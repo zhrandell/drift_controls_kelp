@@ -1,7 +1,7 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ODE system for Drift loss, Kelp loss, and Urchin stomach fullness
-// created April 24th, 2021; updated October 7th, 2021
-// zhr 
+// created April 24th, 2021; updated July 17th, 2024
+// zhr
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 functions {
   vector resourceLoss(real t,              		// time
@@ -19,13 +19,15 @@ functions {
     real v = theta[2];			// max Stomach volume
     real q = theta[3];			// switching param for Low data
     real p = theta[4];			// stomach clearance
-    //real e = theta[5];
+    real w_S = theta[5]; 		// new MN logistic param for drift
+    real w_A = theta[6];		// new MN logistic param for kelp 
+    //real e = theta[7];
     real U = x_r[1]; 			// urchin #
 
-	dS_dt = (-(a * U * S) * (1 - (1 / pow (1 + S/A, q))) * ((v - F) / v));
-	dA_dt = (-(a * U * A) * (1 / pow (1 + S/A, q)) * ((v - F) / v));
-	dF_dt = ((((a * S) * (1 - (1 / pow (1 + S/A, q))) * ((v - F) / v)) + 
-        	((a * A) * (1 / pow (1 + S/A, q)) * ((v - F) / v))) - (p * F));
+	dS_dt = (-(a * U * S) * (1 - (1 / pow (1 + S/A, q))) * ((v - F) / v)) * log (w_S / (1 - w_S));
+	dA_dt = (-(a * U * A) * (1 / pow (1 + S/A, q)) * ((v - F) / v)) * log (w_A / (1 - w_A));
+	dF_dt = ((((a * S) * (1 - (1 / pow (1 + S/A, q))) * ((v - F) / v)) * log (w_S / (1 - w_S))+ 
+        	((a * A) * (1 / pow (1 + S/A, q)) * ((v - F) / v))) * log (w_A / (1 - w_A))- (p * F));
 
     return [dS_dt, dA_dt, dF_dt]';
   }
@@ -70,6 +72,8 @@ parameters {
    real <lower=0, upper=10> v;
    real <lower=0, upper=10> q;
    real <lower=0, upper=1> p;
+   real <lower=0, upper=1> w_S;
+   real <lower=0, upper=1> w_A;
    //real <lower=0, upper=1> e;
    real <lower=0, upper=40> sigma;      
 }
@@ -107,6 +111,8 @@ transformed parameters {
   theta[2] = v;
   theta[3] = q;
   theta[4] = p;
+  theta[5] = w_S;
+  theta[6] = w_A;
   //theta[5] = e;
 
 
@@ -184,6 +190,8 @@ model {
   v ~ exponential(0.1); 
   q ~ lognormal(1, 1);
   p ~ beta(1,1);
+  w_S ~ beta(1,1);
+  w_A ~ beta(1,1);
   //e ~ uniform(0,1) 
   sigma ~ exponential(0.1);
 

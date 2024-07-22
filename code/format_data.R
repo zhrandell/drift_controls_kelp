@@ -206,12 +206,14 @@ y5_init_SA <- as.matrix(p5_init[, c(2:3, 7)])    ## Period 5
 ## data from all three periods
 p1_Sremain <- p1_init[, 5]
 p2_Sremain <- p2_init[, 5]
+
 p1_Aremain <- p1_init[, 6]
 p2_Aremain <- p2_init[, 6]
 
 p3_Sremain <- p3_init[, 5]
 p4_Sremain <- p4_init[, 5]
 p5_Sremain <- p5_init[, 5]
+
 p3_Aremain <- p3_init[, 6]
 p4_Aremain <- p4_init[, 6]
 p5_Aremain <- p5_init[, 6]
@@ -224,48 +226,39 @@ nrow_1 <- n_subject_1
 nrow_2 <- n_subject_2
 
 
-## convert y1_init_SA from character matrix, to numeric, to numeric with proper dimensions
-y1_init_SA <- mapply(y1_init_SA, FUN = as.numeric)
-y1_init_SA <- matrix(data = y1_init_SA, ncol = col_3, nrow = nrow_1)
+## convert to numeric matrices
 
-y2_init_SA <- mapply(y2_init_SA, FUN = as.numeric)
-y2_init_SA <- matrix(data = y2_init_SA, ncol = col_3, nrow = nrow_1)
+## initial drift and kelp
+class(y1_init_SA) <- "numeric"
+class(y2_init_SA) <- "numeric"
+class(y3_init_SA) <- "numeric"
+class(y4_init_SA) <- "numeric"
+class(y5_init_SA) <- "numeric"
 
-y3_init_SA <- mapply(y3_init_SA, FUN = as.numeric)
-y3_init_SA <- matrix(data = y3_init_SA, ncol = col_3, nrow = nrow_2)
-
-y4_init_SA <- mapply(y4_init_SA, FUN = as.numeric)
-y4_init_SA <- matrix(data = y4_init_SA, ncol = col_3, nrow = nrow_2)
-
-y5_init_SA <- mapply(y5_init_SA, FUN = as.numeric)
-y5_init_SA <- matrix(data = y5_init_SA, ncol = col_3, nrow = nrow_2)
-
-
-## convert drift consumed from character matrix, to numeric, to numeric with proper dimensions
 ## observations of drift remaining
-p1_Sremain <- mapply(p1_Sremain, FUN = as.numeric)
-p1_Sremain <- matrix(data = p1_Sremain, ncol = col_1, nrow = nrow_1)
-p2_Sremain <- mapply(p2_Sremain, FUN = as.numeric)
-p2_Sremain <- matrix(data = p2_Sremain, ncol = col_1, nrow = nrow_1)
+class(p1_Sremain) <- "numeric"
+class(p2_Sremain) <- "numeric"
+class(p3_Sremain) <- "numeric"
+class(p4_Sremain) <- "numeric"
+class(p5_Sremain) <- "numeric"
 
-p3_Sremain <- mapply(p3_Sremain, FUN = as.numeric)
+p1_Sremain <- matrix(data = p1_Sremain, ncol = col_1, nrow = nrow_1)
+p2_Sremain <- matrix(data = p2_Sremain, ncol = col_1, nrow = nrow_1)
 p3_Sremain <- matrix(data = p3_Sremain, ncol = col_1, nrow = nrow_2)
-p4_Sremain <- mapply(p4_Sremain, FUN = as.numeric)
 p4_Sremain <- matrix(data = p4_Sremain, ncol = col_1, nrow = nrow_2)
-p5_Sremain <- mapply(p5_Sremain, FUN = as.numeric)
 p5_Sremain <- matrix(data = p5_Sremain, ncol = col_1, nrow = nrow_2)
 
 ## observations of kelp remaining
-p1_Aremain <- mapply(p1_Aremain, FUN = as.numeric)
-p1_Aremain <- matrix(data = p1_Aremain, ncol = col_1, nrow = nrow_1)
-p2_Aremain <- mapply(p2_Aremain, FUN = as.numeric)
-p2_Aremain <- matrix(data = p2_Aremain, ncol = col_1, nrow = nrow_1)
+class(p1_Aremain) <- "numeric"
+class(p2_Aremain) <- "numeric"
+class(p3_Aremain) <- "numeric"
+class(p4_Aremain) <- "numeric"
+class(p5_Aremain) <- "numeric"
 
-p3_Aremain <- mapply(p3_Aremain, FUN = as.numeric)
+p1_Aremain <- matrix(data = p1_Aremain, ncol = col_1, nrow = nrow_1)
+p2_Aremain <- matrix(data = p2_Aremain, ncol = col_1, nrow = nrow_1)
 p3_Aremain <- matrix(data = p3_Aremain, ncol = col_1, nrow = nrow_2)
-p4_Aremain <- mapply(p4_Aremain, FUN = as.numeric)
 p4_Aremain <- matrix(data = p4_Aremain, ncol = col_1, nrow = nrow_2)
-p5_Aremain <- mapply(p5_Aremain, FUN = as.numeric)
 p5_Aremain <- matrix(data = p5_Aremain, ncol = col_1, nrow = nrow_2)
 
 

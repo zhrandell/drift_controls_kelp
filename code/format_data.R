@@ -3,44 +3,8 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 
-
-
-
-## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-rm(list = ls())
-
-
-## read in libraries
-library(tidyverse)
-library(stats)
-library(gridExtra)
-library(gtable)
-library(grid)
-library(deSolve)
-library(rstudioapi)
-library(reshape2)
-library(hexbin)
-library(janitor)
-library(diffdf)
-
-
-## check wd is appropriate
-getwd()
-
-
-## hardcode relative file paths
-code <- "../code"
-data_input <- "../data_input"
-data_output <- "../data_output"
-figs <- "../figs"
-
-
-## specify directory and open data
-setwd(data_input)
-
-
 ## read in data
-dat <- read.csv("drift_kelp_loss.csv", header = TRUE)
+dat <- read.csv(paste0(data_input, "/drift_kelp_loss.csv"), header = TRUE)
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -325,8 +289,8 @@ loss_dat <- list(
 )
 
 
-setwd(data_output)
-saveRDS(loss_dat, file = "loss_dat.RData")
+saveRDS(loss_dat, 
+        file = paste0(data_output,"/loss_dat.RData"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

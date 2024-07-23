@@ -75,6 +75,7 @@ remove(dat3)
 ## 48 hour data
 dat2 <- filter(dat, Trial %in% c("1", "2", "3", "4"))
 dat2 <- filter(dat2, Period %in% c("1", "2", "3"))
+dat2 <- filter(dat2, Treatment %in% c("Low", "High"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

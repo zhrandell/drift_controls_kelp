@@ -52,10 +52,10 @@ model <- cmdstan_model(file <- "restocking_stan_model_new.stan")
 ## initiate sampling 
 fit <- model$sample(data = loss_dat,
                   chains = 1,
-                  iter_warmup = 1, # 1000
-                  iter_sampling = 1, # 2000
+                  iter_warmup = 1000, # 1000
+                  iter_sampling = 1000, # 2000
                   adapt_delta = 0.80, 
-                  parallel_chains = 1) # 4
+                  parallel_chains = 4)
 
 
 # set path to Model output

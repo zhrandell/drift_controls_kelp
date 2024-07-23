@@ -230,8 +230,8 @@ transformed parameters {
     
     // print(" alphaS_2: ", alphaS_2);
     // print(" betaS_2: ", betaS_2);
-    print(" alphaA_2: ", alphaA_2);
-    print(" betaA_2: ", betaA_2);
+    // print(" alphaA_2: ", alphaA_2);
+    // print(" betaA_2: ", betaA_2);
     
 }
 

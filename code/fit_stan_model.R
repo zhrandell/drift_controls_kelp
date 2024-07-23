@@ -7,33 +7,9 @@
 
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-rm(list = ls())
-  
-  
-## read in libraries
-library(cmdstanr)
-library(rstan)
-library(StanHeaders)
-library(shinystan)
-library(posterior)
-library(bayesplot)
 
+loss_dat <- readRDS(paste0(data_output,"/loss_dat.Rdata"))
 
-## check wd is appropriate
-getwd()
-
-
-## hardcode relative file paths
-code <- "../code"
-data_input <- "../data_input"
-data_output <- "../data_output"
-figs <- "../figs"
-
-
-## specify directory and open data
-setwd(data_output)
-
-loss_dat <- readRDS("loss_dat.Rdata")
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -42,11 +18,9 @@ loss_dat <- readRDS("loss_dat.Rdata")
 
 ## run Stan ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## load directory with Stan script
-setwd(code)
-
 
 ## compile model
-model <- cmdstan_model(file <- "restocking_stan_model.stan")
+model <- cmdstan_model(file <- paste0(code, "/restocking_stan_model.stan"))
 
 
 ## initiate sampling 
@@ -58,11 +32,8 @@ fit <- model$sample(data = loss_dat,
                   parallel_chains = 4)
 
 
-# set path to Model output
-setwd(data_output)
-
 ## save via cmdstan's preferred method
-fit$save_object(file="model_output_V1.RDS")
+fit$save_object(file = paste0(data_output, "/model_output_V1.RDS"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

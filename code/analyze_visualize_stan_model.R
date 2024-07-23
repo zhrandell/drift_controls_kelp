@@ -7,33 +7,10 @@
 
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-rm(list = ls())
-
-
-## read in libraries
-library(tidyverse)
-library(cmdstanr)
-library(rstan)
-library(StanHeaders)
-library(shinystan)
-library(posterior)
-library(bayesplot)
-
-
-## check wd is appropriate
-getwd()
-
-
-## hardcode relative file paths
-code <- "../code"
-data_input <- "../data_input"
-data_output <- "../data_output"
-figs <- "../figs"
 
 
 ## specify directory and open saved RDS file
-setwd(data_output)
-fit <- readRDS("model_output_V1.RDS")
+fit <- readRDS(paste0(data_output, "/model_output_V1.RDS"))
 
 
 ## set up custom ggplot theme 
@@ -78,8 +55,7 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 t1 <- mcmc_trace(draws_array, pars = parms) 
 print(t1)  
 
-setwd(figs)
-ggplot2::ggsave(filename = "trace.eps", 
+ggplot2::ggsave(filename = paste0(figs, "/trace.eps"), 
                 plot = t1, 
                 device = cairo_ps, 
                 dpi = 1200, 
@@ -92,8 +68,7 @@ ggplot2::ggsave(filename = "trace.eps",
 pairsplot <- mcmc_pairs(draws_array, pars = parms,
                         off_diag_args = list(size = 0.75))
 
-setwd(figs)
-ggplot2::ggsave(filename = "pairs.eps", 
+ggplot2::ggsave(filename = paste0(figs, "/pairs.eps"), 
                 plot = pairsplot, 
                 device = cairo_ps, 
                 dpi = 1200, 
@@ -118,8 +93,7 @@ posts_df_raw <- draws_df[c(1:10000),c(2:6)]
 dat <- posts_df_raw
 
 ## save RDA file with posteriors from a single chain
-setwd(data_output)
-save(posts_df_raw, file="posts_new_All.RDA")
+save(posts_df_raw, file = paste0(data_output, "/posts_new_All.RDA"))
 
 
 ## load RDA file  
@@ -131,7 +105,6 @@ save(posts_df_raw, file="posts_new_All.RDA")
 
 
 ## custom posteior plot with median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-library(egg)
 CI <- apply(posts_df_raw, 2, quantile, c(0.0250, 0.975), na.rm=TRUE)
 med <- apply(posts_df_raw, 2, median, na.rm=T)
 
@@ -215,8 +188,8 @@ all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool="a"),
 
 print(all6)
 
-setwd(figs)
-ggplot2::ggsave(filename = "posts.eps", 
+
+ggplot2::ggsave(filename = paste0(figs, "/posts.eps"), 
                 plot = all6, 
                 device = cairo_ps, 
                 dpi = 1200, 

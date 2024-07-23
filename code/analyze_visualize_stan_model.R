@@ -78,7 +78,7 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 t1 <- mcmc_trace(draws_array, pars = parms) 
 print(t1)  
 
-setwd(msFigs)
+setwd(figs)
 ggplot2::ggsave(filename = "trace.eps", 
                 plot = t1, 
                 device = cairo_ps, 
@@ -92,7 +92,7 @@ ggplot2::ggsave(filename = "trace.eps",
 pairsplot <- mcmc_pairs(draws_array, pars = parms,
                         off_diag_args = list(size = 0.75))
 
-setwd(msFigs)
+setwd(figs)
 ggplot2::ggsave(filename = "pairs.eps", 
                 plot = pairsplot, 
                 device = cairo_ps, 
@@ -118,8 +118,8 @@ posts_df_raw <- draws_df[c(1:10000),c(2:6)]
 dat <- posts_df_raw
 
 ## save RDA file with posteriors from a single chain
-setwd(modOutput)
-save(posts_df_raw, file="posts_new_All.Rda")
+setwd(data_output)
+save(posts_df_raw, file="posts_new_All.RDA")
 
 
 ## load RDA file  
@@ -204,7 +204,7 @@ sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill=col, alpha=alp)
   theme(axis.title.y = element_blank())
 
 
-windows(20,4,record=T)
+# dev.new(20,4,record=T)
 
 all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool="a"),
                   tag_facet(q_post + facet_wrap(~"time"), tag_pool="b"),
@@ -215,7 +215,7 @@ all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool="a"),
 
 print(all6)
 
-setwd(msFigs)
+setwd(figs)
 ggplot2::ggsave(filename = "posts.eps", 
                 plot = all6, 
                 device = cairo_ps, 
@@ -232,3 +232,4 @@ ggplot2::ggsave(filename = "posts.eps",
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+

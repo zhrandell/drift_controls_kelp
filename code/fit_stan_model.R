@@ -46,7 +46,7 @@ setwd(code)
 
 
 ## compile model
-model <- cmdstan_model(file <- "restocking_stan_model_new.stan")
+model <- cmdstan_model(file <- "restocking_stan_model.stan")
 
 
 ## initiate sampling 

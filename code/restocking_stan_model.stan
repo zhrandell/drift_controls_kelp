@@ -33,15 +33,14 @@ functions {
     real v = theta[2];			// max Stomach volume
     real q = theta[3];			// switching param for Low data
     real p = theta[4];			// stomach clearance
-    real w_S = theta[5]; 		// logistic param for drift
-    real w_A = theta[6];		// logistic param for kelp 
-    //real e = theta[7];
+    real w = theta[5]; 		  // baseline preference for drift over kelp
     real U = x_r[1]; 			  // Urchins
 
-	dS_dt = (-(a * U * S) * (1 - (1 / pow (1 + S/A, q))) * ((v - F) / v)) * log (w_S / (1 - w_S));
-	dA_dt = (-(a * U * A) * (1 / pow (1 + S/A, q)) * ((v - F) / v)) * log (w_A / (1 - w_A));
-	dF_dt = ((((a * S) * (1 - (1 / pow (1 + S/A, q))) * ((v - F) / v)) * log (w_S / (1 - w_S))+ 
-        	((a * A) * (1 / pow (1 + S/A, q)) * ((v - F) / v))) * log (w_A / (1 - w_A))- (p * F));
+	dS_dt = - U * a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+	dA_dt = - U * a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+	dF_dt =   a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
+	        + a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
+          - p * F;
 
     return [dS_dt, dA_dt, dF_dt]';
   }
@@ -87,9 +86,7 @@ parameters {
    real <lower=0, upper=10> v;
    real <lower=0, upper=10> q;
    real <lower=0, upper=1> p;
-   real <lower=0, upper=1> w_S;
-   real <lower=0, upper=1> w_A;
-   //real <lower=0, upper=1> e;
+   real <lower=0, upper=1> w;
    real <lower=0, upper=40> sigma;      
 }
 
@@ -126,9 +123,7 @@ transformed parameters {
   theta[2] = v;
   theta[3] = q;
   theta[4] = p;
-  theta[5] = w_S;
-  theta[6] = w_A;
-  //theta[5] = e;
+  theta[5] = w;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -251,9 +246,7 @@ model {
   v ~ exponential(0.1); 
   q ~ lognormal(1, 1);
   p ~ beta(1,1);
-  w_S ~ beta(1,1);
-  w_A ~ beta(1,1);
-  //e ~ uniform(0,1) 
+  w ~ beta(1,1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) { 

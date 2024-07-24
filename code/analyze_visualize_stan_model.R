@@ -18,8 +18,8 @@ my.theme = theme(panel.grid.major = element_blank(),
                  panel.grid.minor = element_blank(),
                  panel.background = element_blank(), 
                  axis.line = element_line(colour = "black"),
-                 axis.title=element_text(size=16),
-                 axis.text=element_text(size=14),
+                 axis.title = element_text(size=16),
+                 axis.text = element_text(size=14),
                  plot.title = element_text(size=16))
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -29,7 +29,7 @@ my.theme = theme(panel.grid.major = element_blank(),
 
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 ## list of params
-parms <- c("a","v","q","p","sigma")
+parms <- c("a", "v", "q", "p", "w", "sigma")
 
 
 ## print param list output
@@ -86,7 +86,7 @@ print(pairsplot)
 
 ## extract posterior for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## extract a, v, p, q, from Chain 1 
-posts_df_raw <- draws_df[c(1:10000),c(2:6)]
+posts_df_raw <- draws_df[c(1:10000),c(2:8)]
 
 
 ## redefine for posterior plot below
@@ -118,8 +118,10 @@ q_lower <- CI[1,3]
 q_upper <- CI[2,3]
 p_lower <- CI[1,4]
 p_upper <- CI[2,4]
-sig_lower <- CI[1,5]
-sig_upper <- CI[2,5]
+w_lower <- CI[1,5]
+w_upper <- CI[2,5]
+sig_lower <- CI[1,6]
+sig_upper <- CI[2,6]
 
 
 ## extract median values
@@ -127,7 +129,8 @@ a_med <- med[1]
 v_med <- med[2]
 q_med <- med[3]
 p_med <- med[4]
-sig_med <- med[5]
+w_med <- med[5]
+sig_med <- med[6]
 
 
 ## graphical parameters
@@ -142,49 +145,57 @@ sz2 <- 0.5
 
 
 ## plot
-a_post <- ggplot(data = dat, aes(a)) + geom_density(fill=col, alpha=alp) +
+a_post <- ggplot(data = dat, aes(a)) + geom_density(fill = col, alpha = alp) +
   ggtitle("encounter rate \u03B1") + xlab("\u03B1") + my.theme + 
-  geom_vline(xintercept = a_lower, color = CI_col, size = sz2, linetype=lty2) +
-  geom_vline(xintercept = a_upper, color = CI_col, size = sz2, linetype=lty2) + 
-  geom_vline(xintercept = a_med, color = med_col, size = sz1, linetype=lty1) 
+  geom_vline(xintercept = a_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = a_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = a_med, color = med_col, size = sz1, linetype = lty1) 
 
-q_post <- ggplot(data = dat, aes(q)) + geom_density(fill=col, alpha=alp) +
+q_post <- ggplot(data = dat, aes(q)) + geom_density(fill = col, alpha = alp) +
   ggtitle("switching rate \u03C6") + xlab("\u03C6") + my.theme + 
-  geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype=lty2) +
-  geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype=lty2) + 
-  geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype=lty1) +
+  geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
-v_post <- ggplot(data = dat, aes(v)) + geom_density(fill=col, alpha=alp) +
+v_post <- ggplot(data = dat, aes(v)) + geom_density(fill = col, alpha = alp) +
   ggtitle("max gut fullness \u03B7") + xlab("\u03B7") + my.theme + 
-  geom_vline(xintercept = v_lower, color = CI_col, size = sz2, linetype=lty2) +
-  geom_vline(xintercept = v_upper, color = CI_col, size = sz2, linetype=lty2) + 
-  geom_vline(xintercept = v_med, color = med_col, size = sz1, linetype=lty1) +
+  geom_vline(xintercept = v_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = v_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = v_med, color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
-p_post <- ggplot(data = dat, aes(p)) + geom_density(fill=col, alpha=alp) +
+p_post <- ggplot(data = dat, aes(p)) + geom_density(fill = col, alpha = alp) +
   ggtitle("gut clearance \u03B5") + xlab("\u03B5") + my.theme + 
-  geom_vline(xintercept = p_lower, color = CI_col, size = sz2, linetype=lty2) +
-  geom_vline(xintercept = p_upper, color = CI_col, size = sz2, linetype=lty2) + 
-  geom_vline(xintercept = p_med, color = med_col, size = sz1, linetype=lty1) +
+  geom_vline(xintercept = p_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = p_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = p_med, color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
-sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill=col, alpha=alp) +
+w_post <- ggplot(data = dat, aes(w)) + geom_density(fill = col, alpha = alp) +
+  ggtitle("preference \u03c9") + xlab("\u03c9") + my.theme + 
+  geom_vline(xintercept = sig_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = sig_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = sig_med, color = med_col, size = sz1, linetype = lty1) +
+  theme(axis.title.y = element_blank())
+
+sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = alp) +
   ggtitle("variance \u03C3") + xlab("\u03C3") + my.theme + 
-  geom_vline(xintercept = sig_lower, color = CI_col, size = sz2, linetype=lty2) +
-  geom_vline(xintercept = sig_upper, color = CI_col, size = sz2, linetype=lty2) + 
-  geom_vline(xintercept = sig_med, color = med_col, size = sz1, linetype=lty1) +
+  geom_vline(xintercept = sig_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = sig_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = sig_med, color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 
 # dev.new(20,4,record=T)
 
-all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool="a"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool="b"),
-                  tag_facet(v_post + facet_wrap(~"time"), tag_pool="c"),
-                  tag_facet(p_post + facet_wrap(~"time"), tag_pool="d"),
-                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool="e"),
-                  nrow=1, ncol=5)
+all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
+                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "b"),
+                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "c"),
+                  tag_facet(p_post + facet_wrap(~"time"), tag_pool = "d"),
+                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "e"),
+                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
+                  nrow = 2, ncol = 3)
 
 print(all6)
 

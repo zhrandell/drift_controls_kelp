@@ -10,7 +10,7 @@
 
 
 ## specify directory and open saved RDS file
-fit <- readRDS(paste0(data_output, "/model_output_V1.RDS"))
+fit <- readRDS(paste0(data_output, "/model_output.RDS"))
 
 
 ## set up custom ggplot theme 
@@ -149,7 +149,7 @@ a_post <- ggplot(data = dat, aes(a)) + geom_density(fill=col, alpha=alp) +
   geom_vline(xintercept = a_med, color = med_col, size = sz1, linetype=lty1) 
 
 q_post <- ggplot(data = dat, aes(q)) + geom_density(fill=col, alpha=alp) +
-  ggtitle("resource preference \u03C6") + xlab("\u03C6") + my.theme + 
+  ggtitle("switching rate \u03C6") + xlab("\u03C6") + my.theme + 
   geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype=lty2) +
   geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype=lty2) + 
   geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype=lty1) +

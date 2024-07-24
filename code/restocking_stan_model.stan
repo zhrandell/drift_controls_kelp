@@ -37,18 +37,18 @@ functions {
     real U = x_r[1]; 			  // Urchins
 
 // Yodzis formulation
-// 	dS_dt = - U * a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-// 	dA_dt = - U * a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-// 	dF_dt =   a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
-// 	        + a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
-//           - p * F;
+	dS_dt = - U * a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+	dA_dt = - U * a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+	dF_dt =   a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
+	        + a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
+          - p * F;
           
 // Logistic formulation
-	dS_dt = - U * a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-	dA_dt = - U * a * A * (1 - F / v) * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-	dF_dt =   a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ))
-	        + a * A * (1 - F / v) * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ))
-          - p * F;
+// 	dS_dt = - U * a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+// 	dA_dt = - U * a * A * (1 - F / v) * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+// 	dF_dt =   a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ))
+// 	        + a * A * (1 - F / v) * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ))
+//           - p * F;
 
     return [dS_dt, dA_dt, dF_dt]';
   }

@@ -46,4 +46,3 @@ figs <- "../figs"
 source('format_data.R')
 source('fit_stan_model.R')
 source('analyze_visualize_stan_model.R')
-wa

@@ -10,7 +10,7 @@
 
 
 ## specify directory and open saved RDS file
-fit <- readRDS(paste0(data_output, "/model_output_V1.RDS"))
+fit <- readRDS(paste0(data_output, "/model_output.RDS"))
 
 
 ## set up custom ggplot theme 

@@ -33,7 +33,7 @@ fit <- model$sample(data = loss_dat,
 
 
 ## save via cmdstan's preferred method
-fit$save_object(file = paste0(data_output, "/model_output_V1.RDS"))
+fit$save_object(file = paste0(data_output, "/model_output.RDS"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

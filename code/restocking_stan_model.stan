@@ -28,13 +28,14 @@ functions {
     real v = theta[2];			// max Stomach volume
     real q = theta[3];			// switching param for Low data
     real p = theta[4];			// stomach clearance
-    //real e = theta[5];
     real U = x_r[1]; 			// urchin #
 
-    dS_dt = (-(a * U * S) * (1 - (1 / pow(1 + S / A, q))) * ((v - F) / v));
-    dA_dt = (-(a * U * A) * (1 / pow(1 + S / A, q)) * ((v - F) / v));
-    dF_dt = ((((a * S) * (1 - (1 / pow(1 + S / A, q))) * ((v - F) / v)) + 
-             ((a * A) * (1 / pow(1 + S / A, q)) * ((v - F) / v))) - (p * F));
+// Logistic formulation
+	dS_dt = - U * a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + pow((S / A), q)) ));
+	dA_dt = - U * a * A * (1 - F / v) * (     ( 1 / ( 1 + pow((S / A), q)) ));
+	dF_dt =   a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + pow((S / A), q)) ))
+	        + a * A * (1 - F / v) * (     ( 1 / ( 1 + pow((S / A), q)) ))
+	        - p * F;
 
     return [dS_dt, dA_dt, dF_dt]';
   }
@@ -80,7 +81,6 @@ parameters {
   real <lower=0, upper=10> v;
   real <lower=0, upper=10> q;
   real <lower=0, upper=1> p;
-  //real <lower=0, upper=1> e;
   real <lower=0, upper=40> sigma;      
 }
 

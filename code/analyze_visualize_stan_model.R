@@ -174,9 +174,9 @@ p_post <- ggplot(data = dat, aes(p)) + geom_density(fill = col, alpha = alp) +
 
 w_post <- ggplot(data = dat, aes(w)) + geom_density(fill = col, alpha = alp) +
   ggtitle("preference \u03c9") + xlab("\u03c9") + my.theme + 
-  geom_vline(xintercept = sig_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = sig_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = sig_med, color = med_col, size = sz1, linetype = lty1) +
+  geom_vline(xintercept = w_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = w_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = w_med, color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = alp) +

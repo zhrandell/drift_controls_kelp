@@ -84,9 +84,10 @@ print(pairsplot)
 
 
 
-## extract posterior for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## extract a, v, p, q, from Chain 1 
-posts_df_raw <- draws_df[c(1:10000),c(2:8)]
+## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## extract a, v, p, q
+posts_df_raw <- suppressWarnings(draws_df[1:min(nrow(draws_df), 1000), 
+                                          1+(1:length(parms))])
 
 
 ## redefine for posterior plot below
@@ -105,32 +106,32 @@ save(posts_df_raw, file = paste0(data_output, "/posts_new_All.RDA"))
 
 
 ## custom posteior plot with median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CI <- apply(posts_df_raw, 2, quantile, c(0.0250, 0.975), na.rm=TRUE)
-med <- apply(posts_df_raw, 2, median, na.rm=T)
+CI <- data.frame(apply(posts_df_raw, 2, quantile, c(0.0250, 0.975), na.rm = TRUE))
+med <- apply(posts_df_raw, 2, median, na.rm = T)
 
 
 ## extract CI values 
-a_lower <- CI[1,1]
-a_upper <- CI[2,1]
-v_lower <- CI[1,2]
-v_upper <- CI[2,2]
-q_lower <- CI[1,3]
-q_upper <- CI[2,3]
-p_lower <- CI[1,4]
-p_upper <- CI[2,4]
-w_lower <- CI[1,5]
-w_upper <- CI[2,5]
-sig_lower <- CI[1,6]
-sig_upper <- CI[2,6]
+a_lower <- CI$a[1]
+a_upper <- CI$a[2]
+v_lower <- CI$v[1]
+v_upper <- CI$v[2]
+q_lower <- CI$q[1]
+q_upper <- CI$q[2]
+p_lower <- CI$p[1]
+p_upper <- CI$p[2]
+w_lower <- CI$w[1]
+w_upper <- CI$w[2]
+sig_lower <- CI$sigma[1]
+sig_upper <- CI$sigma[2]
 
 
 ## extract median values
-a_med <- med[1]
-v_med <- med[2]
-q_med <- med[3]
-p_med <- med[4]
-w_med <- med[5]
-sig_med <- med[6]
+a_med <- med['a']
+v_med <- med['v']
+q_med <- med['q']
+p_med <- med['p']
+w_med <- med['w']
+sig_med <- med['sigma']
 
 
 ## graphical parameters
@@ -187,8 +188,6 @@ sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = 
   theme(axis.title.y = element_blank())
 
 
-# dev.new(20,4,record=T)
-
 all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(q_post + facet_wrap(~"time"), tag_pool = "b"),
                   tag_facet(v_post + facet_wrap(~"time"), tag_pool = "c"),
@@ -196,8 +195,6 @@ all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(w_post + facet_wrap(~"time"), tag_pool = "e"),
                   tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
-
-print(all6)
 
 
 ggplot2::ggsave(filename = paste0(figs, "/posts.eps"), 

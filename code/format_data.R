@@ -88,7 +88,7 @@ p2_1 <- filter(dat1, Period %in% c("2")) ## 24 hour data, period 2
 ## 48 hour data  
 p3_2 <- filter(dat2, Period %in% c("1")) ## 48 hour data, period 1
 p4_2 <- filter(dat2, Period %in% c("2")) ## 48 hour data, period 2
-p5_2 <- filter(dat2, Period %in% c("3")) ## 49 hour data, period 3
+p5_2 <- filter(dat2, Period %in% c("3")) ## 48 hour data, period 3
 
 
 ## select focal columns

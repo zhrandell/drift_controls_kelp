@@ -47,9 +47,29 @@ dat2 <- filter(dat2, Treatment %in% c("Low", "High", "Low_Control", "High_Contro
 
 
 ## assign unique key to urchin cohorts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## function to rename the treatment level to a numeric value to create proper key
+relabel.levels <- function(data){
+  data <- data %>%
+    mutate(Level = case_when(
+      Level == "Drift_Control" ~ "9",
+      Level == "Low_Control" ~ "10",
+      Level == "High_Control" ~ "11",
+      TRUE ~ Level
+    ))
+  return(data)
+}
+
+
+## invoke function to rename levels to accommodate controls
+dat1 <- relabel.levels(dat1)
+dat2 <- relabel.levels(dat2)
+
+
 ## paste _1_ for "Low kelp" and _2_ for "High Kelp"
 dat1$key <-
   paste(dat1$Level, c("_2_", "_1_")[(dat1$Treatment == "Low") + 1])
+
 dat2$key <-
   paste(dat2$Level, c("_2_", "_1_")[(dat2$Treatment == "Low") + 1])
 

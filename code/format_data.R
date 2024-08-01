@@ -28,20 +28,19 @@ dat$Trial <- as.factor(dat$Trial)
 ## filter down to desired data:
 dat <- na.omit(dat)
 
-## 24 hour data
-dat1 <- filter(dat, Trial %in% c("5", "6"))
-dat1 <- filter(dat1, Treatment %in% c("Low", "High"))
-dat3 <- filter(dat, Trial %in% c("7", "8"))
-dat3 <- filter(dat3, Treatment %in% c("Low", "High"))
+## 24 hour data 
+dat1 <- filter(dat, Trial %in% c("5","6")) 
+dat1 <- filter(dat1, Treatment %in% c("Low", "High", "Low_Control", "High_Control", "Drift_Control"))
+dat3 <- filter(dat, Trial %in% c("7","8")) 
+dat3 <- filter(dat3, Treatment %in% c("Low", "High", "Low_Control", "High_Control", "Drift_Control"))
 dat1 <- rbind(dat1, dat3)
 remove(dat3)
 
-## 48 hour data
-dat2 <- filter(dat, Trial %in% c("1", "2", "3", "4"))
-dat2 <- filter(dat2, Period %in% c("1", "2", "3"))
-dat2 <- filter(dat2, Treatment %in% c("Low", "High"))
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+## 48 hour data 
+dat2 <- filter(dat, Trial %in% c("1","2","3","4")) 
+dat2 <- filter(dat2, Period %in% c("1","2","3"))
+dat2 <- filter(dat2, Treatment %in% c("Low", "High", "Low_Control", "High_Control", "Drift_Control"))## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## END data filtering ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
@@ -67,19 +66,26 @@ dat2 <- as.data.frame(apply(dat2, 2, function(x)
   gsub('\\s+', '', x)))
 
 
-## remove missing data; verify missing data with:
-dat1 <- dat1[!grepl("3_1_5", dat1$key),]
-dat1 <- dat1[!grepl("7_2_7", dat1$key),]
-dat2 <- dat2[!grepl("6_2_1", dat2$key),]
-dat2 <- dat2[!grepl("6_2_4", dat2$key),]
-dat2 <- dat2[!grepl("7_2_1", dat2$key),]
-dat2 <- dat2[!grepl("4_2_1", dat2$key),]
-dat2 <- dat2[!grepl("8_1_1", dat2$key),]
+## remove keys associated with missing data in dat1, the 24hr data
+dat1 <- dat1[!grepl("3_1_5", dat1$key),] 
+dat1 <- dat1[!grepl("Drift_Control_2_8", dat1$key),] 
 
 
-## select Drift and Kelp initial conditions for each Period
+## remove keys associated with missing data in dat2, the 48hr data
+dat2 <- dat2[!grepl("6_2_1", dat2$key),] 
+dat2 <- dat2[!grepl("6_2_4", dat2$key),] 
+dat2 <- dat2[!grepl("7_2_1", dat2$key),] 
+dat2 <- dat2[!grepl("4_2_1", dat2$key),] 
+dat2 <- dat2[!grepl("8_1_1", dat2$key),] 
+
+
+## select Drift and Kelp initial conditions for each sampling Period
+## 24 hour data
 p1_1 <- filter(dat1, Period %in% c("1")) ## 24 hour data, period 1
 p2_1 <- filter(dat1, Period %in% c("2")) ## 24 hour data, period 2
+
+
+## 48 hour data  
 p3_2 <- filter(dat2, Period %in% c("1")) ## 48 hour data, period 1
 p4_2 <- filter(dat2, Period %in% c("2")) ## 48 hour data, period 2
 p5_2 <- filter(dat2, Period %in% c("3")) ## 49 hour data, period 3

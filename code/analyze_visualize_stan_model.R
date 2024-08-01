@@ -29,7 +29,7 @@ my.theme = theme(panel.grid.major = element_blank(),
 
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 ## list of params
-parms <- c("a", "v", "q", "p", "w", "sigma")
+parms <- c("a", "v", "p", "w", "q", "sigma")
 
 
 ## print param list output
@@ -115,12 +115,12 @@ a_lower <- CI$a[1]
 a_upper <- CI$a[2]
 v_lower <- CI$v[1]
 v_upper <- CI$v[2]
-q_lower <- CI$q[1]
-q_upper <- CI$q[2]
 p_lower <- CI$p[1]
 p_upper <- CI$p[2]
 w_lower <- CI$w[1]
 w_upper <- CI$w[2]
+q_lower <- CI$q[1]
+q_upper <- CI$q[2]
 sig_lower <- CI$sigma[1]
 sig_upper <- CI$sigma[2]
 
@@ -128,9 +128,9 @@ sig_upper <- CI$sigma[2]
 ## extract median values
 a_med <- med['a']
 v_med <- med['v']
-q_med <- med['q']
 p_med <- med['p']
 w_med <- med['w']
+q_med <- med['q']
 sig_med <- med['sigma']
 
 
@@ -152,15 +152,8 @@ a_post <- ggplot(data = dat, aes(a)) + geom_density(fill = col, alpha = alp) +
   geom_vline(xintercept = a_upper, color = CI_col, size = sz2, linetype = lty2) + 
   geom_vline(xintercept = a_med, color = med_col, size = sz1, linetype = lty1) 
 
-q_post <- ggplot(data = dat, aes(q)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("switching rate \u03C6") + xlab("\u03C6") + my.theme + 
-  geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype = lty1) +
-  theme(axis.title.y = element_blank())
-
 v_post <- ggplot(data = dat, aes(v)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("max gut fullness \u03B7") + xlab("\u03B7") + my.theme + 
+  ggtitle("satiation sensitivity \u03B7") + xlab("\u03B7") + my.theme + 
   geom_vline(xintercept = v_lower, color = CI_col, size = sz2, linetype = lty2) +
   geom_vline(xintercept = v_upper, color = CI_col, size = sz2, linetype = lty2) + 
   geom_vline(xintercept = v_med, color = med_col, size = sz1, linetype = lty1) +
@@ -174,10 +167,17 @@ p_post <- ggplot(data = dat, aes(p)) + geom_density(fill = col, alpha = alp) +
   theme(axis.title.y = element_blank())
 
 w_post <- ggplot(data = dat, aes(w)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("preference \u03c9") + xlab("\u03c9") + my.theme + 
+  ggtitle("baseline preference \u03c9") + xlab("\u03c9") + my.theme + 
   geom_vline(xintercept = w_lower, color = CI_col, size = sz2, linetype = lty2) +
   geom_vline(xintercept = w_upper, color = CI_col, size = sz2, linetype = lty2) + 
   geom_vline(xintercept = w_med, color = med_col, size = sz1, linetype = lty1) +
+  theme(axis.title.y = element_blank())
+
+q_post <- ggplot(data = dat, aes(q)) + geom_density(fill = col, alpha = alp) +
+  ggtitle("switching rate \u03C6") + xlab("\u03C6") + my.theme + 
+  geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = alp) +
@@ -189,10 +189,10 @@ sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = 
 
 
 all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "c"),
-                  tag_facet(p_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "e"),
+                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "b"),
+                  tag_facet(p_post + facet_wrap(~"time"), tag_pool = "c"),
+                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "d"),
+                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "e"),
                   tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
 

@@ -26,31 +26,51 @@ functions {
     real dS_dt;				// Drift remaining through time
     real dA_dt;				// Kelp remaining through time
     real dF_dt;				// Stomach fullness through time
+    real df_S_dt;     // Feeding rate on drift
+    real df_A_dt;     // Feeding rate on kelp
     real S = Y[1]; 			// Drift
     real A = Y[2]; 			// Kelp
     real F = Y[3];			// Stomach fullness 
-    real a = theta[1]; 			// encounter rate
-    real v = theta[2];			// max Stomach volume
-    real q = theta[3];			// switching param for Low data
-    real p = theta[4];			// stomach clearance
-    real w = theta[5]; 		  // baseline preference for drift over kelp
+    real a = theta[1]; 			// per capita encounter rate
+    real v = theta[2];			// stomach satiation sensitivity
+    real p = theta[3];			// stomach clearance rate
+    real w = theta[4]; 		  // baseline preference for drift over kelp
+    real q = theta[5];			// switching rate
     real U = x_r[1]; 			  // Urchins
 
-// Yodzis formulation
-	dS_dt = - U * a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-	dA_dt = - U * a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-	dF_dt =   a * S * (1 - F / v) * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
-	        + a * A * (1 - F / v) * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ))
-          - p * F;
-          
-// Logistic formulation
-// 	dS_dt = - U * a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-// 	dA_dt = - U * a * A * (1 - F / v) * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-// 	dF_dt =   a * S * (1 - F / v) * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ))
-// 	        + a * A * (1 - F / v) * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ))
-//           - p * F;
+// Yodzis preference formulation [requiring constrained 0-1 prior on w]
+//   df_S_dt = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+//   df_A_dt = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
 
-    return [dS_dt, dA_dt, dF_dt]';
+// Logistic preference formulation [requiring constrained 0-1 prior on w]
+  // df_S_dt = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+  // df_A_dt = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+
+// Logistic preference - log formulation [permitting Normal prior on w]
+  // df_S_dt = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  // df_A_dt = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  
+// Logistic preference - log formulation [permitting Normal priors on w and q]
+  df_S_dt = S * a * ( 1 - ( 1 / ( 1 + exp(w + q * log(S/A) ))));
+  df_A_dt = A * a * (     ( 1 / ( 1 + exp(w + q * log(S/A) ))));
+
+// Logistic preference - log formulation [permitting Normal priors on w and q]
+// allowing for S or A = 0 control treatments
+  if(S == 0 || A == 0){
+    df_S_dt = S * a;
+    df_A_dt = A * a;
+  }
+  else{
+    df_S_dt = S * a * ( 1 - ( 1 / ( 1 + exp(w + q * log(S/A) ))));
+    df_A_dt = A * a * (     ( 1 / ( 1 + exp(w + q * log(S/A) ))));
+  }
+  
+// Drift, Kelp, Stomach fullness
+	dS_dt = - U * df_S_dt * exp(- v * F);
+	dA_dt = - U * df_A_dt * exp(- v * F);
+	dF_dt =   df_S_dt + df_A_dt;
+
+  return [dS_dt, dA_dt, dF_dt]';
   }
 }
 
@@ -62,18 +82,18 @@ data {
   array[n_subject_2, 3] real y3_init_s_a; 			// Initial condition for S & A for period 3; 		
   array[n_subject_2, 3] real y4_init_s_a; 			// the 1st restocked value for S, A for period 4; 	
   array[n_subject_2, 3] real y5_init_s_a; 			// the 2nd restocked value for S, A for period 5;
-  int <lower=1> nts1;               			// # of data collection times in period 1; nts1 = 1		
-  int <lower=1> nts2;               			// # of data collection times in period 2; nts2 = 1		
-  int <lower=1> nts3;               			// # of data collection times in period 3; nts3 = 1 	
-  int <lower=1> nts4;               			// # of data collection times in period 4; nts4 = 1		
-  int <lower=1> nts5;               			// # of data collection times in period 5; nts5 = 1  
-  real <lower=1> t0_1;               			// starting time; t0_1 = 1
-  real <lower=1> t0_2;               			// starting time; t0_2 = 1
-  array[nts1] real <lower=t0_1> ts1;          		// data collection time in period 1; ts1 = 24[1]			 
-  array[nts2] real <lower=t0_1> ts2;          		// data collection time in period 2; ts2 = 48[1]			
-  array[nts3] real <lower=t0_2> ts3;          		// data collection time in period 3; ts3 = 44[1]
-  array[nts4] real <lower=t0_2> ts4;          		// data collection time in period 4; ts4 = 89[1]			
-  array[nts5] real <lower=t0_2> ts5;          		// data collection time in period 5; ts5 = 134[1]			
+  int <lower = 1> nts1;               			// # of data collection times in period 1; nts1  =  1		
+  int <lower = 1> nts2;               			// # of data collection times in period 2; nts2  =  1		
+  int <lower = 1> nts3;               			// # of data collection times in period 3; nts3  =  1 	
+  int <lower = 1> nts4;               			// # of data collection times in period 4; nts4  =  1		
+  int <lower = 1> nts5;               			// # of data collection times in period 5; nts5  =  1  
+  real <lower = 1> t0_1;               			// starting time; t0_1  =  1
+  real <lower = 1> t0_2;               			// starting time; t0_2  =  1
+  array[nts1] real <lower = t0_1> ts1;          		// data collection time in period 1; ts1  =  24[1]			 
+  array[nts2] real <lower = t0_1> ts2;          		// data collection time in period 2; ts2  =  48[1]			
+  array[nts3] real <lower = t0_2> ts3;          		// data collection time in period 3; ts3  =  44[1]
+  array[nts4] real <lower = t0_2> ts4;          		// data collection time in period 4; ts4  =  89[1]			
+  array[nts5] real <lower = t0_2> ts5;          		// data collection time in period 5; ts5  =  134[1]			
   array[n_subject_1, nts1 + nts2] real S_obs_1;            	// experimental observations; [59, nts1 + nts2]  	       					
   array[n_subject_2, nts3 + nts4 + nts5] real S_obs_2;      // experimental drift consumed observations; [59, nts3 + nts4 + nts5]  
   array[n_subject_1, nts1 + nts2] real A_obs_1;            	// experimental kelp consumed observations; [59, nts1 + nts2]
@@ -89,13 +109,15 @@ transformed data {
   n_total_2 = nts3 + nts4 + nts5;
 }
 
+// Narrow down limits to increase sampling efficiency, 
+// but keep wide enough to not affect accepted priors
 parameters {
-   real <lower=0, upper=.1> a; 
-   real <lower=0, upper=10> v;
-   real <lower=0, upper=10> q;
-   real <lower=0, upper=1> p;
-   real <lower=0, upper=1> w;
-   real <lower=0, upper=40> sigma;      
+  real <lower = 0, upper = 0.01> a;
+  real <lower = 0, upper = 0.5> v;
+  real <lower = 0, upper = 1> p;
+  real <lower = -5, upper = 10> w;
+  real <lower = -5, upper = 10> q;
+  real <lower = 10, upper = 30> sigma;
 }
 
 transformed parameters {
@@ -129,9 +151,9 @@ transformed parameters {
   
   theta[1] = a; 
   theta[2] = v;
-  theta[3] = q;
-  theta[4] = p;
-  theta[5] = w;
+  theta[3] = p;
+  theta[4] = w;
+  theta[5] = q;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -156,7 +178,7 @@ transformed parameters {
     kelp_loss_1[i, (nts1+1):(nts1+nts2)] = y2[, 2];
     
     // print(i, " init_1: ", init_1);
-    // print(i, " prm[a,v,q,p]: ", theta);
+    // print(i, " prm[a,v,p,w,q]: ", theta);
     // print(i, " y1: ", y1);
     // print(i, " y2: ", y2);
     // print(i, " U: ", U);
@@ -182,7 +204,7 @@ transformed parameters {
 
 
   // Temporal sequence 2 -----------------------------------
-  for (i in 1:59) {      
+  for (i in 1:n_subject_2) {      
    
     // period 3
     init_2[1] = y3_init_s_a[i, 1];
@@ -212,7 +234,7 @@ transformed parameters {
     kelp_loss_2[i, (nts3+nts4+1):(nts3+nts4+nts5)] = y5[, 2];
 
     // print(i, " init_2: ", init_2);
-    // print(i, " prm[a,v,q,p]: ", theta);
+    // print(i, " prm[a,v,p,w,q]: ", theta);
     // print(i, " y3: ", y3);
     // print(i, " y4: ", y4);
     // print(i, " y5: ", y5);
@@ -252,9 +274,9 @@ transformed parameters {
 model { 
   a ~ exponential(0.1);                
   v ~ exponential(0.1); 
-  q ~ lognormal(1, 1);
   p ~ beta(1,1);
-  w ~ uniform(0,1);
+  w ~ normal(0, 1);
+  q ~ normal(0, 1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) { 

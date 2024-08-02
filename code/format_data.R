@@ -13,14 +13,14 @@ dat <- read.csv(paste0(data_input, "/drift_kelp_loss.csv"), header = TRUE)
 
 ## Data Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## subtract wet weight (20g) from drift bags
-dat$Drift_Initial <- dat$Drift_Initial - 20
-dat$Drift_Remaining <- dat$Drift_Remaining - 20
-dat$Drift_Consumed <- dat$Drift_Initial - dat$Drift_Remaining
+dat$Drift_Initial <- pmax(0, dat$Drift_Initial - 20)
+dat$Drift_Remaining <- pmax(0, dat$Drift_Remaining - 20)
+dat$Drift_Consumed <- pmax(0, dat$Drift_Initial - dat$Drift_Remaining)
 
 ## substract wet weight (80g) from kelp bags
-dat$Kelp_Initial <- dat$Kelp_Initial - 80
-dat$Kelp_Remaining <- dat$Kelp_Remaining - 80
-dat$Kelp_Consumed <- dat$Kelp_Initial - dat$Kelp_Remaining
+dat$Kelp_Initial <- pmax(0, dat$Kelp_Initial - 80)
+dat$Kelp_Remaining <- pmax(0, dat$Kelp_Remaining - 80)
+dat$Kelp_Consumed <- pmax(0, dat$Kelp_Initial - dat$Kelp_Remaining)
 
 ## set as factor
 dat$Trial <- as.factor(dat$Trial)
@@ -28,18 +28,21 @@ dat$Trial <- as.factor(dat$Trial)
 ## filter down to desired data:
 dat <- na.omit(dat)
 
+keepTrtmts <- c("Low", "High", "Low_Control", "High_Control", "Drift_Control")
+
 ## 24 hour data 
 dat1 <- filter(dat, Trial %in% c("5","6")) 
-dat1 <- filter(dat1, Treatment %in% c("Low", "High", "Low_Control", "High_Control", "Drift_Control"))
+dat1 <- filter(dat1, Treatment %in% keepTrtmts)
 dat3 <- filter(dat, Trial %in% c("7","8")) 
-dat3 <- filter(dat3, Treatment %in% c("Low", "High", "Low_Control", "High_Control", "Drift_Control"))
+dat3 <- filter(dat3, Treatment %in% keepTrtmts)
 dat1 <- rbind(dat1, dat3)
 remove(dat3)
 
 ## 48 hour data 
 dat2 <- filter(dat, Trial %in% c("1","2","3","4")) 
 dat2 <- filter(dat2, Period %in% c("1","2","3"))
-dat2 <- filter(dat2, Treatment %in% c("Low", "High", "Low_Control", "High_Control", "Drift_Control"))## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dat2 <- filter(dat2, Treatment %in% keepTrtmts)
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END data filtering ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

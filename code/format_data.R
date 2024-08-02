@@ -47,7 +47,6 @@ dat2 <- filter(dat2, Treatment %in% c("Low", "High", "Low_Control", "High_Contro
 
 
 ## assign unique key to urchin cohorts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 ## function to rename the treatment level to a numeric value to create proper key
 relabel.levels <- function(data){
   data <- data %>%
@@ -61,20 +60,31 @@ relabel.levels <- function(data){
 }
 
 
+## function to create key 
+create.key <- function(data){
+  data <- data %>%
+    mutate(key = paste(Level, case_when(
+      Treatment == "Low" ~ "_1_",
+      Treatment == "Drift_Control" ~ "_3_",
+      Treatment == "Low_Control" ~ "_4_",
+      Treatment == "High_Control" ~ "_5_",
+      TRUE ~ "_2_"  # Default case, if none of the conditions are met
+    )))
+  return(data)
+}
+
+
 ## invoke function to rename levels to accommodate controls
 dat1 <- relabel.levels(dat1)
 dat2 <- relabel.levels(dat2)
 
 
-## paste _1_ for "Low kelp" and _2_ for "High Kelp"
-dat1$key <-
-  paste(dat1$Level, c("_2_", "_1_")[(dat1$Treatment == "Low") + 1])
-
-dat2$key <-
-  paste(dat2$Level, c("_2_", "_1_")[(dat2$Treatment == "Low") + 1])
+## create key
+dat1 <- create.key(dat1)
+dat2 <- create.key(dat2)
 
 
-## paste0 Trial # -- 1, 2, 3, 4, -- onto key column
+## paste0 Trial onto key column
 dat1$key <- with(dat1, paste0(key, Trial))
 dat2$key <- with(dat2, paste0(key, Trial))
 
@@ -84,11 +94,16 @@ dat1 <- as.data.frame(apply(dat1, 2, function(x)
   gsub('\\s+', '', x)))
 dat2 <- as.data.frame(apply(dat2, 2, function(x)
   gsub('\\s+', '', x)))
+## END key creation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 
+
+
+
+## remove data via key ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## remove keys associated with missing data in dat1, the 24hr data
 dat1 <- dat1[!grepl("3_1_5", dat1$key),] 
-dat1 <- dat1[!grepl("Drift_Control_2_8", dat1$key),] 
+dat1 <- dat1[!grepl("9_3_8", dat1$key),] 
 
 
 ## remove keys associated with missing data in dat2, the 48hr data

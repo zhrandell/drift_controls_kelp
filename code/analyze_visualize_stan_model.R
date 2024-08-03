@@ -1,5 +1,5 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~~~~~~~~~~~ Fit system of ODEs to empirical data in STAN ~~~~~~~~~~~~~~~~~~~~
+## ~~~~~~~~~~~ inspect and visualize stan output ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 
@@ -7,20 +7,8 @@
 
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-
-
 ## specify directory and open saved RDS file
 fit <- readRDS(paste0(data_output, "/model_output.RDS"))
-
-
-## set up custom ggplot theme 
-my.theme = theme(panel.grid.major = element_blank(), 
-                 panel.grid.minor = element_blank(),
-                 panel.background = element_blank(), 
-                 axis.line = element_line(colour = "black"),
-                 axis.title = element_text(size=16),
-                 axis.text = element_text(size=14),
-                 plot.title = element_text(size=16))
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -55,6 +43,8 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 t1 <- mcmc_trace(draws_array, pars = parms) 
 print(t1)  
 
+
+## save plot
 ggplot2::ggsave(filename = paste0(figs, "/trace.eps"), 
                 plot = t1, 
                 device = cairo_ps, 
@@ -105,7 +95,7 @@ save(posts_df_raw, file = paste0(data_output, "/posts_new_All.RDA"))
 
 
 
-## custom posteior plot with median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## custom posterior plot with median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 CI <- data.frame(apply(posts_df_raw, 2, quantile, c(0.0250, 0.975), na.rm = TRUE))
 med <- apply(posts_df_raw, 2, median, na.rm = T)
 
@@ -134,6 +124,16 @@ q_med <- med['q']
 sig_med <- med['sigma']
 
 
+## set up custom ggplot theme 
+my.theme = theme(panel.grid.major = element_blank(), 
+                 panel.grid.minor = element_blank(),
+                 panel.background = element_blank(), 
+                 axis.line = element_line(colour = "black"),
+                 axis.title = element_text(size=16),
+                 axis.text = element_text(size=14),
+                 plot.title = element_text(size=16))
+
+
 ## graphical parameters
 col <- "#2FAA96"
 alp <- 1
@@ -145,49 +145,30 @@ sz1 <- 0.5
 sz2 <- 0.5
 
 
-## plot
-a_post <- ggplot(data = dat, aes(a)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("encounter rate \u03B1") + xlab("\u03B1") + my.theme + 
-  geom_vline(xintercept = a_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = a_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = a_med, color = med_col, size = sz1, linetype = lty1) 
-
-v_post <- ggplot(data = dat, aes(v)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("satiation sensitivity \u03B7") + xlab("\u03B7") + my.theme + 
-  geom_vline(xintercept = v_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = v_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = v_med, color = med_col, size = sz1, linetype = lty1) +
-  theme(axis.title.y = element_blank())
-
-p_post <- ggplot(data = dat, aes(p)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("gut clearance \u03B5") + xlab("\u03B5") + my.theme + 
-  geom_vline(xintercept = p_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = p_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = p_med, color = med_col, size = sz1, linetype = lty1) +
-  theme(axis.title.y = element_blank())
-
-w_post <- ggplot(data = dat, aes(w)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("baseline preference \u03c9") + xlab("\u03c9") + my.theme + 
-  geom_vline(xintercept = w_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = w_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = w_med, color = med_col, size = sz1, linetype = lty1) +
-  theme(axis.title.y = element_blank())
-
-q_post <- ggplot(data = dat, aes(q)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("switching rate \u03C6") + xlab("\u03C6") + my.theme + 
-  geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype = lty1) +
-  theme(axis.title.y = element_blank())
-
-sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("variance \u03C3") + xlab("\u03C3") + my.theme + 
-  geom_vline(xintercept = sig_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = sig_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = sig_med, color = med_col, size = sz1, linetype = lty1) +
-  theme(axis.title.y = element_blank())
+## function to visualize posteriors w/ CI and median values 
+plot.posts <- function(data, param, text, label, lower_CI, upper_CI, median){
+  
+  fig <- ggplot(data, aes(param)) + geom_density(fill=col, alpha=alp) +
+    ggtitle(text) + xlab(label) + my.theme + 
+    
+    geom_vline(xintercept = lower_CI, color = CI_col, size = sz2, linetype=lty2) +
+    geom_vline(xintercept = upper_CI, color = CI_col, size = sz2, linetype=lty2) + 
+    geom_vline(xintercept = median, color = med_col, size = sz1, linetype=lty1)
+  
+  return(fig)
+}
 
 
+## create posterior plots
+a_post <- plot.posts(dat, dat$a, "encounter rate \u03B1", "\u03B1", a_lower, a_upper, a_med)
+v_post <- plot.posts(dat, dat$v, "satiation sensitivity \u03B7", "\u03B7", v_lower, v_upper, v_med)
+p_post <- plot.posts(dat, dat$p, "gut clearance \u03B5", "\u03B5", p_lower, p_upper, p_med)
+w_post <- plot.posts(dat, dat$w, "baseline preference \u03c9", "\u03c9", w_lower, w_upper, w_med)
+q_post <- plot.posts(dat, dat$q, "switching rate \u03C6", "\u03C6", q_lower, q_upper, q_med)
+sigma_post <- plot.posts(dat, dat$sigma, "variance \u03C3", "\u03C3", sig_lower, sig_upper, sig_med)
+
+
+## arrange all 6 posteriors in single ms figure
 all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(v_post + facet_wrap(~"time"), tag_pool = "b"),
                   tag_facet(p_post + facet_wrap(~"time"), tag_pool = "c"),
@@ -197,6 +178,7 @@ all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   nrow = 2, ncol = 3)
 
 
+## save ms fig 
 ggplot2::ggsave(filename = paste0(figs, "/posts.eps"), 
                 plot = all6, 
                 device = cairo_ps, 
@@ -213,4 +195,3 @@ ggplot2::ggsave(filename = paste0(figs, "/posts.eps"),
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-

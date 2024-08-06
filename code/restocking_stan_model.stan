@@ -5,8 +5,6 @@
 // zhr
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// Originally created April 24th, 2021; updated October 7th, 2021
-// zhr 
 // Updated using StanGTP (via ChatGTP) on July 20th, 2024 by MN
 // StanGTP-stated key changes:
 // 1. Changed `real[] theta` to `array[] real theta`.
@@ -16,6 +14,7 @@
 // 1. **Consistent Naming**: Ensured consistent naming conventions and alignment.
 // 2. **Correct `array` Syntax**: Used `array` syntax appropriately for multi-dimensional arrays.
 // 3. **General Code Cleanliness**: Improved readability and organization of the code.
+// 4. Fixed inversed beta parameter for the reparameterized gamma likelihood.
 
 functions {
   vector resourceLoss(real t,              		// time
@@ -190,9 +189,9 @@ transformed parameters {
 
     for (j in 1:n_total_1) {
       alphaS_1[i, j] = pow(drift_loss_1[i, j], 2) / pow(sigma, 2);
-      betaS_1[i, j] = (1 / (pow(sigma, 2) / drift_loss_1[i, j]));
+      betaS_1[i, j] = (drift_loss_1[i, j]) / (pow(sigma, 2));
       alphaA_1[i, j] = pow(kelp_loss_1[i, j], 2) / pow(sigma, 2);
-      betaA_1[i, j] = (1 / (pow(sigma, 2) / kelp_loss_1[i, j]));            
+      betaA_1[i, j] = (kelp_loss_1[i, j]) / (pow(sigma, 2));           
     }
     
     // print(i, " alphaS_1: ", alphaS_1[i, ]);
@@ -247,9 +246,9 @@ transformed parameters {
     
     for (j in 1:n_total_2) {
       alphaS_2[i, j] = pow(drift_loss_2[i, j], 2) / pow(sigma, 2);
-      betaS_2[i, j] = (1 / (pow(sigma, 2) / drift_loss_2[i, j]));
+      betaS_2[i, j] = (drift_loss_2[i, j]) / (pow(sigma, 2));
       alphaA_2[i, j] = pow(kelp_loss_2[i, j], 2) / pow(sigma, 2);
-      betaA_2[i, j] = (1 / (pow(sigma, 2) / kelp_loss_2[i, j]));            
+      betaA_2[i, j] = (kelp_loss_2[i, j]) / (pow(sigma, 2));            
     }
     
     // print(i, " alphaS_2: ", alphaS_2[i, ]);

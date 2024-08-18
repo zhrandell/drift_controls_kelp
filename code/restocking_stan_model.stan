@@ -23,52 +23,60 @@ functions {
                       array[] real theta, 		// params
                       vector x_r) {			      // urchins
 
-    real dS_dt;				// Drift remaining through time
-    real dA_dt;				// Kelp remaining through time
-    real dF_dt;				// Stomach fullness through time
-    real df_S_dt;     // Feeding rate on drift
-    real df_A_dt;     // Feeding rate on kelp
+    real dS_dt;				// Drift rate of change
+    real dA_dt;				// Kelp rate of change
+    real dF_dt;				// Stomach fullness rate of change
+    real f_S;         // Feeding rate on drift
+    real f_A;         // Feeding rate on kelp
+    real H;           // Hunger level
     real S = Y[1]; 			// Drift
     real A = Y[2]; 			// Kelp
     real F = Y[3];			// Stomach fullness 
     real a = theta[1]; 			// per capita encounter rate
     real v = theta[2];			// stomach satiation sensitivity
-    real p = theta[3];			// stomach clearance rate
-    real w = theta[4]; 		  // baseline preference for drift over kelp
-    real q = theta[5];			// switching rate
+    real w = theta[3]; 		  // baseline preference for drift over kelp
+    real q = theta[4];			// switching rate
     real U = x_r[1]; 			  // Urchins
 
-// Yodzis preference formulation [requiring constrained 0-1 prior on w]
-//   df_S_dt = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-//   df_A_dt = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-
-// Logistic preference formulation [requiring constrained 0-1 prior on w]
-  // df_S_dt = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-  // df_A_dt = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-
-// Logistic preference - log formulation [permitting Normal prior on w]
-  // df_S_dt = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-  // df_A_dt = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-  
-// Logistic preference - log formulation [permitting Normal priors on w and q]
-  df_S_dt = S * a * ( 1 - ( 1 / ( 1 + exp(w + q * log(S/A) ))));
-  df_A_dt = A * a * (     ( 1 / ( 1 + exp(w + q * log(S/A) ))));
-
-// Logistic preference - log formulation [permitting Normal priors on w and q]
-// allowing for S or A = 0 control treatments
-  if(S == 0 || A == 0){
-    df_S_dt = S * a;
-    df_A_dt = A * a;
+// For control treatments
+  if(S == 0){
+    f_S = 0;
   }
   else{
-    df_S_dt = S * a * ( 1 - ( 1 / ( 1 + exp(w + q * log(S/A) ))));
-    df_A_dt = A * a * (     ( 1 / ( 1 + exp(w + q * log(S/A) ))));
+    f_S = S * a;
+  }
+  if(A == 0){
+    f_A = 0;
+  }
+  else{
+    f_A = A * a;
+  }
+  if(S > 0 && A > 0){
+// Yodzis preference formulation [requiring constrained 0-1 prior on w]
+//   f_S = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+//   f_A = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+
+// Logistic preference formulation [requiring constrained 0-1 prior on w]
+  // f_S = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+  // f_A = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+
+// Logistic preference - multiplicative log formulation [permitting Normal prior on w]
+  // f_S = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  // f_A = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  
+// Logistic preference - additive log formulation [permitting Normal priors on w and q]
+    f_S = S * a * ( 1 - ( 1 / ( 1 + exp(w + q * log(S/A) ))));
+    f_A = A * a * (     ( 1 / ( 1 + exp(w + q * log(S/A) ))));
   }
   
-// Drift, Kelp, Stomach fullness
-	dS_dt = - U * df_S_dt * exp(- v * F);
-	dA_dt = - U * df_A_dt * exp(- v * F);
-	dF_dt =   df_S_dt + df_A_dt;
+// Hunger level
+  H = exp(- v * F);
+  // H = 1 - v * F;
+  
+// Drift, Kelp, Stomach
+	dS_dt = - U * f_S * H;
+	dA_dt = - U * f_A * H;
+	dF_dt =   f_S + f_A;
 
   return [dS_dt, dA_dt, dF_dt]';
   }
@@ -94,10 +102,10 @@ data {
   array[nts3] real <lower = t0_2> ts3;          		// data collection time in period 3; ts3  =  44[1]
   array[nts4] real <lower = t0_2> ts4;          		// data collection time in period 4; ts4  =  89[1]			
   array[nts5] real <lower = t0_2> ts5;          		// data collection time in period 5; ts5  =  134[1]			
-  array[n_subject_1, nts1 + nts2] real S_obs_1;            	// experimental observations; [59, nts1 + nts2]  	       					
-  array[n_subject_2, nts3 + nts4 + nts5] real S_obs_2;      // experimental drift consumed observations; [59, nts3 + nts4 + nts5]  
-  array[n_subject_1, nts1 + nts2] real A_obs_1;            	// experimental kelp consumed observations; [59, nts1 + nts2]
-  array[n_subject_2, nts3 + nts4 + nts5] real A_obs_2;      // experimental kelp consumed observations; [59, nts3 + nts4 + nts5]
+  array[n_subject_1, nts1 + nts2] real <lower = 0> S_obs_1; 		     // drift consumed observations period 1
+  array[n_subject_2, nts3 + nts4 + nts5] real <lower = 0> S_obs_2;   // drift consumed observations period 1
+  array[n_subject_1, nts1 + nts2] real <lower = 0> A_obs_1;          // kelp consumed observations period 2
+  array[n_subject_2, nts3 + nts4 + nts5] real <lower = 0> A_obs_2;   // kelp consumed observations period 2
 }
 
 transformed data {
@@ -112,16 +120,15 @@ transformed data {
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
 parameters {
-  real <lower = 0, upper = 0.01> a;
+  real <lower = 0, upper = 0.1> a;
   real <lower = 0, upper = 0.5> v;
-  real <lower = 0, upper = 1> p;
-  real <lower = -5, upper = 10> w;
-  real <lower = -5, upper = 10> q;
+  real <lower = -4, upper = 4> w;
+  real <lower = -5, upper = 5> q;
   real <lower = 10, upper = 30> sigma;
 }
 
 transformed parameters {
-  array[5] real theta;
+  array[4] real theta;
   array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
   array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
@@ -132,28 +139,27 @@ transformed parameters {
   vector[1] U;			
   
   // obs 
-  array[n_subject_1, n_total_1] real drift_loss_1; 		// Drift consumed; [59, n_total_1]
-  array[n_subject_1, n_total_1] real kelp_loss_1; 		// Kelp consumed; [59, n_total_1]
-  array[n_subject_2, n_total_2] real drift_loss_2; 		// Drift consumed; [59, n_total_2]
-  array[n_subject_2, n_total_2] real kelp_loss_2; 		// Kelp consumed; [59, n_total_2]
+  array[n_subject_1, n_total_1] real drift_1; 	// Drift remaining
+  array[n_subject_1, n_total_1] real kelp_1; 		// Kelp remaining
+  array[n_subject_2, n_total_2] real drift_2; 	// Drift remaining
+  array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
     
-  // drift alpha, beta 
-  array[n_subject_1, n_total_1] real alphaS_1;  // reparameterized shape for gamma distribution; drift likelihood; [59, n_total_1] 
-  array[n_subject_1, n_total_1] real betaS_1;		// reparameterized scale for gamma distribution; drift likelihood; [59, n_total_1]
-  array[n_subject_2, n_total_2] real alphaS_2;  // reparameterized shape for gamma distribution; drift likelihood; [59, n_total_2] 
-  array[n_subject_2, n_total_2] real betaS_2;  
+  // alpha and beta for reparameterized shape for gamma distribution - drift
+  array[n_subject_1, n_total_1] real alphaS_1;
+  array[n_subject_1, n_total_1] real betaS_1;
+  array[n_subject_2, n_total_2] real alphaS_2;
+  array[n_subject_2, n_total_2] real betaS_2;
 
-  // kelp alpha, beta
-  array[n_subject_1, n_total_1] real alphaA_1;  // reparameterized shape for gamma distribution; kelp likelihood; [59, n_total_1] 
-  array[n_subject_1, n_total_1] real betaA_1;		// reparameterized scale for gamma distribution; kelp likelihood; [59, n_total_1]
-  array[n_subject_2, n_total_2] real alphaA_2;  // reparameterized shape for gamma distribution; kelp likelihood; [59, n_total_2] 
+  // alpha and beta for reparameterized shape for gamma distribution - kelp
+  array[n_subject_1, n_total_1] real alphaA_1;
+  array[n_subject_1, n_total_1] real betaA_1;
+  array[n_subject_2, n_total_2] real alphaA_2;
   array[n_subject_2, n_total_2] real betaA_2;
   
   theta[1] = a; 
   theta[2] = v;
-  theta[3] = p;
-  theta[4] = w;
-  theta[5] = q;
+  theta[3] = w;
+  theta[4] = q;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -165,8 +171,8 @@ transformed parameters {
     init_1[3] = 0;                 // initial urchin gut fullness
     U[1] = y1_init_s_a[i, 3];      // initial urchin
     y1 = ode_rk45(resourceLoss, init_1, t0_1, ts1, theta, U);
-    drift_loss_1[i, 1:nts1] = y1[, 1];
-    kelp_loss_1[i, 1:nts1] = y1[, 2];
+    drift_1[i, 1:nts1] = y1[, 1];
+    kelp_1[i, 1:nts1] = y1[, 2];
 	
     // period 2
     init_1[1] = y2_init_s_a[i, 1]; 		
@@ -174,25 +180,25 @@ transformed parameters {
     init_1[3] = y1[nts1, 3];
     U[1] = y2_init_s_a[i, 3];
     y2 = ode_rk45(resourceLoss, init_1, ts1[nts1], ts2, theta, U);
-    drift_loss_1[i, (nts1+1):(nts1+nts2)] = y2[, 1];
-    kelp_loss_1[i, (nts1+1):(nts1+nts2)] = y2[, 2];
+    drift_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 1];
+    kelp_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 2];
     
     // print(i, " init_1: ", init_1);
-    // print(i, " prm[a,v,p,w,q]: ", theta);
+    // print(i, " prm[a,v,w,q]: ", theta);
     // print(i, " y1: ", y1);
     // print(i, " y2: ", y2);
     // print(i, " U: ", U);
     // print(i, " dXdt: ", resourceLoss(t0_1, init_1, theta, U));
     
-    // print(i, " drift_loss_1: ", drift_loss_1[i, ]);
-    // print(i, " kelp_loss_1: ", kelp_loss_1[i, ]);
+    // print(i, " drift_1: ", drift_1[i, ]);
+    // print(i, " kelp_1: ", kelp_1[i, ]);
     // print(i, " sigma: ", sigma);
 
     for (j in 1:n_total_1) {
-      alphaS_1[i, j] = pow(drift_loss_1[i, j], 2) / pow(sigma, 2);
-      betaS_1[i, j] = (1 / (pow(sigma, 2) / drift_loss_1[i, j]));
-      alphaA_1[i, j] = pow(kelp_loss_1[i, j], 2) / pow(sigma, 2);
-      betaA_1[i, j] = (1 / (pow(sigma, 2) / kelp_loss_1[i, j]));            
+      alphaS_1[i, j] = pow(drift_1[i, j], 2) / pow(sigma, 2);
+      betaS_1[i, j] = (1 / (pow(sigma, 2) / drift_1[i, j]));
+      alphaA_1[i, j] = pow(kelp_1[i, j], 2) / pow(sigma, 2);
+      betaA_1[i, j] = (1 / (pow(sigma, 2) / kelp_1[i, j]));
     }
     
     // print(i, " alphaS_1: ", alphaS_1[i, ]);
@@ -212,8 +218,8 @@ transformed parameters {
     init_2[3] = 0;
     U[1] = y3_init_s_a[i, 3];
     y3 = ode_rk45(resourceLoss, init_2, t0_2, ts3, theta, U);
-    drift_loss_2[i, 1:nts3] = y3[, 1];
-    kelp_loss_2[i, 1:nts3] = y3[, 2];
+    drift_2[i, 1:nts3] = y3[, 1];
+    kelp_2[i, 1:nts3] = y3[, 2];
 	
     // period 4
     init_2[1] = y4_init_s_a[i, 1]; 		
@@ -221,8 +227,8 @@ transformed parameters {
     init_2[3] = y3[nts3, 3];
     U[1] = y4_init_s_a[i, 3];
     y4 = ode_rk45(resourceLoss, init_2, ts3[nts3], ts4, theta, U);
-    drift_loss_2[i, (nts3+1):(nts3+nts4)] = y4[, 1];
-    kelp_loss_2[i, (nts3+1):(nts3+nts4)] = y4[, 2];
+    drift_2[i, (nts3 + 1):(nts3 + nts4)] = y4[, 1];
+    kelp_2[i, (nts3 + 1):(nts3 + nts4)] = y4[, 2];
     
     // period 5
     init_2[1] = y5_init_s_a[i, 1];
@@ -230,8 +236,8 @@ transformed parameters {
     init_2[3] = y4[nts4, 3];
     U[1] = y5_init_s_a[i, 3];
     y5 = ode_rk45(resourceLoss, init_2, ts4[nts4], ts5, theta, U); 	
-    drift_loss_2[i, (nts3+nts4+1):(nts3+nts4+nts5)] = y5[, 1];
-    kelp_loss_2[i, (nts3+nts4+1):(nts3+nts4+nts5)] = y5[, 2];
+    drift_2[i, (nts3 + nts4 + 1):(nts3 + nts4 + nts5)] = y5[, 1];
+    kelp_2[i, (nts3 + nts4 + 1):(nts3 + nts4 + nts5)] = y5[, 2];
 
     // print(i, " init_2: ", init_2);
     // print(i, " prm[a,v,p,w,q]: ", theta);
@@ -241,15 +247,15 @@ transformed parameters {
     // print(i, " U: ", U);
     // print(i, " dXdt: ", resourceLoss(t0_1, init_2, theta, U));
   
-    // print(i, " drift_loss_2: ", drift_loss_2[i, ]);
-    // print(i, " kelp_loss_2: ", kelp_loss_2[i, ]);
+    // print(i, " drift_2: ", drift_2[i, ]);
+    // print(i, " kelp_2: ", kelp_2[i, ]);
     // print(i, " sigma: ", sigma);
     
     for (j in 1:n_total_2) {
-      alphaS_2[i, j] = pow(drift_loss_2[i, j], 2) / pow(sigma, 2);
-      betaS_2[i, j] = (1 / (pow(sigma, 2) / drift_loss_2[i, j]));
-      alphaA_2[i, j] = pow(kelp_loss_2[i, j], 2) / pow(sigma, 2);
-      betaA_2[i, j] = (1 / (pow(sigma, 2) / kelp_loss_2[i, j]));            
+      alphaS_2[i, j] = pow(drift_2[i, j], 2) / pow(sigma, 2);
+      betaS_2[i, j] = (1 / (pow(sigma, 2) / drift_2[i, j]));
+      alphaA_2[i, j] = pow(kelp_2[i, j], 2) / pow(sigma, 2);
+      betaA_2[i, j] = (1 / (pow(sigma, 2) / kelp_2[i, j]));
     }
     
     // print(i, " alphaS_2: ", alphaS_2[i, ]);
@@ -271,22 +277,37 @@ transformed parameters {
     
 }
 
-model { 
-  a ~ exponential(0.1);                
-  v ~ exponential(0.1); 
-  p ~ beta(1,1);
-  w ~ normal(0, 1);
-  q ~ normal(0, 1);
+model {
+  a ~ exponential(1);
+  v ~ exponential(1);
+  w ~ normal(0, 0.75);
+  q ~ normal(0, 0.5);
   sigma ~ exponential(0.1);
 
-  for (i in 1:n_subject_1) { 
-    S_obs_1[i, ] ~ gamma(alphaS_1[i, ], betaS_1[i, ]);
-    A_obs_1[i, ] ~ gamma(alphaA_1[i, ], betaA_1[i, ]);
+  for (i in 1:n_subject_1) {
+    if(y1_init_s_a[i, 1] > 0){
+      // S_obs_1[i, ] ~ gamma(alphaS_1[i, ], betaS_1[i, ]);
+      // S_obs_1[i, ] ~ normal(drift_1[i, ], sigma);
+      target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
+    }
+    if(y1_init_s_a[i, 2] > 0){
+      // A_obs_1[i, ] ~ gamma(alphaA_1[i, ], betaA_1[i, ]);
+      // A_obs_1[i, ] ~ normal(kelp_1[i, ], sigma);
+      target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
+    }
   }
 
   for (i in 1:n_subject_2) {
-    S_obs_2[i, ] ~ gamma(alphaS_2[i, ], betaS_2[i, ]);
-    A_obs_2[i, ] ~ gamma(alphaA_2[i, ], betaA_2[i, ]);
+    if(y3_init_s_a[i, 1] > 0){
+      // S_obs_2[i, ] ~ gamma(alphaS_2[i, ], betaS_2[i, ]);
+      // S_obs_2[i, ] ~ normal(drift_2[i, ], sigma);
+      target += normal_lpdf(S_obs_2[i, ] | drift_2[i, ], sigma);
+    }
+    if(y3_init_s_a[i, 2] > 0){
+      // A_obs_2[i, ] ~ gamma(alphaA_2[i, ], betaA_2[i, ]);
+      // A_obs_2[i, ] ~ normal(kelp_2[i, ], sigma);
+      target += normal_lpdf(A_obs_2[i, ] | kelp_2[i, ], sigma);
+    }
   }
 }
 

@@ -28,6 +28,10 @@ dat$Trial <- as.factor(dat$Trial)
 ## filter down to desired data:
 dat <- na.omit(dat)
 
+
+dat$Drift_Initial[dat$Drift_Initial==0] <- 0
+dat$Kelp_Initial[dat$Kelp_Initial==0] <- 0
+
 keepTrtmts <- c("Low", "High", "Low_Control", "High_Control", "Drift_Control")
 
 ## 24 hour data 
@@ -46,7 +50,10 @@ dat2 <- filter(dat2, Treatment %in% keepTrtmts)
 ## END data filtering ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
+## Drift to Kelp ratio
+DKratio <- c(dat1$Drift_Initial/dat1$Kelp_Initial,
+             dat2$Drift_Initial/dat2$Kelp_Initial)
+DKratio.rng <- range(DKratio[is.finite(DKratio) & DKratio!=0])
 
 
 ## assign unique key to urchin cohorts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

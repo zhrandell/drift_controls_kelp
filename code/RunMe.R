@@ -32,7 +32,7 @@ library(egg)
 ## check wd is appropriate
 getwd()
 
-## hardcode relative file paths
+## relative file paths
 code <- "../code"
 data_input <- "../data_input"
 data_output <- "../data_output"
@@ -44,6 +44,7 @@ figs <- "../figs"
 source('format_data.R')
 source('fit_stan_model.R')
 source('analyze_visualize_stan_model.R')
+
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

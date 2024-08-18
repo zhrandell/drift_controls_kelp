@@ -29,7 +29,7 @@ my.theme = theme(panel.grid.major = element_blank(),
 
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 ## list of params
-parms <- c("a", "v", "p", "w", "q", "sigma")
+parms <- c("a", "v", "w", "q", "sigma")
 
 
 ## print param list output
@@ -38,13 +38,12 @@ print(fit, parms)
 
 ## extract draw information
 draws_array <- fit$draws()
-str(draws_array)
 draws_df <- posterior::as_draws_df(draws_array)
 
 
 ## plot posteriors
 posts <- mcmc_hist(fit$draws(parms))
-print(posts)
+# print(posts)
 
 
 ## sampling diagnostics 
@@ -101,38 +100,20 @@ save(posts_df_raw, file = paste0(data_output, "/posts_new_All.RDA"))
 #load("posts_df_raw.Rda")
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# Transform baseline preference parameter to Yodzis w form
+InvLogit <- function(x){
+  1 / (1 + exp(-x))
+}
+# Yodzis preference (for Drift)
+dat$w_y <- InvLogit(dat$w)
+posts_df_raw$w_y <- InvLogit(posts_df_raw$w)
 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
 ## custom posteior plot with median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CI <- data.frame(apply(posts_df_raw, 2, quantile, c(0.0250, 0.975), na.rm = TRUE))
-med <- apply(posts_df_raw, 2, median, na.rm = T)
-
-
-## extract CI values 
-a_lower <- CI$a[1]
-a_upper <- CI$a[2]
-v_lower <- CI$v[1]
-v_upper <- CI$v[2]
-p_lower <- CI$p[1]
-p_upper <- CI$p[2]
-w_lower <- CI$w[1]
-w_upper <- CI$w[2]
-q_lower <- CI$q[1]
-q_upper <- CI$q[2]
-sig_lower <- CI$sigma[1]
-sig_upper <- CI$sigma[2]
-
-
-## extract median values
-a_med <- med['a']
-v_med <- med['v']
-p_med <- med['p']
-w_med <- med['w']
-q_med <- med['q']
-sig_med <- med['sigma']
-
+CI <- data.frame(apply(posts_df_raw, 2, quantile, c(0.0250, 0.5, 0.975), na.rm = TRUE))
 
 ## graphical parameters
 col <- "#2FAA96"
@@ -147,58 +128,60 @@ sz2 <- 0.5
 
 ## plot
 a_post <- ggplot(data = dat, aes(a)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("encounter rate \u03B1") + xlab("\u03B1") + my.theme + 
-  geom_vline(xintercept = a_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = a_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = a_med, color = med_col, size = sz1, linetype = lty1) 
-
-v_post <- ggplot(data = dat, aes(v)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("satiation sensitivity \u03B7") + xlab("\u03B7") + my.theme + 
-  geom_vline(xintercept = v_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = v_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = v_med, color = med_col, size = sz1, linetype = lty1) +
+  xlab("encounter rate \u03B1") + my.theme + theme(axis.text.y = element_blank()) + 
+  geom_vline(xintercept = CI$a[1], color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = CI$a[3], color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = CI$a[2], color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
-p_post <- ggplot(data = dat, aes(p)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("gut clearance \u03B5") + xlab("\u03B5") + my.theme + 
-  geom_vline(xintercept = p_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = p_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = p_med, color = med_col, size = sz1, linetype = lty1) +
+v_post <- ggplot(data = dat, aes(v)) + geom_density(fill = col, alpha = alp) +
+  xlab("satiation sensitivity \u03B7") + my.theme + theme(axis.text.y = element_blank()) + 
+  geom_vline(xintercept = CI$v[1], color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = CI$v[3], color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = CI$v[2], color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 w_post <- ggplot(data = dat, aes(w)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("baseline preference \u03c9") + xlab("\u03c9") + my.theme + 
-  geom_vline(xintercept = w_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = w_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = w_med, color = med_col, size = sz1, linetype = lty1) +
+  xlab("baseline preference \u03c9") + my.theme + theme(axis.text.y = element_blank()) + 
+  geom_vline(xintercept = CI$w[1], color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = CI$w[3], color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = CI$w[2], color = med_col, size = sz1, linetype = lty1) +
+  theme(axis.title.y = element_blank())
+
+wy_post <- ggplot(data = dat, aes(w_y)) + geom_density(fill = col, alpha = alp) +
+  xlab("baseline preference (Yodzis) w") + my.theme + theme(axis.text.y = element_blank()) + 
+  geom_vline(xintercept = CI$w_y[1], color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = CI$w_y[3], color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = CI$w_y[2], color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 q_post <- ggplot(data = dat, aes(q)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("switching rate \u03C6") + xlab("\u03C6") + my.theme + 
-  geom_vline(xintercept = q_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = q_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = q_med, color = med_col, size = sz1, linetype = lty1) +
+  xlab("switching rate \u03C6") + my.theme + theme(axis.text.y = element_blank()) + 
+  geom_vline(xintercept = CI$q[1], color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = CI$q[3], color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = CI$q[2], color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 sigma_post <- ggplot(data = dat, aes(sigma)) + geom_density(fill = col, alpha = alp) +
-  ggtitle("variance \u03C3") + xlab("\u03C3") + my.theme + 
-  geom_vline(xintercept = sig_lower, color = CI_col, size = sz2, linetype = lty2) +
-  geom_vline(xintercept = sig_upper, color = CI_col, size = sz2, linetype = lty2) + 
-  geom_vline(xintercept = sig_med, color = med_col, size = sz1, linetype = lty1) +
+  xlab("variance \u03C3") + my.theme + theme(axis.text.y = element_blank()) + 
+  geom_vline(xintercept = CI$sigma[1], color = CI_col, size = sz2, linetype = lty2) +
+  geom_vline(xintercept = CI$sigma[3], color = CI_col, size = sz2, linetype = lty2) + 
+  geom_vline(xintercept = CI$sigma[2], color = med_col, size = sz1, linetype = lty1) +
   theme(axis.title.y = element_blank())
 
 
-all6 <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
-                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(p_post + facet_wrap(~"time"), tag_pool = "c"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "e"),
-                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
-                  nrow = 2, ncol = 3)
+allparms <- ggarrange(
+  tag_facet(a_post, tag_pool = "a"),
+  tag_facet(v_post, tag_pool = "b"),
+  tag_facet(w_post, tag_pool = "c"),
+  tag_facet(q_post, tag_pool = "d"),
+  tag_facet(sigma_post, tag_pool = "e"),
+  tag_facet(wy_post, tag_pool = "f"),
+  nrow = 2, ncol = 3)
 
 
 ggplot2::ggsave(filename = paste0(figs, "/posts.eps"), 
-                plot = all6, 
+                plot = allparms, 
                 device = cairo_ps, 
                 dpi = 1200, 
                 width = 20,
@@ -206,8 +189,45 @@ ggplot2::ggsave(filename = paste0(figs, "/posts.eps"),
                 units = "in")
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## Plot preference function
+LogisticPreference <- function(x){
+    1 - (1 / (1 + exp(w + q * x) ))
+}
+xlims <- c(-6, 6)
+plot(1,1,
+     xlim = xlims,
+     ylim = c(0, 1),
+     xlab = 'log(Drift/Kelp)',
+     ylab = 'Preference for drift',
+     type = 'n',
+     axes = FALSE
+)
+x2.lim <- 10
+x2.step <- 2
+x2.vals <- 2^seq(-x2.lim, x2.lim, x2.step)
+x2.ats <- log2(x2.vals)/log2(exp(1))
+x2.labs <- c(rev(
+  paste0('1:',2^seq(0, x2.lim, x2.step))), 
+  paste0(2^seq(0, x2.lim, x2.step)[-1],':1'))
+axis(1, at = x2.ats, labels = x2.labs)
+axis(2, las = 1)
+box(lwd = 1)
 
 
+abline(v = 0, 
+       lty = 3,
+       col = 'grey')
+for(i in 1:nrow(dat)){
+  w <- dat$w[i]
+  q <- dat$q[i]
+  curve(LogisticPreference, min(xlims), max(xlims), 
+        add = TRUE,
+        col = alpha('black', 0.1))
+}
+abline(h = CI$w_y[2],
+       col = 'grey20',
+       lwd = 2,
+       lty = 2)
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

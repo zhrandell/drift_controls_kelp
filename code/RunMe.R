@@ -26,6 +26,7 @@ library(bayesplot)
 
 ## Libraries for 'analyze_visualize_stan_model.R'
 library(egg)
+library(Cairo) # requires installation of Xcode
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

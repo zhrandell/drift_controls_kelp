@@ -12,12 +12,12 @@ dat <- read.csv(paste0(data_input, "/drift_kelp_loss.csv"), header = TRUE)
 
 
 ## Data Configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## subtract wet weight (20g) from drift bags
+## subtract drift bag wet weight (20g)
 dat$Drift_Initial <- pmax(0, dat$Drift_Initial - 20)
 dat$Drift_Remaining <- pmax(0, dat$Drift_Remaining - 20)
 dat$Drift_Consumed <- pmax(0, dat$Drift_Initial - dat$Drift_Remaining)
 
-## substract wet weight (80g) from kelp bags
+## subtract kelp bag wet weight (80g)
 dat$Kelp_Initial <- pmax(0, dat$Kelp_Initial - 80)
 dat$Kelp_Remaining <- pmax(0, dat$Kelp_Remaining - 80)
 dat$Kelp_Consumed <- pmax(0, dat$Kelp_Initial - dat$Kelp_Remaining)
@@ -32,7 +32,7 @@ dat <- na.omit(dat)
 dat$Drift_Initial[dat$Drift_Initial==0] <- 0
 dat$Kelp_Initial[dat$Kelp_Initial==0] <- 0
 
-keepTrtmts <- c("Low", "High", "Low_Control", "High_Control", "Drift_Control")
+keepTrtmts <- c("Low", "High") #, "Low_Control", "High_Control", "Drift_Control")
 
 ## 24 hour data 
 dat1 <- filter(dat, Trial %in% c("5","6")) 

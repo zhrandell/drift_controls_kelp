@@ -1,69 +1,77 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// ODE system for Drift loss, Kelp loss, and Urchin stomach fullness
+  // ODE system for Drift loss, Kelp loss, and Urchin stomach fullness
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-functions {
-  vector resourceLoss(real t,              		// time
-                      vector Y,            		// state variables          
-                      array[] real theta, 		// params
-                      vector x_r) {			      // urchins
-
-    real dS_dt;				// Drift rate of change
-    real dA_dt;				// Kelp rate of change
-    real dF_dt;				// Stomach fullness rate of change
-    real f_S;         // Feeding rate on drift
-    real f_A;         // Feeding rate on kelp
-    real H;           // Hunger level
-    real S = Y[1]; 			// Drift
-    real A = Y[2]; 			// Kelp
-    real F = Y[3];			// Stomach fullness 
-    real a = theta[1]; 			// per capita encounter rate
-    real v = theta[2];			// stomach satiation sensitivity
-    real w = theta[3]; 		  // baseline preference for drift over kelp
-    real q = theta[4];			// switching rate
-    real U = x_r[1]; 			  // Urchins
-
-// For control treatments
-  if(S == 0){
-    f_S = 0;
-  }
-  else{
-    f_S = S * a;
-  }
-  if(A == 0){
-    f_A = 0;
-  }
-  else{
-    f_A = A * a;
-  }
-  if(S > 0 && A > 0){
-// Yodzis preference formulation [requiring constrained 0-1 prior on w]
-//   f_S = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-//   f_A = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-
-// Logistic preference formulation [requiring constrained 0-1 prior on w]
-  // f_S = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-  // f_A = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-
-// Logistic preference - multiplicative log formulation [permitting Normal prior on w]
-  // f_S = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-  // f_A = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
   
-// Logistic preference - additive log formulation [permitting Normal priors on w and q]
-    f_S = S * a * ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-    f_A = A * a * (     ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-  }
-  
-// Hunger level
-  H = exp(- v * F);
-  // H = 1 - v * F;
-  
-// Drift, Kelp, Stomach
-	dS_dt = - U * f_S * H;
-	dA_dt = - U * f_A * H;
-	dF_dt =   f_S + f_A;
+  functions {
+    vector resourceLoss(real t,              		// time
+                        vector Y,            		// state variables          
+                        array[] real theta, 		// params
+                        vector x_r) {			      // urchins
+      
+      real dS_dt;				// Drift rate of change
+      real dA_dt;				// Kelp rate of change
+      real dF_dt;				// Stomach fullness rate of change
+      real f_S;         // Feeding rate on drift
+      real f_A;         // Feeding rate on kelp
+      real H;           // Hunger level
+      real S = Y[1]; 			// Drift
+      real A = Y[2]; 			// Kelp
+      real F = Y[3];			// Stomach fullness 
+      real a = theta[1]; 			// baseline attack rate
+      real v = theta[2];			// stomach satiation sensitivity
+      real w = theta[3];			// relative preference
+      real q = theta[4]; 		  // switching rate
+      real U = x_r[1]; 			  // Urchins
+      
+      // For control treatments
+      if(S == 0){
+        f_S = 0;
+      }
+      else{
+        f_S = S * a;
+      }
+      if(A == 0){
+        f_A = 0;
+      }
+      else{
+        f_A = A * a;
+      }
+      if(S > 0 && A > 0){
+        // Yodzis preference formulation [requiring constrained 0-1 prior on w]
+        //   f_S = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+        //   f_A = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+        
+        // Logistic preference formulation [requiring constrained 0-1 prior on w]
+        // f_S = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+        // f_A = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+        
+        // Logistic preference - multiplicative log formulation [permitting Normal prior on w]
+        // f_S = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+        // f_A = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+        
+        // Logistic preference - additive log formulation [permitting Normal priors on w and q]
+        // f_S = S * a * ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+        // f_A = A * a * (     ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+        
+        // vanLeeuwen et al.
+        // f_S = S * a * ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
+        // f_A = A * a * (     ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) )
 
-  return [dS_dt, dA_dt, dF_dt]';
+        // vanLeeuwen et al. reformulated
+        f_S = S * a * ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+        f_A = A * a * (      ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );      
+      }
+      
+      // Hunger level
+      H = exp(- v * F);
+      // H = 1 - v * F;
+      
+      // Drift, Kelp, Stomach
+      dS_dt = - U * f_S * H;
+      dA_dt = - U * f_A * H;
+      dF_dt =   f_S + f_A;
+      
+      return [dS_dt, dA_dt, dF_dt]';
   }
 }
 
@@ -94,8 +102,8 @@ data {
 }
 
 transformed data {
-  int x_i; 				 
-  int x_r;              
+  int x_i;
+  int x_r;
   int n_total_1;			// n_total_1 = nts1 + nts2 = 2
   int n_total_2;			// n_total_2 = nts3 + nts4 + nts5 = 3	
   n_total_1 = nts1 + nts2;
@@ -105,10 +113,10 @@ transformed data {
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
 parameters {
-  real <lower = 0, upper = 0.1> a;
-  real <lower = 0, upper = 0.5> v;
-  real <lower = -1, upper = 8> w;
-  real <lower = -5, upper = 5> q;
+  real <lower = 0, upper = 0.01> a;
+  real <lower = 0, upper = 0.3> v;
+  real <lower = -20, upper = 20> w;
+  real <lower = 0, upper = 10> q;
   real <lower = 10, upper = 30> sigma;
 }
 
@@ -216,10 +224,8 @@ transformed parameters {
 model {
   a ~ exponential(1);
   v ~ exponential(1);
-  w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
+  w ~ normal(0, 10);
   q ~ normal(0, 10);
-  // w ~ student_t(3, 0, 1);
-  // q ~ student_t(3, 0, 1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

@@ -4,10 +4,18 @@
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
+# Which model
+sel.model <- c('Logistic', 'vanLeeuwen')[2]
 
 ## specify directory and open saved RDS file
-fit <- readRDS(paste0(data_output, "/model_output.RDS"))
+if(sel.model=='Logistic'){
+    fit <- readRDS(paste0(results, "/model_output.RDS"))
+}else{
+    fit <- readRDS(paste0(results, "/model_output_vL.RDS"))
+}
 
+
+rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
 
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -42,7 +50,7 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 t1 <- mcmc_trace(draws_array, pars = parms) 
 print(t1)  
 
-ggplot2::ggsave(filename = paste0(figs, "/trace.pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/trace-", sel.model, ".pdf"), 
                 plot = t1, 
                 dpi = 1200, 
                 width = 11,
@@ -56,7 +64,7 @@ pairsplot <- mcmc_pairs(draws_array,
                         off_diag_args = list(size = 0.75))
 print(pairsplot)
 
-ggplot2::ggsave(filename = paste0(figs, "/pairs.pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/pairs-", sel.model, ".pdf"), 
                 plot = pairsplot, 
                 dpi = 1200, 
                 width = 11,
@@ -69,24 +77,33 @@ ggplot2::ggsave(filename = paste0(figs, "/pairs.pdf"),
 
 
 ## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## extract a, v, p, q
-posts_df_raw <- suppressWarnings(draws_df[1:min(nrow(draws_df), 1000), 
-                                          1+(1:length(parms))])
+draws2pull <- 1000
+posts_df_raw <- suppressWarnings(
+  draws_df[1:min(nrow(draws_df), draws2pull), 
+                                          1+(1:length(parms))]
+  )
 
 ## save RDA file with posteriors from a single chain
-save(posts_df_raw, file = paste0(data_output, "/posts_new_All.RDA"))
+save(posts_df_raw, file = paste0(results, "/posts_new_All-", sel.model, ".RDA"))
 
-
-## load RDA file  
-#load("posts_df_raw.Rda")
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Transform baseline preference parameter to Yodzis w form
-InvLogit <- function(x){
-  1 / (1 + exp(-x))
+Logit <- function(x){
+  log(x / (1-x) )
 }
-# Yodzis preference (for Drift)
-posts_df_raw$w_y <- InvLogit(posts_df_raw$w)
+InvLogit <- function(x){
+  1 / (1 + exp( -x ))
+}
+
+if(sel.model=='Logistic'){
+  # Yodzis preference (for Drift)
+  posts_df_raw$w_y <- InvLogit(posts_df_raw$w)
+}else{
+  # vanLeewen preference (for Drift)
+  posts_df_raw$w_y <- NA
+}
+
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,7 +115,7 @@ CI <- data.frame(apply(posts_df_raw, 2, quantile, c(0.0250, 0.5, 0.975), na.rm =
 ## Custom posterior plot ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Function to visualize posteriors w/ CI and median values 
-plot.posterior <- function(data, param, label){
+plot.posterior <- function(x, param='a', label='a'){
   ## graphical parameters
   col <- "#2FAA96"
   alp <- 1
@@ -109,9 +126,9 @@ plot.posterior <- function(data, param, label){
   sz1 <- 0.5
   sz2 <- 0.5
 
-  CI <- quantile(data.frame(data)[param], c(0.0250, 0.5, 0.975), na.rm = TRUE)
+  CI <- quantile(data.frame(x)[param], c(0.0250, 0.5, 0.975), na.rm = TRUE)
   
-  fig <- ggplot(data, aes(.data[[param]])) + 
+  fig <- ggplot(x, aes(.data[[param]])) + 
     geom_density(fill = col, alpha = alp) +
     xlab(label) + 
     ylab('Density') + 
@@ -135,7 +152,7 @@ plot.posterior <- function(data, param, label){
 a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
 v_post <- plot.posterior(posts_df_raw, 'v', "Satiation sensitivity (\u03B7)")
 w_post <- plot.posterior(posts_df_raw, 'w', "Baseline preference (\u03c9)")
-wy_post <- plot.posterior(posts_df_raw, 'w_y', "Baseline preference (Yodzis w)")
+wy_post <- plot.posterior(posts_df_raw, 'w_y', "Baseline preference (w)")
 q_post <- plot.posterior(posts_df_raw, 'q', "Switching rate (\u03C6)")
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
 
@@ -148,7 +165,7 @@ allparms <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
 
-ggplot2::ggsave(filename = paste0(figs, "/posteriors.pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/posteriors-", sel.model,".pdf"), 
                 plot = allparms, 
                 device = cairo_pdf,
                 dpi = 1200, 
@@ -157,27 +174,60 @@ ggplot2::ggsave(filename = paste0(figs, "/posteriors.pdf"),
                 units = "in")
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-## Plot preference function
-LogisticPreference <- function(x){
-    1 - (1 / (1 + exp(w + q * x) ))
+## Plot preference-for-drift function 
+# For logistic, x = log(S / A), 
+# thus
+# for vanLeeuwen, divide numerator and denominator by A and substitute S/A = exp(x)
+if(sel.model == 'Logistic'){
+  
+  Preference <- function(x){
+    1 - ( 1 / ( 1 + exp( w + q * x ) ) )
+  }
+
+  LogSwitchPoint <- function(y){
+    ( log( -y / ( y - 1 ) ) - w ) / q
+  }
+  
+}else{
+  
+  Preference <- function(x){
+    1 - ( 1 + exp( w + x )) / 
+      ( 1 + exp( log(2) + w + x ) + exp( q + 2 * x )) 
+  }
+  
+  LogSwitchPoint <- function(y){
+    log(- (2 * y) / 
+     ( exp(w) * (2 * y - 1) - exp(q) * sqrt(exp(-2 * q) * (exp(2 * w) * (1 - 2 * y)^2 - 4 * exp(q) * (y - 1) * y)) ))
+  }
+  
 }
 
+initial.ratios <- rdat$Drift_Initial / rdat$Kelp_Initial
+initial.ratios <- log2(initial.ratios[is.finite(initial.ratios)])/log2(exp(1))
+
 ratio.lim <- 10
-ratio.step <- 0.5
-ratio.vals <- log2(2^seq(-ratio.lim, ratio.lim, ratio.step))/log2(exp(1))
-Predictions <- array(NA, 
+ratio.step <- 0.1
+ratio.vals <- log10(10^seq(-ratio.lim, ratio.lim, ratio.step))/log2(exp(1))
+Pref.Predicts <- array(NA,
                      dim = c(nrow(posts_df_raw), length(ratio.vals)))
+Pref.One2Ones <- vector()
+Switch.Predictions <- vector()
 
 for(i in 1:nrow(posts_df_raw)){
   w <- posts_df_raw$w[i]
   q <- posts_df_raw$q[i]
-  Predictions[i,] <- LogisticPreference(ratio.vals)
+  Pref.Predicts[i,] <- Preference(ratio.vals)
+  Pref.One2Ones[i] <- Preference(0)
+  Switch.Predictions[i] <- 1/exp(LogSwitchPoint(0.5))
 }
-Prediction <- apply(Predictions, 2, mean)
 
-# pdf(paste0(figs, '/preference.pdf'),
-#     height = 4,
-#     width = 8)
+Pref.Predictions <- apply(Pref.Predicts, 2, median)
+Pref.One2One <- round(quantile(Pref.One2Ones, c(0.025, 0.5, 0.975)), 3)
+Switch.Prediction <- round(quantile(Switch.Predictions, c(0.025, 0.5, 0.975)), 3)
+
+pdf(paste0(figs, '/preference-', sel.model,'.pdf'),
+    height = 4,
+    width = 8)
 par(mar = c(3, 3, 1, 1),
     mgp = c(2, 0.2, 0),
     tcl = -0.1,
@@ -193,6 +243,58 @@ par(mar = c(3, 3, 1, 1),
        type = 'n',
        axes = FALSE
   )
+  
+  rng <- range(initial.ratios)
+  polygon(c(rng, rev(rng)), 
+          c(0,0,1,1),
+          border = NA,
+          col = 'gray95')
+  
+  for(i in 1:nrow(posts_df_raw)){
+    w <- posts_df_raw$w[i]
+    q <- posts_df_raw$q[i]
+    curve(Preference, 
+          min(xlims), max(xlims), 
+          add = TRUE,
+          col = alpha('black', 0.1))
+  }
+  w <- CI$w[2]
+  q <- CI$q[2]
+  curve(Preference, 
+        min(xlims), max(xlims), 
+        add = TRUE,
+        col = 'black',
+        lwd = 5)
+  curve(Preference, 
+        min(xlims), max(xlims), 
+        add = TRUE,
+        col = 'grey',
+        lwd = 3)
+  
+  # points(ratio.vals, Pref.Predictions,
+  #        type = 'l',
+  #        col = 'black',
+  #        lwd = 5)
+  # points(ratio.vals, Pref.Predictions,
+  #        type = 'l',
+  #        col = 'blue',
+  #        lwd = 3)
+  
+  Po2o <- Pref.One2One[2]
+  segments(c(0, 0), c(0, Po2o), 
+           c(0, -10), c(Po2o, Po2o),
+           lty = 3,
+           lwd = 2,
+           col = 'grey40')
+  
+  sp <- 0.5
+  Lsp <- LogSwitchPoint(sp)
+  segments(c(Lsp, Lsp), c(0, sp), 
+           c(Lsp, -10), c(sp, sp),
+           lty = 3,
+           lwd = 2,
+           col = 'grey40')
+  
   x2.lim <- 10
   x2.step <- 2
   x2.vals <- 2^seq(-x2.lim, x2.lim, x2.step)
@@ -203,28 +305,40 @@ par(mar = c(3, 3, 1, 1),
   axis(1, at = x2.ats, labels = x2.labs)
   axis(2, las = 1)
   box(lwd = 1)
-  
-  segments(0, 0, 0, CI$w_y[2],
-           lty = 3,
-           col = 'grey')
 
-  
-  for(i in 1:nrow(posts_df_raw)){
-    w <- posts_df_raw$w[i]
-    q <- posts_df_raw$q[i]
-    curve(LogisticPreference, 
-          min(xlims), max(xlims), 
-          add = TRUE,
-          col = alpha('black', 0.1))
-  }
-  points(ratio.vals, Prediction,
-         type = 'l',
-         col = 'red',
-         lwd = 2)
+dev.off()
 
-# dev.off()
-
+sink(paste0(results, "/Summary-", sel.model, ".txt"))
+cat('Abundance switch point (equal preference):\n 1g drift to ', 
+             round(1/exp(Lsp), 2), 
+             'g (',
+             Switch.Prediction[1],
+             'g-',
+             Switch.Prediction[3],
+             'g) kelp.\n')
+cat('Baseline preference (equal abundance):\n', 
+             Pref.One2One[2], 
+             ' (',
+             Pref.One2One[1],
+             '-',
+             Pref.One2One[3],
+             ') drift to ',
+             1-Pref.One2One[2], 
+             ' (',
+             1-Pref.One2One[3],
+             '-',
+             1-Pref.One2One[1],
+             ') kelp.\n')
+cat('Baseline preference (equal abundance) log-odds:\n', 
+    Logit(Pref.One2One[2]), 
+    ' (',
+    Logit(Pref.One2One[1]),
+    '-',
+    Logit(Pref.One2One[3]),
+    ') drift to kelp.\n')
+sink()
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 

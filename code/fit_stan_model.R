@@ -3,12 +3,9 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 
-
-
-
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-loss_dat <- readRDS(paste0(data_output,"/loss_dat.Rdata"))
+loss_dat <- readRDS(paste0(results,"/loss_dat.Rdata"))
 
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -25,17 +22,36 @@ model <- cmdstan_model(file <- paste0(code, "/restocking_stan_model.stan"))
 
 ## initiate sampling 
 fit <- model$sample(data = loss_dat,
-                  chains = 1,
-                  iter_warmup = 1000, # 1000
-                  iter_sampling = 2000, # 2000
+                  chains = 4,
+                  iter_warmup = 200,
+                  iter_sampling = 500,
                   adapt_delta = 0.80, 
                   parallel_chains = 4)
 
 
 ## save via cmdstan's preferred method
-fit$save_object(file = paste0(data_output, "/model_output.RDS"))
+fit$save_object(file = paste0(results, "/model_output.RDS"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## run Stan ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## load directory with Stan script
+
+## compile model
+model <- cmdstan_model(file <- paste0(code, "/restocking_stan_model_vL.stan"))
+
+
+## initiate sampling 
+fit <- model$sample(data = loss_dat,
+                    chains = 4,
+                    iter_warmup = 200,
+                    iter_sampling = 500,
+                    adapt_delta = 0.80, 
+                    parallel_chains = 4)
+
+
+## save via cmdstan's preferred method
+fit$save_object(file = paste0(results, "/model_output_vL.RDS"))
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 

@@ -35,8 +35,8 @@ getwd()
 
 ## relative file paths
 code <- "../code"
-data_input <- "../data_input"
-data_output <- "../data_output"
+data <- "../data"
+results <- "../results"
 figs <- "../figs"
 
 
@@ -44,7 +44,7 @@ figs <- "../figs"
 
 source('format_data.R')
 source('fit_stan_model.R')
-source('analyze_visualize_stan_model.R')
+source('analyze_visualize.R')
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -4,7 +4,7 @@
 
 
 ## read in data
-dat <- read.csv(paste0(data_input, "/drift_kelp_loss.csv"), header = TRUE)
+dat <- read.csv(paste0(data, "/drift_kelp_loss.csv"), header = TRUE)
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -341,7 +341,7 @@ loss_dat <- list(
 
 
 saveRDS(loss_dat, 
-        file = paste0(data_output,"/loss_dat.RData"))
+        file = paste0(results,"/loss_dat.RData"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

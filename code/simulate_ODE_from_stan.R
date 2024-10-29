@@ -42,12 +42,12 @@ figs <- "figs"
 ## ode() with multiple params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## load posts_Df
 setwd(results)
-load("posts_new_All.RDA")
+load("posts_new_All-vanLeeuwen.RDA")
 
 
-## select every 10th row to think the posterior 
-posts_df <- posts_df_raw[,1:5]
-posts_df <- posts_df[seq(1, nrow(posts_df), 10), ]
+## select every 10th row to downsample to 1000 
+#posts_df <- posts_df_raw[,1:5]
+#posts_df <- posts_df[seq(1, nrow(posts_df), 10), ]
 
 
 

@@ -12,20 +12,10 @@
 rm(list=ls())
   
 library(deSolve)
-library(ggplot2)
 library(reshape2)
-library(dplyr)
-library(tidyr)
-
-## set up custom ggplot theme 
-my.theme = theme(panel.grid.major = element_blank(), 
-                 panel.grid.minor = element_blank(),
-                 panel.background = element_blank(), 
-                 axis.line = element_line(colour = "black"),
-                 axis.title=element_text(size=16),
-                 axis.text=element_text(size=14),
-                 plot.title = element_text(size=16))
-
+library(egg)
+library(tidyselect)
+library(scales)
 
 ## set relative file paths
 setwd("../")
@@ -54,7 +44,7 @@ load("posts_new_All-vanLeeuwen.RDA")
 ## create sequences of initial conditions
 len_init <- 200
 S0 <- seq(1, 300, length.out = len_init)
-A0 <- seq(30, 30, length.out = len_init)
+A0 <- seq(300, 300, length.out = len_init)
 H0 <- seq(0, 0, length.out = len_init)
 
 
@@ -153,8 +143,7 @@ outs_parms <- lapply(full_parm_list, function(x){
 })
 
 #setwd(simData)
-save(outs_parms, file="ODE_vL_low-kelp.RDA")
-#save(outs_parms, file="outs_new_All_low.RDA")
+save(outs_parms, file="ODE_vL_high-kelp.RDA")
 ## END ODE simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -162,9 +151,9 @@ save(outs_parms, file="ODE_vL_low-kelp.RDA")
 
 
 ## calculate and plot 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-setwd(simData)
-load("outs_new_All_low.RDA")
-load("outs_new_All_high.RDA")
+setwd(results)
+load("ODE_vL_low-kelp.RDA")
+load("ODE_vL_high-kelp.RDA")
 
 
 ## create sequences of initial conditions
@@ -328,19 +317,17 @@ names(means)[9]="H_P3"
 
 ## save and load ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## use to plot one: either High or Low
-singleSim <- cbind(df, means)
+#singleSim <- cbind(df, means)
 
 
-## use to plot both in final figure: High kelp simulation
+## use to plot both in final figure: low kelp (A = 30) simulation
 combined_low <- cbind(df, means)
-setwd(simData)
-save(combined_low, file="combined_low.RDA")
+save(combined_low, file="ODE_low-kelp_toPlot.RDA")
 
 
-## use to plot both in final figure: Low kelp simulation
+## use to plot both in final figure: high kelp (A=300) simulation
 combined_high <- cbind(df, means)
-setwd(simData)
-save(combined_high, file="combined_high.RDA")
+save(combined_high, file="ODE_high-kelp_toPlot.RDA")
 
 
 ## load simulated data to plot
@@ -362,7 +349,6 @@ s.drift <- "#68228B"
 s.kelp <- "#000000"
 s.fullness <- "#CD0000"
 
-
 lowD <- "#6183A6"
 highD <- "#00688B"
 lowK <- "#77896C"
@@ -376,12 +362,23 @@ lwd_sml <- 0.75
 wid1 <- .5
 wid2 <- 1
 lineCol <- "black"
-ymax <- 6
+#ymax <- 6
+
 
 both.blank <- theme(axis.title.y = element_blank(), axis.text.y = element_blank(),
                     axis.title.x = element_blank(), axis.text.x = element_blank())
 x.blank <- theme(axis.title.x = element_blank(), axis.text.x = element_blank())
 y.blank <- theme(axis.title.y = element_blank(), axis.text.y = element_blank())
+
+
+## set up custom ggplot theme 
+my.theme = theme(panel.grid.major = element_blank(), 
+                 panel.grid.minor = element_blank(),
+                 panel.background = element_blank(), 
+                 axis.line = element_line(colour = "black"),
+                 axis.title=element_text(size=16),
+                 axis.text=element_text(size=14),
+                 plot.title = element_text(size=16))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -389,8 +386,6 @@ y.blank <- theme(axis.title.y = element_blank(), axis.text.y = element_blank())
 
 
 ## Plot individual Low or High simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-library(egg)
-library(ggplot2)
 windows(12,5,record=T)
 
 p1 <- ggplot(data=singleSim, aes(S0)) +
@@ -403,8 +398,8 @@ p1 <- ggplot(data=singleSim, aes(S0)) +
   geom_line(aes(S0, A_P1), color=s.kelp, size=wid1) +
   geom_line(aes(S0, S_P1), color=lineCol, size=wid2) +
   geom_line(aes(S0, S_P1), color=s.drift, size=wid1) +
-  xlab("initial Drift") + ylab("state value") + ggtitle("period 1: t = 44hr snapshot") +
-  ylim(0, ymax)
+  xlab("initial Drift") + ylab("state value") + ggtitle("period 1: t = 44hr snapshot") #+
+  #ylim(0, ymax)
 
 p2 <- ggplot(data=singleSim, aes(S0)) +
   geom_ribbon(aes(ymin=Amin_2, ymax=Amax_2), fill=s.kelp, alpha=alph) +
@@ -416,8 +411,8 @@ p2 <- ggplot(data=singleSim, aes(S0)) +
   geom_line(aes(S0, A_P2), color=s.kelp, size=wid1) +
   geom_line(aes(S0, S_P2), color=lineCol, size=wid2) +
   geom_line(aes(S0, S_P2), color=s.drift, size=wid1) +
-  xlab("initial Drift") + ylab("state value") + ggtitle("period 2: t = 89hr snapshot") +
-  ylim(0, ymax) + y.blank
+  xlab("initial Drift") + ylab("state value") + ggtitle("period 2: t = 89hr snapshot") #+
+  #ylim(0, ymax) + y.blank
 
 p3 <- ggplot(data=singleSim, aes(S0)) +
   geom_ribbon(aes(ymin=Amin_3, ymax=Amax_3), fill=s.kelp, alpha=alph) +
@@ -429,8 +424,8 @@ p3 <- ggplot(data=singleSim, aes(S0)) +
   geom_line(aes(S0, A_P3), color=s.kelp, size=wid1) +
   geom_line(aes(S0, S_P3), color=lineCol, size=wid2) +
   geom_line(aes(S0, S_P3), color=s.drift, size=wid1) +
-  xlab("initial Drift") + ylab("state value") + ggtitle("period 3: t = 134hr snapshot") +
-  ylim(0, ymax) + y.blank
+  xlab("initial Drift") + ylab("state value") + ggtitle("period 3: t = 134hr snapshot") #+
+#  ylim(0, ymax) + y.blank
 
 
 ## plot 
@@ -456,7 +451,8 @@ p1 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, S_P1), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, S_P1), color=lowD, size=wid1) +
   xlab("initial Drift") + ylab("drift consumed") + ggtitle("period 1: t = 44hr snapshot") +
-  ylim(0, ymax) + x.blank
+  #ylim(0, ymax) + 
+  x.blank
 
 p2 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(aes(ymin=Smin_2, ymax=Smax_2), fill=highD, alpha=alph) + my.theme +
@@ -466,7 +462,8 @@ p2 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, S_P2), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, S_P2), color=lowD, size=wid1) +
   xlab("initial Drift") + ggtitle("period 2: t = 89hr snapshot") +
-  ylim(0, ymax) + both.blank
+  #ylim(0, ymax) + 
+  both.blank
 
 p3 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(aes(ymin=Smin_3, ymax=Smax_3), fill=highD, alpha=alph) + my.theme +
@@ -476,7 +473,8 @@ p3 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, S_P3), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, S_P3), color=lowD, size=wid1) +
   xlab("initial Drift") + ggtitle("period 3: t = 134hr snapshot") +
-  ylim(0, ymax) + both.blank
+  #ylim(0, ymax) + 
+  both.blank
 
 
 ## Kelp loss
@@ -488,7 +486,8 @@ p4 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, A_P1), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, A_P1), color=lowK, size=wid1) +
   xlab("initial Drift") + ylab("kelp consumed") +
-  ylim(0, ymax) + x.blank 
+  #ylim(0, ymax) + 
+  x.blank 
 
 p5 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(aes(ymin=Amin_2, ymax=Amax_2), fill=highK, alpha=alph) + my.theme +
@@ -498,7 +497,8 @@ p5 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, A_P2), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, A_P2), color=lowK, size=wid1) +
   xlab("initial Drift") + ylab("kelp consumed") +
-  ylim(0, ymax) + both.blank
+  #ylim(0, ymax) + 
+  both.blank
 
 p6 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(aes(ymin=Amin_3, ymax=Amax_3), fill=highK, alpha=alph) + my.theme +
@@ -508,7 +508,8 @@ p6 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, A_P3), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, A_P3), color=lowK, size=wid1) +
   xlab("initial Drift") + ylab("kelp consumed")  +
-  ylim(0, ymax) + both.blank
+  #ylim(0, ymax) + 
+  both.blank
 
 
 ## Gut fullness 
@@ -519,8 +520,8 @@ p7 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(data=combined_low, aes(ymin=Hmin_1, ymax=Hmax_1), fill=lowH, alpha=alph) + my.theme +
   geom_line(data=combined_low, aes(S0, H_P1), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, H_P1), color=lowH, size=wid1) +
-  xlab("initial Drift") + ylab("cumulative stomach fullness") +
-  ylim(0, ymax)
+  xlab("initial Drift") + ylab("cumulative stomach fullness") 
+  #ylim(0, ymax)
 
 p8 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(aes(ymin=Hmin_2, ymax=Hmax_2), fill=highH, alpha=alph) + my.theme +
@@ -530,7 +531,8 @@ p8 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, H_P2), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, H_P2), color=lowH, size=wid1) +
   xlab("initial Drift") + ylab("drift consumed") +
-  ylim(0, ymax) + y.blank
+  #ylim(0, ymax) + 
+  y.blank
 
 p9 <- ggplot(data=combined_high, aes(S0)) +
   geom_ribbon(aes(ymin=Hmin_3, ymax=Hmax_3), fill=highH, alpha=alph) + my.theme +
@@ -540,14 +542,11 @@ p9 <- ggplot(data=combined_high, aes(S0)) +
   geom_line(data=combined_low, aes(S0, H_P3), color=lineCol, size=wid2) +
   geom_line(data=combined_low, aes(S0, H_P3), color=lowH, size=wid1) +
   xlab("initial Drift") + ylab("drift consumed") +
-  ylim(0, ymax) + y.blank
+  #ylim(0, ymax) + 
+  y.blank
 
 
 ## plot 
-library(egg)
-library(ggplot2)
-library(scales)
-
 windows(12,12,record=T)
 
 all9 <- ggarrange(tag_facet(p1 + facet_wrap(~"time"), tag_pool="a"),
@@ -567,126 +566,9 @@ print(all9)
 
 
 
-## simulated preference, rank switching ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-library(egg)
-graphics.off()
-windows(h=5,w=14, record=TRUE)
-
-simData <- "D:/OneDrive/Active_Projects/Functional-Response-Field-Experiment/Data/SimulatedData"
-setwd(simData)
-load("combined_high.RDA")
-singleSim <- combined_high
-
-
-## Create proportion available PrA and PrC consumed
-singleSim$PropAvail_Det <- (singleSim$S0 / (singleSim$S0 + singleSim$A0))
-singleSim$PropConsum_Det <- (singleSim$S_P1 / (singleSim$S_P1 + singleSim$A_P1))
-singleSim$PropAvail_Kelp <- (singleSim$A0 / (singleSim$S0 + singleSim$A0))
-singleSim$PropConsum_Kelp <- (singleSim$A_P1 / (singleSim$S_P1 + singleSim$A_P1))
-
-
-## Create proportion available PrA and PrC consumed
-singleSim$PropConsum_Det_max <- (singleSim$Smax_1 / (singleSim$Smax_1 + singleSim$Amax_1))
-singleSim$PropConsum_Det_min <- (singleSim$Smin_1 / (singleSim$Smin_1 + singleSim$Amin_1))
-singleSim$PropConsum_Kelp_max <- (singleSim$Amax_1 / (singleSim$Smax_1 + singleSim$Amax_1))
-singleSim$PropConsum_Kelp_min <- (singleSim$Amin_1 / (singleSim$Smin_1 + singleSim$Amin_1))
-
-
-## Net consumption  
-singleSim$Total_Initial <- singleSim$S0 + singleSim$A0 
-singleSim$Total_Consumed <- singleSim$S_P1 + singleSim$A_P1 
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-## Graphical parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-s.drift <- "#68228B"
-s.kelp <- "#000000"
-s.fullness <- "#CD0000"
-blk <- "black"
-dashedLineCol <- "black"
-dashedLineSize <- 0.5
-solidLineCol <- "red"
-solidLineSize <- 0.5
-alph <- 0.5
-wid1 <- .25
-wid2 <- 0.75
-
-
-Xaxis.rank <- 382
-Xaxis.rankDrift <- 82
-
-both.blank <- theme(axis.text.y = element_blank(),#, axis.text.y = element_blank(),
-                    axis.title.x = element_blank())#, axis.text.x = element_blank())
-y.blank <- theme(axis.text.y = element_blank())#, axis.text.y = element_blank())
-x.blank <- theme(axis.title.x = element_blank())#, axis.text.x = element_blank())
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-## Plot ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-sim_pref <- ggplot(data = singleSim, aes(PropAvail_Det)) +
-  geom_ribbon(aes(ymin=PropConsum_Det_min, ymax=PropConsum_Det_max), fill=s.drift, alpha=alph) + my.theme +
-  geom_line(aes(PropAvail_Det, PropConsum_Det), color=blk, size=wid2) +
-  geom_line(aes(PropAvail_Det, PropConsum_Det), color=s.drift, size=wid1) +
-  theme(legend.position = "none") + my.theme +
-  geom_abline(slope = 1, intercept = 0, color = dashedLineCol, size = dashedLineSize, linetype=2) +
-  xlab("proportion of drift available") + ylab("proportion of drift consumed") +
-  scale_y_continuous(limit=c(0,1),oob=squish) 
-
-sim_rank <- ggplot(data = singleSim, aes(Total_Initial)) +
-  geom_ribbon(aes(ymin=PropConsum_Det_min, ymax=PropConsum_Det_max), fill=s.drift, alpha=alph) + my.theme +
-  geom_line(aes(Total_Initial, PropConsum_Det), color=blk, size=wid2) +
-  geom_line(aes(Total_Initial, PropConsum_Det), color=s.drift, size=wid1) +
-  geom_ribbon(data=singleSim, aes(ymin=PropConsum_Kelp_min, ymax=PropConsum_Kelp_max), fill=s.kelp, alpha=alph) + my.theme +
-  geom_line(data=singleSim, aes(Total_Initial, PropConsum_Kelp), color=blk, size=wid2) +
-  geom_line(data=singleSim, aes(Total_Initial, PropConsum_Kelp), color=s.kelp, size=wid1) +
-  theme(legend.position = "none") + my.theme +
-  geom_abline(slope = 0, intercept = 0.5, color = dashedLineCol, size = dashedLineSize, linetype=2) + 
-  geom_vline(xintercept = Xaxis.rank, color = solidLineCol, size = solidLineSize, linetype=1) +
-  xlab("total drift + kelp biomass available") + ylab("proportion of resources consumed") +
-  scale_y_continuous(limit=c(0,1),oob=squish) +
-  xlim(200,600) + y.blank
-
-sim_S_switch <- ggplot(data = singleSim, aes(S0)) +
-  geom_ribbon(aes(ymin=PropConsum_Det_min, ymax=PropConsum_Det_max), fill=s.drift, alpha=alph) + my.theme +
-  geom_line(aes(S0, PropConsum_Det), color=blk, size=wid2) +
-  geom_line(aes(S0, PropConsum_Det), color=s.drift, size=wid1) +
-  geom_ribbon(data=singleSim, aes(ymin=PropConsum_Kelp_min, ymax=PropConsum_Kelp_max), fill=s.kelp, alpha=alph) + my.theme +
-  geom_line(data=singleSim, aes(S0, PropConsum_Kelp), color=blk, size=wid2) +
-  geom_line(data=singleSim, aes(S0, PropConsum_Kelp), color=s.kelp, size=wid1) +
-  geom_abline(slope = 0, intercept = 0.5, color = dashedLineCol, size = dashedLineSize, linetype=2) + 
-  theme(legend.position = "none") + my.theme +
-  geom_vline(xintercept = Xaxis.rankDrift, color = solidLineCol, size = solidLineSize, linetype=1) +
-  xlab("drift biomass available") + ylab("proportion of resources consumed") +
-  scale_y_continuous(limit=c(0,1),oob=squish) + y.blank
-
-
-
-
-
-
-switch <- ggarrange(tag_facet(sim_pref + facet_wrap(~"PropAvail_Det"), tag_pool="a"),
-                    tag_facet(sim_rank + facet_wrap(~"Total_Initial"), tag_pool="b"),
-                    tag_facet(sim_S_switch + facet_wrap(~"Detritus_Initial"), tag_pool="c"),
-                    nrow=1, ncol=3)
-
-print(switch)
-
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END OF SCRIPT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-
-

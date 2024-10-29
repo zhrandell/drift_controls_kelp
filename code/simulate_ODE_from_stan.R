@@ -81,16 +81,16 @@ inits_P1 <- mapply(c, S=S0, A=A0, H=H0, SIMPLIFY = F)
 
 
 ## list of params 
-aL <- posts_df$a 
-pL <- posts_df$p
-vL <- posts_df$v
-qL <- posts_df$q
+aL <- posts_df_raw$a 
+vL <- posts_df_raw$v
+wL <- posts_df_raw$w
+qL <- posts_df_raw$q
 
 
 ## first set of params 
 parm_list = c(a = aL[1],
-              p = pL[1],
               v = vL[1],
+              w = wL[1],
               q = qL[1])
 
 
@@ -119,15 +119,13 @@ out_P1 <- ode(init_P1,
 
 
 ## concactonate params into list of lists
-full_parm_list <- mapply(c, a=aL, p=pL, v=vL, q=qL, SIMPLIFY = F)
+full_parm_list <- mapply(c, a=aL, v=vL, w=wL, q=qL, SIMPLIFY = F)
 
 
 ## t.lists for restocking model
 t.list_P1_restock <- seq(1, P1, by = 1)
 t.list_P2_restock <- seq(P1+1, P1+P2, by = 1)
 t.list_P3_restock <- seq(P1+P2+1, P1+P2+P3, by = 1)
-
-
 
 
 ## nested lapply 
@@ -155,7 +153,7 @@ outs_parms <- lapply(full_parm_list, function(x){
 })
 
 #setwd(simData)
-#save(outs_parms, file="outs_new_All_high.RDA")
+save(outs_parms, file="ODE_vL_low-kelp.RDA")
 #save(outs_parms, file="outs_new_All_low.RDA")
 ## END ODE simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

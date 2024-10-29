@@ -95,18 +95,18 @@ parm_list = c(a = aL[1],
 
 
 ## specify ODE function 
-resourceLoss <- function(S0, A0, F0, params) {
-  with(as.list(c(S0, A0, F0)),{
+resourceLoss <- function(S0, A0, H0, params) {
+  with(as.list(c(S0, A0, H0)),{
  
     f_S <- S * a * (1 - (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A)))) 
     f_A <- A * a * ((1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A)))) 
-    H = exp(- v * F)
+    Hunger = exp(- v * H)
     
-    dS_dt = f_S * H
-    dA_dt = f_A * H
-    dF_dt = f_S + f_A
+    dS_dt = f_S * Hunger
+    dA_dt = f_A * Hunger
+    dH_dt = f_S + f_A
     
-    return(list(c(dS_dt, dA_dt, dF_dt)))
+    return(list(c(dS_dt, dA_dt, dH_dt)))
   })
 }
 

@@ -32,7 +32,8 @@ figs <- "figs"
 ## ode() with multiple params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## load posts_Df
 setwd(results)
-load("posts_new_All-vanLeeuwen.RDA")
+#load("posts_new_All-vanLeeuwen.RDA")
+load("posts_new_All-logistic.RDA")
 
 
 ## select every 10th row to downsample to 1000 
@@ -88,8 +89,14 @@ parm_list = c(a = aL[1],
 resourceLoss <- function(S0, A0, H0, params) {
   with(as.list(c(S0, A0, H0)),{
  
-    f_S <- S * a * (1 - (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A)))) 
-    f_A <- A * a * ((1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A)))) 
+    ## vanLeeuwen
+    #f_S <- S * a * (1 - (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A)))) 
+    #f_A <- A * a * ((1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A)))) 
+    
+    ## logistic
+    f_S <- S * a * (1 - (1 / (1 + exp(w + q * log(S / A)))))
+    f_A <- A * a * (1 / (1 + exp(w + q * log(S / A))))
+    
     Hunger = exp(- v * H)
     
     dS_dt = f_S * Hunger

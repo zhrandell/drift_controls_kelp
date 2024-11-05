@@ -150,7 +150,7 @@ outs_parms <- lapply(full_parm_list, function(x){
 })
 
 #setwd(simData)
-save(outs_parms, file="ODE_vL_high-kelp.RDA")
+save(outs_parms, file="ODE_Logistic_low-kelp.RDA")
 ## END ODE simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -159,8 +159,10 @@ save(outs_parms, file="ODE_vL_high-kelp.RDA")
 
 ## calculate and plot 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 setwd(results)
-load("ODE_vL_low-kelp.RDA")
-load("ODE_vL_high-kelp.RDA")
+#load("ODE_vanLeeuwen_low-kelp.RDA")
+#load("ODE_vanLeeuwen_high-kelp.RDA")
+load("ODE_Logistic_low-kelp.RDA")
+load("ODE_Logistic_high-kelp.RDA")
 
 
 ## create sequences of initial conditions
@@ -329,19 +331,18 @@ names(means)[9]="H_P3"
 
 ## use to plot both in final figure: low kelp (A = 30) simulation
 combined_low <- cbind(df, means)
-save(combined_low, file="ODE_low-kelp_toPlot.RDA")
+save(combined_low, file="ODE_low-kelp_toPlot_Logistic.RDA")
 
 
 ## use to plot both in final figure: high kelp (A=300) simulation
 combined_high <- cbind(df, means)
-save(combined_high, file="ODE_high-kelp_toPlot.RDA")
+save(combined_high, file="ODE_high-kelp_toPlot_Logistic.RDA")
 
 
 ## load simulated data to plot
-setwd(simData)
-load("combined_low.RDA")
-load("combined_high.RDA")
-singleSim <- combined_high
+getwd()
+load("plot_Logistic_low-kelp.RDA")
+load("plot_Logistic_high-kelp.RDA")
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

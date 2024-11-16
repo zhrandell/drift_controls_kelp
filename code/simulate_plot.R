@@ -1,6 +1,3 @@
-
-
-
 ## load simulated data to plot
 load(paste0(results, "/ODE_toPlot_kelp_low_", sel.model, ".RDA"))
 load(paste0(results, "/ODE_toPlot_kelp_high_", sel.model, ".RDA"))
@@ -26,7 +23,8 @@ lwd_sml <- 0.75
 wid1 <- .5
 wid2 <- 1
 lineCol <- "black"
-#ymax <- 6
+ymax_loss <- 130
+ymax_fill <- 45
 
 
 
@@ -78,7 +76,7 @@ p1 <- ggplot(data = combined_high, aes(S0)) +
   xlab("initial Drift") +
   ylab("drift consumed") +
   ggtitle("period 1: t = 44hr snapshot") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_loss) +
   x.blank
 
 p2 <- ggplot(data = combined_high, aes(S0)) +
@@ -103,7 +101,7 @@ p2 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") + 
   ggtitle("period 2: t = 89hr snapshot") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_loss) +
   both.blank
 
 p3 <- ggplot(data = combined_high, aes(S0)) +
@@ -128,7 +126,7 @@ p3 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ggtitle("period 3: t = 134hr snapshot") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_loss) +
   both.blank
 
 
@@ -156,7 +154,7 @@ p4 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ylab("kelp consumed") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_loss) +
   x.blank
 
 p5 <- ggplot(data = combined_high, aes(S0)) +
@@ -182,7 +180,7 @@ p5 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ylab("kelp consumed") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_loss) +
   both.blank
 
 p6 <- ggplot(data = combined_high, aes(S0)) +
@@ -208,7 +206,7 @@ p6 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ylab("kelp consumed")  +
-  #ylim(0, ymax) +
+  ylim(0, ymax_loss) +
   both.blank
 
 
@@ -237,7 +235,7 @@ p7 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ylab("cumulative stomach fullness")
-#ylim(0, ymax)
+  ylim(0, ymax_fill)
 
 p8 <- ggplot(data = combined_high, aes(S0)) +
   geom_ribbon(aes(ymin = Fmin_2, ymax = Fmax_2),
@@ -262,7 +260,7 @@ p8 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ylab("drift consumed") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_fill) +
   y.blank
 
 p9 <- ggplot(data = combined_high, aes(S0)) +
@@ -288,7 +286,7 @@ p9 <- ggplot(data = combined_high, aes(S0)) +
             size = wid1) +
   xlab("initial Drift") +
   ylab("drift consumed") +
-  #ylim(0, ymax) +
+  ylim(0, ymax_fill) +
   y.blank
 
 

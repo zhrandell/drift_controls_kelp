@@ -234,7 +234,7 @@ p7 <- ggplot(data = combined_high, aes(S0)) +
             color = lowF,
             size = wid1) +
   xlab("initial Drift") +
-  ylab("cumulative stomach fullness")
+  ylab("cumulative stomach fullness") +
   ylim(0, ymax_fill)
 
 p8 <- ggplot(data = combined_high, aes(S0)) +

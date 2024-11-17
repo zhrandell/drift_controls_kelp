@@ -298,9 +298,9 @@ all9 <- ggarrange(
   tag_facet(p4 + facet_wrap(~ "time"), tag_pool = "d"),
   tag_facet(p5 + facet_wrap(~ "time"), tag_pool = "e"),
   tag_facet(p6 + facet_wrap(~ "time"), tag_pool = "f"),
-  tag_facet(p7 + facet_wrap(~ "time"), tag_pool = "d"),
-  tag_facet(p8 + facet_wrap(~ "time"), tag_pool = "e"),
-  tag_facet(p9 + facet_wrap(~ "time"), tag_pool = "f"),
+  tag_facet(p7 + facet_wrap(~ "time"), tag_pool = "g"),
+  tag_facet(p8 + facet_wrap(~ "time"), tag_pool = "h"),
+  tag_facet(p9 + facet_wrap(~ "time"), tag_pool = "i"),
   nrow = 3,
   ncol = 3
 )

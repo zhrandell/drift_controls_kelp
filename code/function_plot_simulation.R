@@ -3,15 +3,13 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
-
-
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 library(tidyverse)
 library(rlang)
 
-load("ODE_toPlot_kelp_high_vanLeeuwen.RDA")
-load("ODE_toPlot_kelp_low_vanLeeuwen.RDA")
+load(paste0(results,"/ODE_toPlot_kelp_high_", sel.model,".RDA"))
+load(paste0(results,"/ODE_toPlot_kelp_low_", sel.model,".RDA"))
+
 ## END set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -32,7 +30,7 @@ high_fullnes_col <- "#9D1309"
 alph <- 0.5
 linew <- 1
 lwd_sml <- 0.75
-wid1 <- .5
+wid1 <- 0.5
 wid2 <- 1
 lineCol <- "black"
 ymax_loss <- 130
@@ -47,8 +45,10 @@ both.blank <- theme(
   axis.text.x = element_blank()
 )
 
-x.blank <- theme(axis.title.x = element_blank(), axis.text.x = element_blank())
-y.blank <- theme(axis.title.y = element_blank(), axis.text.y = element_blank())
+x.blank <- theme(axis.title.x = element_blank(), 
+                 axis.text.x = element_blank())
+y.blank <- theme(axis.title.y = element_blank(), 
+                 axis.text.y = element_blank())
 
 
 ## set up custom ggplot theme
@@ -68,19 +68,33 @@ my.theme = theme(
 
 
 ## function to plot single Period for Low and High Kelp treatments ~~~~~~~~~~~~~ 
-test.plot <- function(high_dat, var, high_lower_ribbon, high_upper_ribbon, high_fill, ## params to plot High Kelp ribbon
-                      high_init, high_period, ## params to plot High Kelp median value line across x-axis 
-                      low_dat, low_lower_ribbon, low_upper_ribbon, low_fill, ## params to plot Low Kelp ribbon
-                      low_init, low_period, ## params to plot Low Kelp median value line across x-axis
-                      x_axis_text, y_axis_text, plot_title, ymax){ ## axis label and ylim params
+test.plot <- function(high_dat, var, 
+                      high_lower_ribbon, 
+                      high_upper_ribbon, 
+                      high_fill, ## params to plot High Kelp ribbon
+                      high_init, 
+                      high_period, ## params to plot High Kelp median value line across x-axis 
+                      low_dat, 
+                      low_lower_ribbon, 
+                      low_upper_ribbon, 
+                      low_fill, ## params to plot Low Kelp ribbon
+                      low_init, 
+                      low_period, ## params to plot Low Kelp median value line across x-axis
+                      x_axis_text, 
+                      y_axis_text, 
+                      plot_title,
+                      ymax){ ## axis label and ylim params
 
 ## High Kelp treatment  
-  plot <- ggplot(data = high_dat, aes(x = {{ var }})) + my.theme +
+  plot <- ggplot(data = high_dat,
+                 aes(x = {{ var }})) + 
+    my.theme +
     geom_ribbon(aes(
       ymin = {{ high_lower_ribbon }}, 
       ymax = {{ high_upper_ribbon }}),
       fill = high_fill, 
-      alpha = alph) +
+      alpha = alph
+      ) +
     geom_line(aes(
       x = {{ high_init }}, 
       y = {{ high_period }}), 
@@ -88,14 +102,18 @@ test.plot <- function(high_dat, var, high_lower_ribbon, high_upper_ribbon, high_
       linewidth = wid2) +
 
 ## Low Kelp treatment
-    geom_ribbon(data = low_dat, aes(
-      ymin = {{ low_lower_ribbon }}, 
-      ymax = {{ low_upper_ribbon }}),
-      fill = low_fill, 
-      alpha = alph) +
-    geom_line(data = low_dat, aes(
-      x = {{ low_init }}, 
-      y = {{ low_period }}), 
+    geom_ribbon(data = low_dat, 
+                aes(
+                  ymin = {{ low_lower_ribbon }}, 
+                  ymax = {{ low_upper_ribbon }}),
+                fill = low_fill, 
+                alpha = alph 
+                ) +
+    geom_line(data = low_dat, 
+              aes(
+                x = {{ low_init }}, 
+                y = {{ low_period }}
+                ), 
       color = lineCol, 
       linewidth = wid2) +
 
@@ -131,9 +149,9 @@ p1 <- test.plot(
   low_init = S0,
   low_period = S_P1, 
   
-  x_axis_text = "initial Drift",
+  x_axis_text = "Initial drift",
   y_axis_text = "Drift consumed",
-  plot_title =  "period 1: t = 44hr snapshot",
+  plot_title =  "Period 1: t = 44hr snapshot",
   ymax = ymax_loss
 )
 

@@ -11,6 +11,7 @@ library(rlang)
 setwd("../")
 getwd()
 results <- "results"
+figs <- "figs"
 
 # Choose the model [1] or [2]
 sel.model <- c('Logistic', 'vanLeeuwen')[2]
@@ -443,7 +444,7 @@ print(fullness.3)
 
 
 
-## plot
+## plot all 9 panes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 library(tidyverse)
 library(egg)
 
@@ -464,12 +465,16 @@ all.temporal.dynamics <- ggarrange(
 windows(11, 8)
 print(all.temporal.dynamics)
 
+
+## save pdf 
 ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", sel.model, ".pdf"), 
-                plot = all9, 
+                plot = all.temporal.dynamics, 
                 dpi = 1200, 
                 width = 11,
                 height = 8, 
                 units = "in")
+## END plotting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 
 

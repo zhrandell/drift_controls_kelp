@@ -2,6 +2,10 @@
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 rm(list = ls())
 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Choose the model [1] or [2]
+sel.model <- c('Logistic', 'vanLeeuwen')[1]
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Libraries for 'format_data.R'
 library(tidyverse)
@@ -28,6 +32,14 @@ library(bayesplot)
 library(egg)
 library(Cairo) # requires installation of Xcode
 
+## Libraries for 'simulate.R' and 'plot_simulation'
+library(deSolve)
+library(reshape2)
+library(ggplot2)
+library(egg)
+library(tidyselect)
+library(scales)
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## check wd is appropriate
@@ -38,13 +50,14 @@ code <- "../code"
 data <- "../data"
 results <- "../results"
 figs <- "../figs"
-
-
-## end start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 source('format_data.R')
 source('fit_stan_model.R')
 source('analyze_visualize.R')
+source('simulate.R')
+source('simulate_process.R')
+source('plot_simulation.R')
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

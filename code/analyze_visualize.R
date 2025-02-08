@@ -4,23 +4,12 @@
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-# Which model
-sel.model <- c('Logistic', 'vanLeeuwen')[2]
-
 ## specify directory and open saved RDS file
-if(sel.model=='Logistic'){
-    fit <- readRDS(paste0(results, "/model_output.RDS"))
-}else{
-    fit <- readRDS(paste0(results, "/model_output_vL.RDS"))
-}
-
+fit <- readRDS(paste0(results, "/model_output_", sel.model, ".RDS"))
 
 rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
 
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
 
 
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
@@ -50,7 +39,7 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 t1 <- mcmc_trace(draws_array, pars = parms) 
 print(t1)  
 
-ggplot2::ggsave(filename = paste0(figs, "/trace-", sel.model, ".pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/trace_", sel.model, ".pdf"), 
                 plot = t1, 
                 dpi = 1200, 
                 width = 11,
@@ -64,7 +53,7 @@ pairsplot <- mcmc_pairs(draws_array,
                         off_diag_args = list(size = 0.75))
 print(pairsplot)
 
-ggplot2::ggsave(filename = paste0(figs, "/pairs-", sel.model, ".pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/pairs_", sel.model, ".pdf"), 
                 plot = pairsplot, 
                 dpi = 1200, 
                 width = 11,
@@ -84,7 +73,7 @@ posts_df_raw <- suppressWarnings(
   )
 
 ## save RDA file with posteriors from a single chain
-save(posts_df_raw, file = paste0(results, "/posts_new_All-", sel.model, ".RDA"))
+save(posts_df_raw, file = paste0(results, "/posterior_draws_", sel.model, ".RDA"))
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -108,7 +97,9 @@ if(sel.model=='Logistic'){
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CI <- data.frame(apply(posts_df_raw, 2, quantile, c(0.0250, 0.5, 0.975), na.rm = TRUE))
+CI <- data.frame(apply(posts_df_raw, 2, 
+                       quantile, c(0.0250, 0.5, 0.975), 
+                       na.rm = TRUE))
 
 
 
@@ -165,7 +156,7 @@ allparms <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
 
-ggplot2::ggsave(filename = paste0(figs, "/posteriors-", sel.model,".pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"), 
                 plot = allparms, 
                 device = cairo_pdf,
                 dpi = 1200, 
@@ -225,7 +216,7 @@ Pref.Predictions <- apply(Pref.Predicts, 2, median)
 Pref.One2One <- round(quantile(Pref.One2Ones, c(0.025, 0.5, 0.975)), 3)
 Switch.Prediction <- round(quantile(Switch.Predictions, c(0.025, 0.5, 0.975)), 3)
 
-pdf(paste0(figs, '/preference-', sel.model,'.pdf'),
+pdf(paste0(figs, '/preference_', sel.model,'.pdf'),
     height = 4,
     width = 8)
 par(mar = c(3, 3, 1, 1),
@@ -308,7 +299,7 @@ par(mar = c(3, 3, 1, 1),
 
 dev.off()
 
-sink(paste0(results, "/Summary-", sel.model, ".txt"))
+sink(paste0(results, "/Summary_", sel.model, ".txt"))
 cat('Abundance switch point (equal preference):\n 1g drift to ', 
              round(1/exp(Lsp), 2), 
              'g (',

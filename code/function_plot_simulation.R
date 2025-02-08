@@ -7,6 +7,13 @@
 library(tidyverse)
 library(rlang)
 
+
+setwd("../")
+getwd()
+results <- "results"
+
+# Choose the model [1] or [2]
+sel.model <- c('Logistic', 'vanLeeuwen')[2]
 load(paste0(results,"/ODE_toPlot_kelp_high_", sel.model,".RDA"))
 load(paste0(results,"/ODE_toPlot_kelp_low_", sel.model,".RDA"))
 
@@ -23,7 +30,7 @@ high_drift_col <- "#00688B"
 low_kelp_col <- "#77896C"
 high_kelp_col <- "#006400"
 low_fullness_col <- "#CD9B9B"
-high_fullnes_col <- "#9D1309"
+high_fullness_col <- "#9D1309"
 
 
 ## graphing details hard coded
@@ -68,7 +75,7 @@ my.theme = theme(
 
 
 ## function to plot single Period for Low and High Kelp treatments ~~~~~~~~~~~~~ 
-test.plot <- function(high_dat, var, 
+plot.dynamics <- function(high_dat, var, 
                       high_lower_ribbon, 
                       high_upper_ribbon, 
                       high_fill, ## params to plot High Kelp ribbon
@@ -131,8 +138,8 @@ test.plot <- function(high_dat, var,
 
 
 
-## invoke function to plot a single pane ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-p1 <- test.plot(
+## invoke function to plot Period 1 high & low drift consumed at Period 1 ~~~~~~
+drift.1 <- plot.dynamics(
   
   high_dat = combined_high,
   var = S0,
@@ -156,16 +163,313 @@ p1 <- test.plot(
 )
 
 
-## plot single figure
-windows(4, 4, record=T)
-print(p1)
+## edit axis labels as required for final, aggregated figure
+drift.1 <- drift.1 + x.blank
+print(drift.1)
+## END Period 1 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## invoke function to plot Period 2 high & low drift consumed ~~~~~~~~~~~~~~~~~~
+drift.2 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Smin_2, 
+  high_upper_ribbon = Smax_2, 
+  high_fill = high_drift_col,
+  high_init = S0,
+  high_period = S_P2, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Smin_2, 
+  low_upper_ribbon = Smax_2, 
+  low_fill = low_drift_col,
+  low_init = S0,
+  low_period = S_P2, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Drift consumed",
+  plot_title =  "Period 2: t = 89hr snapshot",
+  ymax = ymax_loss
+)
 
 
 ## edit axis labels as required for final, aggregated figure
-p1 <- p1 + x.blank
-print(p1)
-## END graphing function and invocation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drift.2 <- drift.2 + x.blank + y.blank 
+print(drift.2)
+## END Period 2 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+
+
+## invoke function to plot Period 3 high & low drift consumed ~~~~~~~~~~~~~~~~~~
+drift.3 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Smin_3, 
+  high_upper_ribbon = Smax_3, 
+  high_fill = high_drift_col,
+  high_init = S0,
+  high_period = S_P3, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Smin_3, 
+  low_upper_ribbon = Smax_3, 
+  low_fill = low_drift_col,
+  low_init = S0,
+  low_period = S_P3, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Drift consumed",
+  plot_title =  "Period 3: t = 134hr snapshot",
+  ymax = ymax_loss
+)
+
+
+## edit axis labels as required for final, aggregated figure
+drift.3 <- drift.3 + x.blank + y.blank 
+print(drift.3)
+## END Period 3 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+## invoke function to plot Period 1 high & low kelp consumed ~~~~~~~~~~~~~~~~~~~
+kelp.1 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Amin_1, 
+  high_upper_ribbon = Amax_1, 
+  high_fill = high_kelp_col,
+  high_init = S0,
+  high_period = A_P1, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Amin_1, 
+  low_upper_ribbon = Amax_1, 
+  low_fill = low_kelp_col,
+  low_init = S0,
+  low_period = A_P1, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Kelp consumed",
+  plot_title =  element_blank(),
+  ymax = ymax_loss
+)
+
+
+## edit axis labels as required for final, aggregated figure
+kelp.1 <- kelp.1 + x.blank #+ y.blank 
+print(kelp.1)
+## END Period 1 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## invoke function to plot Period 2 high & low kelp consumed ~~~~~~~~~~~~~~~~~~~
+kelp.2 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Amin_2, 
+  high_upper_ribbon = Amax_2, 
+  high_fill = high_kelp_col,
+  high_init = S0,
+  high_period = A_P2, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Amin_2, 
+  low_upper_ribbon = Amax_2, 
+  low_fill = low_kelp_col,
+  low_init = S0,
+  low_period = A_P2, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Kelp consumed",
+  plot_title =  element_blank(),
+  ymax = ymax_loss
+)
+
+
+## edit axis labels as required for final, aggregated figure
+kelp.2 <- kelp.2 + x.blank + y.blank 
+print(kelp.2)
+## END Period 2 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## invoke function to plot Period 3 high & low kelp consumed ~~~~~~~~~~~~~~~~~~~
+kelp.3 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Amin_3, 
+  high_upper_ribbon = Amax_3, 
+  high_fill = high_kelp_col,
+  high_init = S0,
+  high_period = A_P3, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Amin_3, 
+  low_upper_ribbon = Amax_3, 
+  low_fill = low_kelp_col,
+  low_init = S0,
+  low_period = A_P3, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Kelp consumed",
+  plot_title =  element_blank(),
+  ymax = ymax_loss
+)
+
+
+## edit axis labels as required for final, aggregated figure
+kelp.3 <- kelp.3 + x.blank + y.blank 
+print(kelp.3)
+## END Period 3 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## invoke function to plot Period 1 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~
+fullness.1 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Fmin_1, 
+  high_upper_ribbon = Fmax_1, 
+  high_fill = high_fullness_col,
+  high_init = S0,
+  high_period = F_P1, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Fmin_1, 
+  low_upper_ribbon = Fmax_1, 
+  low_fill = low_fullness_col,
+  low_init = S0,
+  low_period = F_P1, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Cumulative stomach fullness",
+  plot_title =  element_blank(),
+  ymax = ymax_fill
+)
+
+
+## edit axis labels as required for final, aggregated figure
+#fullness.1 <- fullness.1 + x.blank + y.blank 
+print(fullness.1)
+## END Period 1 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## invoke function to plot Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~
+fullness.2 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Fmin_2, 
+  high_upper_ribbon = Fmax_2, 
+  high_fill = high_fullness_col,
+  high_init = S0,
+  high_period = F_P2, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Fmin_2, 
+  low_upper_ribbon = Fmax_2, 
+  low_fill = low_fullness_col,
+  low_init = S0,
+  low_period = F_P2, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Cumulative stomach fullness",
+  plot_title =  element_blank(),
+  ymax = ymax_fill
+)
+
+
+## edit axis labels as required for final, aggregated figure
+fullness.2 <- fullness.2 + y.blank 
+print(fullness.2)
+## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## invoke function to plot Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~
+fullness.3 <- plot.dynamics(
+  
+  high_dat = combined_high,
+  var = S0,
+  high_lower_ribbon = Fmin_3, 
+  high_upper_ribbon = Fmax_3, 
+  high_fill = high_fullness_col,
+  high_init = S0,
+  high_period = F_P3, 
+  
+  low_dat = combined_low,
+  low_lower_ribbon = Fmin_3, 
+  low_upper_ribbon = Fmax_3, 
+  low_fill = low_fullness_col,
+  low_init = S0,
+  low_period = F_P3, 
+  
+  x_axis_text = "Initial drift",
+  y_axis_text = "Cumulative stomach fullness",
+  plot_title =  element_blank(),
+  ymax = ymax_fill
+)
+
+
+## edit axis labels as required for final, aggregated figure
+fullness.3 <- fullness.3 + y.blank 
+print(fullness.3)
+## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+## plot
+library(tidyverse)
+library(egg)
+
+all.temporal.dynamics <- ggarrange(
+  tag_facet(drift.1 + facet_wrap(~ "time"), tag_pool = "a"),
+  tag_facet(drift.2 + facet_wrap(~ "time"), tag_pool = "b"),
+  tag_facet(drift.3 + facet_wrap(~ "time"), tag_pool = "c"),
+  tag_facet(kelp.1 + facet_wrap(~ "time"), tag_pool = "d"),
+  tag_facet(kelp.2 + facet_wrap(~ "time"), tag_pool = "e"),
+  tag_facet(kelp.3 + facet_wrap(~ "time"), tag_pool = "f"),
+  tag_facet(fullness.1 + facet_wrap(~ "time"), tag_pool = "d"),
+  tag_facet(fullness.2 + facet_wrap(~ "time"), tag_pool = "e"),
+  tag_facet(fullness.3 + facet_wrap(~ "time"), tag_pool = "f"),
+  nrow = 3,
+  ncol = 3
+)
+
+windows(11, 8)
+print(all.temporal.dynamics)
+
+ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", sel.model, ".pdf"), 
+                plot = all9, 
+                dpi = 1200, 
+                width = 11,
+                height = 8, 
+                units = "in")
 
 
 

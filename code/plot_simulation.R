@@ -159,7 +159,6 @@ drift.1 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 drift.1 <- drift.1 + x.blank
-print(drift.1)
 ## END Period 1 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -193,7 +192,6 @@ drift.2 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 drift.2 <- drift.2 + x.blank + y.blank 
-print(drift.2)
 ## END Period 2 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -227,7 +225,6 @@ drift.3 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 drift.3 <- drift.3 + x.blank + y.blank 
-print(drift.3)
 ## END Period 3 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -260,7 +257,6 @@ kelp.1 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 kelp.1 <- kelp.1 + x.blank #+ y.blank 
-print(kelp.1)
 ## END Period 1 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -294,7 +290,6 @@ kelp.2 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 kelp.2 <- kelp.2 + x.blank + y.blank 
-print(kelp.2)
 ## END Period 2 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -328,7 +323,6 @@ kelp.3 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 kelp.3 <- kelp.3 + x.blank + y.blank 
-print(kelp.3)
 ## END Period 3 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -358,11 +352,6 @@ fullness.1 <- plot.dynamics(
   plot_title =  element_blank(),
   ymax = ymax_fill
 )
-
-
-## edit axis labels as required for final, aggregated figure
-#fullness.1 <- fullness.1 + x.blank + y.blank 
-print(fullness.1)
 ## END Period 1 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -396,7 +385,6 @@ fullness.2 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 fullness.2 <- fullness.2 + y.blank 
-print(fullness.2)
 ## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -430,7 +418,6 @@ fullness.3 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 fullness.3 <- fullness.3 + y.blank 
-print(fullness.3)
 ## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -438,9 +425,6 @@ print(fullness.3)
 
 
 ## plot all 9 panes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-library(tidyverse)
-library(egg)
-
 all.temporal.dynamics <- ggarrange(
   tag_facet(drift.1 + facet_wrap(~ "time"), tag_pool = "a"),
   tag_facet(drift.2 + facet_wrap(~ "time"), tag_pool = "b"),

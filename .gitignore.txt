@@ -1,0 +1,3 @@
+# Ignore the folder named 'kelp_controls_drift_ms'
+
+drift_controls_kelp_ms

@@ -14,6 +14,7 @@ rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
 
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 ## list of params
+## For vanLeeuwen, we use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
 parms <- c("a", "v", "w", "q", "sigma")
 
 
@@ -166,9 +167,9 @@ ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"),
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Plot preference-for-drift function 
-# For logistic, x = log(S / A), 
-# thus
-# for vanLeeuwen, divide numerator and denominator by A and substitute S/A = exp(x)
+# For logistic, x = log(S / A).
+# For vanLeeuwen, divide numerator and denominator by A and substitute S/A = exp(x).
+# For van Leeuwen we use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
 if(sel.model == 'Logistic'){
   
   Preference <- function(x){
@@ -180,7 +181,6 @@ if(sel.model == 'Logistic'){
   }
   
 }else{
-  
   Preference <- function(x){
     1 - ( 1 + exp( w + x )) / 
       ( 1 + exp( log(2) + w + x ) + exp( q + 2 * x )) 

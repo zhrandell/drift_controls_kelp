@@ -58,6 +58,7 @@
         // f_A = A * a * (     ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) )
 
         // vanLeeuwen et al. reformulated
+        // We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
         f_S = S * a * ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
         f_A = A * a * (      ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );      
       }

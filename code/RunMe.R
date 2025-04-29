@@ -4,7 +4,7 @@ rm(list = ls())
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Choose the model [1] or [2]
-sel.model <- c('Logistic', 'vanLeeuwen')[1]
+sel.model <- c('Logistic', 'vanLeeuwen')[2]
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Libraries for 'format_data.R'

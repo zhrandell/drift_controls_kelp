@@ -84,6 +84,7 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
     with(as.list(c(S0, A0, F0)),{
       
       ## vanLeeuwen
+      # We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
       f_S <- S * a * (1 - (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A))))
       f_A <- A * a * ((1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A))))
       

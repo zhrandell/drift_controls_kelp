@@ -142,19 +142,19 @@ plot.posterior <- function(x, param='a', label='a'){
 
 ## create posterior plots
 a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
-v_post <- plot.posterior(posts_df_raw, 'v', "Satiation sensitivity (\u03B7)")
+v_post <- plot.posterior(posts_df_raw, 'v', "Satiation sensitivity v")
 w_post <- plot.posterior(posts_df_raw, 'w', "Baseline preference (\u03c9)")
-wy_post <- plot.posterior(posts_df_raw, 'w_y', "Baseline preference (w)")
+#wy_post <- plot.posterior(posts_df_raw, 'w_y', "Baseline preference (w)") 
 q_post <- plot.posterior(posts_df_raw, 'q', "Switching rate (\u03C6)")
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
 
 
 allparms <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(v_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "c"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(wy_post + facet_wrap(~"time"), tag_pool = "e"),
-                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
+                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "c"),
+                  #tag_facet(wy_post + facet_wrap(~"time"), tag_pool = "e"),
+                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "d"),
+                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "e"),
                   nrow = 2, ncol = 3)
 
 ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"), 

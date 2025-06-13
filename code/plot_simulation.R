@@ -7,8 +7,6 @@
 
 
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Choose the model [1] or [2]
-sel.model <- c('Logistic', 'vanLeeuwen')[1]
 load(paste0(results,"/ODE_toPlot_kelp_high_", sel.model,".RDA"))
 load(paste0(results,"/ODE_toPlot_kelp_low_", sel.model,".RDA"))
 ## END set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,7 +150,7 @@ drift.1 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Drift consumed",
-  plot_title =  "Period 1: t = 44hr snapshot",
+  plot_title =  "Period 1",
   ymax = ymax_loss
 )
 
@@ -185,7 +183,7 @@ drift.2 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Drift consumed",
-  plot_title =  "Period 2: t = 89hr snapshot",
+  plot_title =  "Period 2",
   ymax = ymax_loss
 )
 
@@ -218,7 +216,7 @@ drift.3 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Drift consumed",
-  plot_title =  "Period 3: t = 134hr snapshot",
+  plot_title =  "Period 3",
   ymax = ymax_loss
 )
 
@@ -348,7 +346,7 @@ fullness.1 <- plot.dynamics(
   low_period = F_P1, 
   
   x_axis_text = "Initial drift",
-  y_axis_text = "Cumulative stomach fullness",
+  y_axis_text = "Stomach fullness",
   plot_title =  element_blank(),
   ymax = ymax_fill
 )
@@ -377,7 +375,7 @@ fullness.2 <- plot.dynamics(
   low_period = F_P2, 
   
   x_axis_text = "Initial drift",
-  y_axis_text = "Cumulative stomach fullness",
+  y_axis_text = "Stomach fullness",
   plot_title =  element_blank(),
   ymax = ymax_fill
 )
@@ -410,7 +408,7 @@ fullness.3 <- plot.dynamics(
   low_period = F_P3, 
   
   x_axis_text = "Initial drift",
-  y_axis_text = "Cumulative stomach fullness",
+  y_axis_text = "Stomach fullness",
   plot_title =  element_blank(),
   ymax = ymax_fill
 )
@@ -439,7 +437,6 @@ all.temporal.dynamics <- ggarrange(
   ncol = 3
 )
 
-windows(11, 8)
 print(all.temporal.dynamics)
 
 

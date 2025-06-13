@@ -23,6 +23,12 @@ functions {
     real q = theta[4];			// switching rate
     real U = x_r[1]; 			  // Urchins
 
+
+// Hunger level
+  H = exp(- v * F);
+  // H = 1 - v * F;
+  
+  
 // For control treatments
   if(S == 0){
     f_S = 0;
@@ -38,30 +44,27 @@ functions {
   }
   if(S > 0 && A > 0){
 // Yodzis preference formulation [requiring constrained 0-1 prior on w]
-//   f_S = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-//   f_A = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+//   f_S = S * H * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+//   f_A = A * H * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
 
 // Logistic preference formulation [requiring constrained 0-1 prior on w]
-  // f_S = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-  // f_A = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+  // f_S = S * H * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+  // f_A = A * H * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
 
 // Logistic preference - multiplicative log formulation [permitting Normal prior on w]
-  // f_S = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-  // f_A = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  // f_S = S * H * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  // f_A = A * H * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
   
 // Logistic preference - additive log formulation [permitting Normal priors on w and q]
-    f_S = S * a * ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-    f_A = A * a * (     ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+    f_S = S * H * a * ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+    f_A = A * H * a * (     ( 1 / ( 1 + exp( w + q * log(S / A) ))));
   }
   
-// Hunger level
-  H = exp(- v * F);
-  // H = 1 - v * F;
-  
+
 // Drift, Kelp, Stomach
-	dS_dt = - U * f_S * H;
-	dA_dt = - U * f_A * H;
-	dF_dt =   f_S + f_A;
+	dS_dt = - U * f_S;
+	dA_dt = - U * f_A;
+	dF_dt =   (f_S + f_A);
 
   return [dS_dt, dA_dt, dF_dt]';
   }

@@ -23,53 +23,38 @@
       real q = theta[4]; 		  // switching rate
       real U = x_r[1]; 			  // Urchins
       
+      // Hunger level
+      H = exp(- v * F);
+      // H = 1 - v * F;
+      
       // For control treatments
       if(S == 0){
         f_S = 0;
       }
       else{
-        f_S = S * a;
+        f_S = S * H * a;
       }
       if(A == 0){
         f_A = 0;
       }
       else{
-        f_A = A * a;
+        f_A = A * H * a;
       }
       if(S > 0 && A > 0){
-        // Yodzis preference formulation [requiring constrained 0-1 prior on w]
-        //   f_S = S * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-        //   f_A = A * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-        
-        // Logistic preference formulation [requiring constrained 0-1 prior on w]
-        // f_S = S * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-        // f_A = A * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-        
-        // Logistic preference - multiplicative log formulation [permitting Normal prior on w]
-        // f_S = S * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-        // f_A = A * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-        
-        // Logistic preference - additive log formulation [permitting Normal priors on w and q]
-        // f_S = S * a * ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-        // f_A = A * a * (     ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-        
         // vanLeeuwen et al.
-        // f_S = S * a * ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
-        // f_A = A * a * (     ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) )
+        // f_S = S * H * a * ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
+        // f_A = A * H * a * (     ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) )
 
         // vanLeeuwen et al. reformulated
         // We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-        f_S = S * a * ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
-        f_A = A * a * (      ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );      
+        f_S = S * H * a * ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+        f_A = A * H * a * (      ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );      
       }
       
-      // Hunger level
-      H = exp(- v * F);
-      // H = 1 - v * F;
       
       // Drift, Kelp, Stomach
-      dS_dt = - U * f_S * H;
-      dA_dt = - U * f_A * H;
+      dS_dt = - U * f_S;
+      dA_dt = - U * f_A;
       dF_dt =   f_S + f_A;
       
       return [dS_dt, dA_dt, dF_dt]';
@@ -115,10 +100,10 @@ transformed data {
 // but keep wide enough to not affect accepted priors
 parameters {
   real <lower = 0, upper = 0.01> a;
-  real <lower = 0, upper = 0.3> v;
-  real <lower = -20, upper = 20> w;
-  real <lower = 0, upper = 10> q;
-  real <lower = 10, upper = 30> sigma;
+  real <lower = 0, upper = 0.5> v;
+  real <lower = -30, upper = 10> w;
+  real <lower = 2, upper = 7> q;
+  real <lower = 10, upper = 20> sigma;
 }
 
 transformed parameters {

@@ -65,15 +65,15 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   
   resourceLoss_Logistic <- function(S0, A0, F0, params) {
     with(as.list(c(S0, A0, F0)),{
-   
-      ## logistic
-      f_S <- S * a * (1 - (1 / (1 + exp(w + q * log(S / A)))))
-      f_A <- A * a * (1 / (1 + exp(w + q * log(S / A))))
       
       H = exp(- v * F)
+   
+      ## logistic
+      f_S <- S * H * a * (1 - (1 / (1 + exp(w + q * log(S / A)))))
+      f_A <- A * H * a * (1 / (1 + exp(w + q * log(S / A))))
       
-      dS_dt = - U * f_S * H
-      dA_dt = - U * f_A * H
+      dS_dt = - U * f_S
+      dA_dt = - U * f_A
       dF_dt = f_S + f_A
       
       return(list(c(dS_dt, dA_dt, dF_dt)))
@@ -83,15 +83,16 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   resourceLoss_vanLeeuwen <- function(S0, A0, F0, params) {
     with(as.list(c(S0, A0, F0)),{
       
-      ## vanLeeuwen
-      # We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-      f_S <- S * a * (1 - (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A))))
-      f_A <- A * a * ((1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A))))
-      
       H = exp(- v * F)
       
-      dS_dt = - U * f_S * H
-      dA_dt = - U * f_A * H
+      ## vanLeeuwen
+      # We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
+      f_S <- S * H * a * (1 - (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A))))
+      f_A <- A * H * a * (    (1 + exp(w + log(S / A))) / (1 + exp(log(2) + w + log(S / A)) + exp(q + 2 * log(S / A))))
+    
+      
+      dS_dt = - U * f_S
+      dA_dt = - U * f_A
       dF_dt = f_S + f_A
       
       return(list(c(dS_dt, dA_dt, dF_dt)))

@@ -4,10 +4,20 @@
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-## specify directory and open saved RDS file
+## specify directory and open saved RDS files
 fit <- readRDS(paste0(results, "/model_output_", sel.model, ".RDS"))
 
-rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
+# rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
+rdat <- readRDS(paste0(results,"/loss_dat.RData"))
+rdat <- data.frame(rbind(rdat$y1_init_s_a,
+                         rdat$y2_init_s_a,
+                         rdat$y3_init_s_a,
+                         rdat$y4_init_s_a,
+                         rdat$y5_init_s_a
+                         ))
+colnames(rdat) <- c('Drift_Initial','Kelp_Initial','Urchins')
+sel <- rdat$Drift_Initial > 0 & rdat$Kelp_Initial > 0
+rdat <- rdat[sel ,]
 
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -326,6 +336,13 @@ cat('Baseline preference (equal abundance) log-odds:\n',
     Logit(Pref.One2One[1]),
     '-',
     Logit(Pref.One2One[3]),
+    ') drift to kelp.\n')
+cat('Baseline preference (equal abundance) odds:\n', 
+    exp(Logit(Pref.One2One[2])), 
+    ' (',
+    exp(Logit(Pref.One2One[1])),
+    '-',
+    exp(Logit(Pref.One2One[3])),
     ') drift to kelp.\n')
 sink()
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

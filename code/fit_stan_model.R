@@ -17,8 +17,8 @@ model <- cmdstan_model(file <- paste0(code,
 ## initiate sampling 
 fit <- model$sample(data = loss_dat,
                   chains = 4,
-                  iter_warmup = 200,
-                  iter_sampling = 500,
+                  iter_warmup = 1000,
+                  iter_sampling = 3000,
                   adapt_delta = 0.80, 
                   parallel_chains = 4)
 

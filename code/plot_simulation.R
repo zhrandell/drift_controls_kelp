@@ -66,6 +66,48 @@ my.theme = theme(
 
 
 
+## function to create custom legend via grob ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+library(grid)
+
+# Function to return a grob for custom legend
+custom_legend_grob <- function(low_col, high_col) {
+  legend_df <- data.frame(
+    x = 0.55,
+    y = c(1.00, 0.87),
+    label = c("Low", "High"),
+    fill = c(low_col, high_col)
+  )
+  
+  ggplot(legend_df, aes(x = x, y = y)) +
+    geom_tile(aes(fill = fill),
+              width = 0.2,
+              height = 0.075,
+              show.legend = FALSE) +
+    geom_text(aes(label = label),
+              hjust = 0,
+              nudge_x = 0.25,
+              size = 5) +
+    scale_fill_identity() +
+    theme_void() +
+    coord_fixed(
+      ratio = 1.5,
+      xlim = c(0.5, 1.1),
+      ylim = c(0.8, 1.05),  
+      expand = FALSE
+    )
+}
+
+
+## create the three legends
+legend_drift <- ggplotGrob(custom_legend_grob(low_drift_col, high_drift_col))
+legend_kelp <- ggplotGrob(custom_legend_grob(low_kelp_col, high_kelp_col))
+legend_full <- ggplotGrob(custom_legend_grob(low_fullness_col, high_fullness_col))
+## END custom legend ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
 ## function to plot single Period for Low and High Kelp treatments ~~~~~~~~~~~~~ 
 plot.dynamics <- function(high_dat, var, 
                       high_lower_ribbon, 
@@ -222,7 +264,8 @@ drift.3 <- plot.dynamics(
 
 
 ## edit axis labels as required for final, aggregated figure
-drift.3 <- drift.3 + x.blank + y.blank 
+drift.3 <- drift.3 + x.blank + y.blank +
+  annotation_custom(grob = legend_drift, xmin = 200, xmax = 300, ymin = 80, ymax = 130)
 ## END Period 3 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -320,7 +363,8 @@ kelp.3 <- plot.dynamics(
 
 
 ## edit axis labels as required for final, aggregated figure
-kelp.3 <- kelp.3 + x.blank + y.blank 
+kelp.3 <- kelp.3 + x.blank + y.blank +
+  annotation_custom(grob = legend_kelp, xmin = 200, xmax = 300, ymin = 80, ymax = 130)
 ## END Period 3 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -415,7 +459,8 @@ fullness.3 <- plot.dynamics(
 
 
 ## edit axis labels as required for final, aggregated figure
-fullness.3 <- fullness.3 + y.blank 
+fullness.3 <- fullness.3 + y.blank +
+  annotation_custom(grob = legend_full, xmin = 200, xmax = 300, ymin = 30, ymax = 45)
 ## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -437,7 +482,11 @@ all.temporal.dynamics <- ggarrange(
   ncol = 3
 )
 
-print(all.temporal.dynamics)
+
+## view plot, if desired
+#graphics.off()
+#windows(11, 8)
+#print(all.temporal.dynamics)
 
 
 ## save pdf 

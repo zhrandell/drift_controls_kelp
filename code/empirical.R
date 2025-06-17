@@ -7,25 +7,6 @@
 
 
 ## startup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rm(list = ls())
-
-
-## libraries
-library(tidyverse)
-library(scales)
-library(ggpubr)
-
-
-## set working directory to home folder
-setwd("../")
-getwd()
-
-
-## relative file paths to necessary locations 
-data <- "data"
-figs <- "figs"
-
-
 ## read in data
 dat <- read.csv(file.path(data, "drift_kelp_loss.csv"))
 ## END startup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

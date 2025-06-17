@@ -7,8 +7,17 @@ rm(list = ls())
 sel.model <- c('Logistic', 'vanLeeuwen')[2]
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-## Libraries for 'format_data.R'
+
+
+
+
+## Libraries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Libraries for 'empirical.R'
 library(tidyverse)
+library(scales)
+library(ggpubr)
+
+## Libraries for 'format_data.R' 
 library(stats)
 library(gridExtra)
 library(gtable)
@@ -39,9 +48,13 @@ library(ggplot2)
 library(egg)
 library(tidyselect)
 library(scales)
-
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## check wd is appropriate
 getwd()
 
@@ -52,12 +65,18 @@ results <- "../results"
 figs <- "../figs"
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+
+## source files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source('empirical.R')
 source('format_data.R')
 source('fit_stan_model.R')
 source('analyze_visualize.R')
 source('simulate.R')
 source('simulate_process.R')
 source('plot_simulation.R')
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

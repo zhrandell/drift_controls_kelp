@@ -14,6 +14,7 @@ functions {
     real f_S;         // Feeding rate on drift
     real f_A;         // Feeding rate on kelp
     real H;           // Hunger level
+    real p;           // Preference for drift
     real S = Y[1]; 			// Drift
     real A = Y[2]; 			// Kelp
     real F = Y[3];			// Stomach fullness 
@@ -27,39 +28,22 @@ functions {
 // Hunger level
   H = exp(- v * F);
   // H = 1 - v * F;
-  
-  
-// For control treatments
-  if(S == 0){
-    f_S = 0;
-  }
-  else{
-    f_S = S * a;
-  }
-  if(A == 0){
-    f_A = 0;
-  }
-  else{
-    f_A = A * a;
-  }
-  if(S > 0 && A > 0){
+
 // Yodzis preference formulation [requiring constrained 0-1 prior on w]
-//   f_S = S * H * a * (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-//   f_A = A * H * a * (((1-w) * pow(A, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
+//   p = (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
 
 // Logistic preference formulation [requiring constrained 0-1 prior on w]
-  // f_S = S * H * a * ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-  // f_A = A * H * a * (     ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
+  // p = ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
 
 // Logistic preference - multiplicative log formulation [permitting Normal prior on w]
-  // f_S = S * H * a * ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
-  // f_A = A * H * a * (     ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
+  // p = ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
   
 // Logistic preference - additive log formulation [permitting Normal priors on w and q]
-    f_S = S * H * a * ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-    f_A = A * H * a * (     ( 1 / ( 1 + exp( w + q * log(S / A) ))));
-  }
-  
+  p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+
+// Consumption rates
+  f_S = S * H * a * p;
+  f_A = A * H * a * (1 - p);
 
 // Drift, Kelp, Stomach
 	dS_dt = - U * f_S;

@@ -14,6 +14,7 @@
       real f_S;         // Feeding rate on drift
       real f_A;         // Feeding rate on kelp
       real H;           // Hunger level
+      real p;           // Preference for drift
       real S = Y[1]; 			// Drift
       real A = Y[2]; 			// Kelp
       real F = Y[3];			// Stomach fullness 
@@ -24,38 +25,24 @@
       real U = x_r[1]; 			  // Urchins
       
       // Hunger level
-      H = exp(- v * F);
+      H = exp( - v * F );
       // H = 1 - v * F;
       
-      // For control treatments
-      if(S == 0){
-        f_S = 0;
-      }
-      else{
-        f_S = S * H * a;
-      }
-      if(A == 0){
-        f_A = 0;
-      }
-      else{
-        f_A = A * H * a;
-      }
-      if(S > 0 && A > 0){
-        // vanLeeuwen et al.
-        // f_S = S * H * a * ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
-        // f_A = A * H * a * (     ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) )
+      // vanLeeuwen et al.
+      // p = ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
 
-        // vanLeeuwen et al. reformulated
-        // We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-        f_S = S * H * a * ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
-        f_A = A * H * a * (      ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );      
-      }
+      // vanLeeuwen et al. reformulated
+      // We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
+      p = ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
       
-      
+      // Consumption rates
+      f_S = S * H * a * p;
+      f_A = A * H * a * (1 - p);      
+
       // Drift, Kelp, Stomach
       dS_dt = - U * f_S;
       dA_dt = - U * f_A;
-      dF_dt =   f_S + f_A;
+      dF_dt =   (f_S + f_A);
       
       return [dS_dt, dA_dt, dF_dt]';
   }

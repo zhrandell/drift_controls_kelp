@@ -229,14 +229,11 @@ p3 <- fig2(
 
 
 ## combine all rows into 1
-graphics.off()
-windows(h = 12, w = 10, record = TRUE)
 seq1_results <- ggarrange(p1, p2, p3, nrow = 3)
-print(seq1_results)
 
 
 ## save 
-ggsave("figs/fig2.pdf", 
+ggsave(paste0(figs,"/fig2.pdf"), 
        plot = seq1_results, 
        width = 10, 
        height = 12, 
@@ -266,15 +263,8 @@ all_consumption <- ggplot(dat, aes(x = Total_Initial, y = Total_Consumed)) +
   my.text + upper.R.legend.2
 
 
-
-## plot 
-graphics.off()
-windows(h=7,w=12, record=TRUE)
-print(all_consumption)
-
-
 ## save
-ggsave("figs/SOM_all_consumption.pdf", 
+ggsave(paste0(figs,"/SOM_all_consumption.pdf"), 
        plot = all_consumption, 
        width = 12, 
        height = 7, 
@@ -403,14 +393,8 @@ pAll <- ggarrange(p4, p5, p6,
                   common.legend = TRUE,
                   legend = "bottom")
 
-## plot 
-graphics.off()
-windows(h=11,w=13, record=TRUE)
-print(pAll)
-
-
 ## save
-ggsave("figs/SOM_both_sequences.pdf", 
+ggsave(paste0(figs,"/SOM_both_sequences.pdf"), 
        plot = pAll, 
        width = 11, 
        height = 13, 

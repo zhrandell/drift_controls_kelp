@@ -72,7 +72,7 @@ source('empirical.R')
 source('format_data.R')
 source('fit_stan_model.R')
 source('analyze_visualize.R')
-source('simulate.R')
+source('simulate.R') # This step takes a long time
 source('simulate_process.R')
 source('plot_simulation.R')
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

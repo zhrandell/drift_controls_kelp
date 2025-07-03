@@ -32,8 +32,8 @@ lwd_sml <- 0.75
 wid1 <- 0.5
 wid2 <- 1
 lineCol <- "black"
-ymax_loss <- 130
-ymax_fill <- 45
+ymax_loss <- 125
+ymax_fill <- 11
 
 
 ## axis options for final, aggregated figure
@@ -460,7 +460,8 @@ fullness.3 <- plot.dynamics(
 
 ## edit axis labels as required for final, aggregated figure
 fullness.3 <- fullness.3 + y.blank +
-  annotation_custom(grob = legend_full, xmin = 200, xmax = 300, ymin = 30, ymax = 45)
+  annotation_custom(grob = legend_full, 
+                    xmin = 200, xmax = 300, ymin = 0, ymax = 2)
 ## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

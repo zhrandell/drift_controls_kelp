@@ -22,11 +22,15 @@
       real v = theta[2];			// stomach satiation sensitivity
       real w = theta[3];			// relative preference
       real q = theta[4]; 		  // switching rate
+      real z = theta[5]; 		  // evacuation rate
       real U = x_r[1]; 			  // Urchins
       
       // Hunger level
-      H = exp( - v * F );
+      // H = exp( - v * F );
       // H = 1 - v * F;
+      // H = 1 / (1 + exp(v * (F - z)));
+      H = 2 / (1 + exp( ( F / z )^v ));
+      
       
       // vanLeeuwen et al.
       // p = ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
@@ -42,7 +46,7 @@
       // Drift, Kelp, Stomach
       dS_dt = - U * f_S;
       dA_dt = - U * f_A;
-      dF_dt =   (f_S + f_A);
+      dF_dt =   f_S + f_A;
       
       return [dS_dt, dA_dt, dF_dt]';
   }
@@ -87,14 +91,15 @@ transformed data {
 // but keep wide enough to not affect accepted priors
 parameters {
   real <lower = 0, upper = 0.01> a;
-  real <lower = 0, upper = 0.5> v;
+  real <lower = 0, upper = 2> v;
   real <lower = -30, upper = 10> w;
   real <lower = 2, upper = 7> q;
+  real <lower = 1, upper = 10> z;
   real <lower = 10, upper = 20> sigma;
 }
 
 transformed parameters {
-  array[4] real theta;
+  array[5] real theta;
   array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
   array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
@@ -114,6 +119,7 @@ transformed parameters {
   theta[2] = v;
   theta[3] = w;
   theta[4] = q;
+  theta[5] = z;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -196,9 +202,10 @@ transformed parameters {
 
 model {
   a ~ exponential(1);
-  v ~ exponential(1);
+  v ~ exponential(0.1);
   w ~ normal(0, 10);
   q ~ normal(0, 10);
+  z ~ normal(10, 1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

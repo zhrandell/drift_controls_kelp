@@ -25,7 +25,7 @@ rdat <- rdat[sel ,]
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 ## list of params
 ## For vanLeeuwen, we use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-parms <- c("a", "v", "w", "q", "sigma")
+parms <- c("a", "v", "w", "q", "z", "sigma")
 
 
 ## print param list output
@@ -152,19 +152,19 @@ plot.posterior <- function(x, param='a', label='a'){
 
 ## create posterior plots
 a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
-v_post <- plot.posterior(posts_df_raw, 'v', "Satiation sensitivity v")
+v_post <- plot.posterior(posts_df_raw, 'v', "Stomach sensitivity (v)")
+z_post <- plot.posterior(posts_df_raw, 'z', "Evacuation rate (e)")
 w_post <- plot.posterior(posts_df_raw, 'w', "Baseline preference (\u03c9)")
-#wy_post <- plot.posterior(posts_df_raw, 'w_y', "Baseline preference (w)") 
 q_post <- plot.posterior(posts_df_raw, 'q', "Switching rate (\u03C6)")
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
 
-
-allparms <- ggarrange(tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
-                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "c"),
-                  #tag_facet(wy_post + facet_wrap(~"time"), tag_pool = "e"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "e"),
+allparms <- ggarrange(
+                  tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
+                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "b"),
+                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "c"),
+                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "d"),
+                  tag_facet(z_post + facet_wrap(~"time"), tag_pool = "e"),
+                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
 
 ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"), 
@@ -271,15 +271,6 @@ par(mar = c(3, 3, 1, 1),
         add = TRUE,
         col = 'grey',
         lwd = 3)
-  
-  # points(ratio.vals, Pref.Predictions,
-  #        type = 'l',
-  #        col = 'black',
-  #        lwd = 5)
-  # points(ratio.vals, Pref.Predictions,
-  #        type = 'l',
-  #        col = 'blue',
-  #        lwd = 3)
   
   Po2o <- Pref.One2One[2]
   segments(c(0, 0), c(0, Po2o), 

@@ -15,7 +15,7 @@ A.level = c("low" = 30,
 for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
 
   ## create sequences of initial conditions
-  len_init <- 100
+  len_init <- 40 # 100
   A0 <- seq(A.level[AL], A.level[AL], length.out = len_init)    # Kelp
   S0 <- seq(  1, 300, length.out = len_init)    # Drift
   F0 <- seq(  0,   0, length.out = len_init)    # Stomach Fullness
@@ -49,16 +49,19 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   
   ## list of params 
   aL <- posts_df_raw$a 
-  vL <- posts_df_raw$v
   wL <- posts_df_raw$w
   qL <- posts_df_raw$q
+  vL <- posts_df_raw$v
+  zL <- posts_df_raw$z
   
   
   ## first set of params 
   parm_list = c(a = aL[1],
-                v = vL[1],
                 w = wL[1],
-                q = qL[1])
+                q = qL[1],
+                v = vL[1],
+                z = zL[1]
+                )
   
   
   ## specify ODE functions
@@ -66,7 +69,9 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   resourceLoss_Logistic <- function(S0, A0, F0, params) {
     with(as.list(c(S0, A0, F0)),{
       
-      H = exp(- v * F)
+      # H = exp(- v * F)
+      # H = 1 / (1 + exp( v * (F - z)))
+      H = 2 / (1 + exp( ( F / z )^v ))
    
       ## logistic
       p = (1 - (1 / (1 + exp(w + q * log(S / A)))))
@@ -85,7 +90,9 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   resourceLoss_vanLeeuwen <- function(S0, A0, F0, params) {
     with(as.list(c(S0, A0, F0)),{
       
-      H = exp(- v * F)
+      # H = exp(- v * F)
+      H = 1 / (1 + exp(v * (F - z)))
+      
       
       ## vanLeeuwen
       # We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
@@ -119,7 +126,7 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   
   ## concatenate params into list of lists
   full_parm_list <- mapply(c, 
-                           a = aL, v = vL, w = wL, q = qL, 
+                           a = aL, w = wL, q = qL, v = vL, z = zL,
                            SIMPLIFY = FALSE)
   
   

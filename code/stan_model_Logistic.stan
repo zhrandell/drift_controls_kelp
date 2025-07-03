@@ -19,15 +19,15 @@ functions {
     real A = Y[2]; 			// Kelp
     real F = Y[3];			// Stomach fullness 
     real a = theta[1]; 			// per capita encounter rate
-    real v = theta[2];			// stomach satiation sensitivity
-    real w = theta[3]; 		  // baseline preference for drift over kelp
-    real q = theta[4];			// switching rate
+    real w = theta[2]; 		  // baseline preference for drift over kelp
+    real q = theta[3];			// switching rate
+    real z = theta[4];      // evacuation rate
     real U = x_r[1]; 			  // Urchins
 
 
 // Hunger level
   H = exp(- v * F);
-  // H = 1 - v * F;
+
 
 // Yodzis preference formulation [requiring constrained 0-1 prior on w]
 //   p = (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
@@ -48,7 +48,7 @@ functions {
 // Drift, Kelp, Stomach
 	dS_dt = - U * f_S;
 	dA_dt = - U * f_A;
-	dF_dt =   (f_S + f_A);
+	dF_dt =   (f_S + f_A) - z * F;
 
   return [dS_dt, dA_dt, dF_dt]';
   }
@@ -93,9 +93,9 @@ transformed data {
 // but keep wide enough to not affect accepted priors
 parameters {
   real <lower = 0, upper = 0.1> a;
-  real <lower = 0, upper = 0.5> v;
   real <lower = -1, upper = 8> w;
   real <lower = -5, upper = 5> q;
+  real <lower = 0, upper = 0.05> v;
   real <lower = 10, upper = 30> sigma;
 }
 
@@ -117,9 +117,9 @@ transformed parameters {
   array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
   
   theta[1] = a; 
-  theta[2] = v;
-  theta[3] = w;
-  theta[4] = q;
+  theta[2] = w;
+  theta[3] = q;
+  theta[4] = z;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -202,11 +202,9 @@ transformed parameters {
 
 model {
   a ~ exponential(1);
-  v ~ exponential(1);
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
-  // w ~ student_t(3, 0, 1);
-  // q ~ student_t(3, 0, 1);
+  z ~ exponential(1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

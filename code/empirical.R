@@ -34,6 +34,10 @@ dat$Total_Initial <- dat$Drift_Initial + dat$Kelp_Initial
 dat$Total_Consumed <- dat$Drift_Consumed + dat$Kelp_Consumed 
 
 
+## preserve original treatment labels
+dat$Treatment_Controls <- dat$Treatment  
+
+
 ## incorporate controls 
 dat$Treatment[dat$Treatment == "High_Control"] <- "High"
 dat$Treatment[dat$Treatment == "Low_Control"] <- "Low"
@@ -77,6 +81,14 @@ dat$group_label_simple <- case_when(
 )
 
 
+## Remove rows with NA values 
+dat <- dat %>%
+  filter(!is.na(Drift_Initial),
+         !is.na(Drift_Consumed),
+         !is.na(Kelp_Initial),
+         !is.na(Kelp_Consumed))
+
+
 ## to plot only sequence 1 data 
 seq1 <- dat %>% filter(Trial %in% 1:4)
 
@@ -118,15 +130,19 @@ my.text = theme(
 
 
 ## upper right legend
-upper.R.legend = theme(legend.position = c(1, 1),
+upper.R.legend = theme(legend.position.inside = c(1, 1),
                        legend.justification = c(1, 1),
                        legend.background = element_rect(fill = "white", color = NA))
 
 
 ## legend version with more space
-upper.R.legend.2 = theme(legend.position = c(.95, .95),
-                         legend.justification = c(1, 1),
-                         legend.background = element_rect(fill = "white", color = NA))
+upper.R.legend.2 <- theme(
+  legend.position = "inside",
+  legend.position.inside = c(0.98, 0.98),
+  legend.justification = c(1, 1),
+  legend.background = element_rect(fill = "white", color = NA),
+  legend.box.margin = margin(5,5,5,5)
+)
 
 
 ## disable legend 
@@ -176,10 +192,13 @@ fig2 <- function(data,
     no.legend
   }
   
-  ggplot(data, aes_string(x = xvar, y = yvar)) + my.theme + my.text +
+  ggplot(data, aes(x = {{ xvar }}, y = {{ yvar }})) + my.theme + my.text +
     geom_point(aes(color = Treatment, shape = Treatment), size = ptSize) +
-    geom_smooth(aes(color = Treatment, fill = Treatment),
-                size = smoothSize, span = smoothSpan, level = smoothCI) +
+    geom_smooth(
+      data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
+      aes(color = Treatment, fill = Treatment),
+      linewidth = smoothSize, span = smoothSpan, level = smoothCI
+    ) +
     scale_color_manual(values = palette) +
     scale_fill_manual(values = palette) +
     scale_shape_manual(values = c("Low" = 19, "High" = 17)) + 
@@ -194,8 +213,8 @@ fig2 <- function(data,
 ## create rows of fig 2 
 p1 <- fig2(
   data = seq1,
-  xvar = "Drift_Initial",
-  yvar = "Drift_Consumed",
+  xvar = Drift_Initial,
+  yvar = Drift_Consumed,
   palette = pal_drift,
   plot_title = "Drift consumed vs Drift available",
   xlab_text = "initial Drift (g)",
@@ -206,8 +225,8 @@ p1 <- fig2(
 
 p2 <- fig2(
   data = seq1,
-  xvar = "Drift_Initial",
-  yvar = "Kelp_Consumed",
+  xvar = Drift_Initial,
+  yvar = Kelp_Consumed,
   palette = pal_kelp,
   plot_title = "Kelp consumed vs Drift available",
   xlab_text = "initial Drift (g)",
@@ -218,8 +237,8 @@ p2 <- fig2(
 
 p3 <- fig2(
   data = seq1,
-  xvar = "Kelp_Initial",
-  yvar = "Kelp_Consumed",
+  xvar = Kelp_Initial,
+  yvar = Kelp_Consumed,
   palette = pal_kelp,
   plot_title = "Kelp consumed vs Kelp available",
   xlab_text = "initial Kelp (g)",
@@ -246,18 +265,37 @@ ggsave(paste0(figs,"/fig2.pdf"),
 
 
 ## all consumption (drift + kelp) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+all_levels <- names(pal_custom)
+dat$group_label_simple <- factor(dat$group_label_simple, levels = all_levels)
+
+
+smooth_data <- dat %>%
+  filter(!Treatment_Controls %in% c("High_Control", "Low_Control")) %>%
+  mutate(group_label_simple = factor(group_label_simple, levels = all_levels))
+
+
 all_consumption <- ggplot(dat, aes(x = Total_Initial, y = Total_Consumed)) +
   my.theme +
-  geom_point(aes(color = group_label_simple), pch = ptType, size = ptSize, alpha = alph) +
-  geom_smooth(aes(color = group_label_simple, fill = group_label_simple),
-              method = "loess", span = smoothSpan, size = smoothSize, level = smoothCI) +
-  scale_color_manual(values = pal_custom) +
-  scale_fill_manual(values = pal_custom) +
+  geom_point(aes(color = group_label_simple, fill = group_label_simple),
+             pch = ptType, size = ptSize, alpha = alph) +
+  geom_smooth(
+    data = smooth_data,
+    aes(x = Total_Initial, y = Total_Consumed,
+        color = group_label_simple, fill = group_label_simple, group = group_label_simple),
+    method = "loess",
+    formula = y ~ x,
+    span = smoothSpan,
+    linewidth = smoothSize,
+    level = smoothCI
+  ) +
+  scale_color_manual(name = NULL, values = pal_custom, drop = FALSE) +
+  scale_fill_manual(name = NULL, values = pal_custom, drop = FALSE) +
   guides(fill = guide_legend(nrow = 3), color = "none") +
-  labs(title = "Total biomass (kelp + drift) consumed across all eight experimental Trials",
-       x = "Biomass available", 
-       y = "Biomass consumed",
-       color = NULL, fill = NULL) +
+  labs(
+    title = "Total biomass (kelp + drift) consumed across all eight experimental Trials",
+    x = "Biomass available",
+    y = "Biomass consumed"
+  ) +
   facet_grid(cols = vars(hours), labeller = facet.label) +
   scale_y_continuous(limit = c(-1, NA), oob = squish) +
   my.text + upper.R.legend.2
@@ -333,10 +371,13 @@ all_seq <- function(data,
     )
   }
   
-  ggplot(data, aes_string(x = xvar, y = yvar)) + my.theme + my.text +
+  ggplot(data, aes(x = {{ xvar }}, y = {{ yvar }})) + my.theme + my.text +
     geom_point(aes(color = group_label, fill = group_label, shape = Treatment), size = ptSize) +
-    geom_smooth(aes(color = group_label, fill = group_label),
-                size = smoothSize, span = smoothSpan, level = smoothCI) +
+    geom_smooth(
+      data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
+      aes(x = {{ xvar }}, y = {{ yvar }}, color = group_label, fill = group_label),
+      linewidth = smoothSize, span = smoothSpan, level = smoothCI
+    ) +
     scale_color_manual(values = palette) +
     scale_fill_manual(values = palette) +
     scale_shape_manual(values = c("Low" = 19, "High" = 17)) + 
@@ -348,11 +389,12 @@ all_seq <- function(data,
 }
 
 
+
 ## invoke function - drift as a function of drift
 p4 <- all_seq(
   data = dat,
-  xvar = "Drift_Initial",
-  yvar = "Drift_Consumed",
+  xvar = Drift_Initial,
+  yvar = Drift_Consumed,
   palette = pal_custom,
   plot_title = "Drift consumed vs available drift",
   xlab_text = "initial drift (g)",
@@ -360,12 +402,11 @@ p4 <- all_seq(
   show_legend = FALSE
 )
 
-
 ## invoke function - kelp as a function of drift 
 p5 <- all_seq(
   data = dat,
-  xvar = "Drift_Initial",
-  yvar = "Kelp_Consumed",
+  xvar = Drift_Initial,
+  yvar = Kelp_Consumed,
   palette = pal_custom,
   plot_title = "Kelp consumed vs available drift",
   xlab_text = "initial drift (g)",
@@ -377,8 +418,8 @@ p5 <- all_seq(
 ## invoke function - kelp as a function of kelp
 p6 <- all_seq(
   data = dat,
-  xvar = "Kelp_Initial",
-  yvar = "Kelp_Consumed",
+  xvar = Kelp_Initial,
+  yvar = Kelp_Consumed,
   palette = pal_custom,
   plot_title = "Kelp consumed vs available kelp",
   xlab_text = "initial kelp (g)",
@@ -393,10 +434,11 @@ pAll <- ggarrange(p4, p5, p6,
                   common.legend = TRUE,
                   legend = "bottom")
 
+
 ## save
 ggsave(paste0(figs,"/SOM_both_sequences.pdf"), 
        plot = pAll, 
-       width = 11, 
+       width = 13, 
        height = 13, 
        dpi = 1200, 
        units = "in")

@@ -430,9 +430,7 @@ p6 <- all_seq(
 
 ## aggregate
 pAll <- ggarrange(p4, p5, p6,
-                  nrow = 3,
-                  common.legend = TRUE,
-                  legend = "bottom")
+                  nrow = 3)
 
 
 ## save

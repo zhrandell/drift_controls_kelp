@@ -25,15 +25,24 @@ low_fullness_col <- "#CD9B9B"
 high_fullness_col <- "#9D1309"
 
 
-## graphing details hard coded
+## graphing details
 alph <- 0.5
 linew <- 1
 lwd_sml <- 0.75
 wid1 <- 0.5
 wid2 <- 1
 lineCol <- "black"
-ymax_loss <- 125
-ymax_fill <- 11
+
+combined <- rbind(combined_high, combined_low)
+ymax_loss <- max(combined[, c('Smin_1', 'Smax_1', 'Amin_1', 'Amax_1', 
+                              'Smin_2', 'Smax_2', 'Amin_2', 'Amax_2',
+                              'Smin_3', 'Smax_3', 'Amin_3', 'Amax_3',
+                              'S_P1', 'S_P2', 'S_P3',
+                              'A_P1', 'A_P2', 'A_P3')]) * 1.1
+ymax_fill <- max(combined[, c('Fmin_1', 'Fmax_1',
+                              'Fmin_1', 'Fmax_1',
+                              'Fmin_3', 'Fmax_3',
+                              'F_P1', 'F_P2', 'F_P3')]) * 1.1
 
 
 ## axis options for final, aggregated figure

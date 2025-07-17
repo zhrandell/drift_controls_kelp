@@ -137,7 +137,8 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   
   
   ## nested lapply 
-  outs_parms <- lapply(full_parm_list, function(x){
+  print(paste('Kelp level', AL, 'of', length(A.level)))
+  outs_parms <- pblapply(full_parm_list, function(x){
     lapply(inits_P1, function(y){
       
       p1 <- ode(y,

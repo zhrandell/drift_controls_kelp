@@ -26,10 +26,10 @@
       real U = x_r[1]; 			  // Urchins
       
       // Hunger level
-      // H = exp( - v * F );
+      H = exp( - v * F );
       // H = 1 - v * F;
       // H = 1 / (1 + exp(v * (F - z)));
-      H = 2 / (1 + exp( ( F / z )^v ));
+      // H = 2 / (1 + exp( ( F / z )^v ));
       
       
       // vanLeeuwen et al.
@@ -52,38 +52,54 @@
   }
 }
 
+// data {
+//   int n_subject_1;					// number of urchin cohorts temp. seq. 1 = 62
+//   int n_subject_2;					// number of urchin cohorts temp. seq. 2 = 59  
+//   array[n_subject_1, 3] real y1_init_s_a; 			// Initial condition for S & A for period 1; 		
+//   array[n_subject_1, 3] real y2_init_s_a; 			// the 1st restocked value for S, A for period 2; 	
+//   array[n_subject_2, 3] real y3_init_s_a; 			// Initial condition for S & A for period 3; 		
+//   array[n_subject_2, 3] real y4_init_s_a; 			// the 1st restocked value for S, A for period 4; 	
+//   array[n_subject_2, 3] real y5_init_s_a; 			// the 2nd restocked value for S, A for period 5;
+//   int <lower = 1> nts1;               			// # of data collection times in period 1; nts1  =  1		
+//   int <lower = 1> nts2;               			// # of data collection times in period 2; nts2  =  1		
+//   int <lower = 1> nts3;               			// # of data collection times in period 3; nts3  =  1 	
+//   int <lower = 1> nts4;               			// # of data collection times in period 4; nts4  =  1		
+//   int <lower = 1> nts5;               			// # of data collection times in period 5; nts5  =  1  
+//   real <lower = 1> t0_1;               			// starting time; t0_1  =  1
+//   real <lower = 1> t0_2;               			// starting time; t0_2  =  1
+//   array[nts1] real <lower = t0_1> ts1;          		// data collection time in period 1; ts1  =  24[1]			 
+//   array[nts2] real <lower = t0_1> ts2;          		// data collection time in period 2; ts2  =  48[1]			
+//   array[nts3] real <lower = t0_2> ts3;          		// data collection time in period 3; ts3  =  44[1]
+//   array[nts4] real <lower = t0_2> ts4;          		// data collection time in period 4; ts4  =  89[1]			
+//   array[nts5] real <lower = t0_2> ts5;          		// data collection time in period 5; ts5  =  134[1]			
+//   array[n_subject_1, nts1 + nts2] real <lower = 0> S_obs_1; 		     // drift consumed observations period 1
+//   array[n_subject_2, nts3 + nts4 + nts5] real <lower = 0> S_obs_2;   // drift consumed observations period 1
+//   array[n_subject_1, nts1 + nts2] real <lower = 0> A_obs_1;          // kelp consumed observations period 2
+//   array[n_subject_2, nts3 + nts4 + nts5] real <lower = 0> A_obs_2;   // kelp consumed observations period 2
+// }
+
 data {
-  int n_subject_1;					// number of urchin cohorts temp. seq. 1 = 62
   int n_subject_2;					// number of urchin cohorts temp. seq. 2 = 59  
-  array[n_subject_1, 3] real y1_init_s_a; 			// Initial condition for S & A for period 1; 		
-  array[n_subject_1, 3] real y2_init_s_a; 			// the 1st restocked value for S, A for period 2; 	
   array[n_subject_2, 3] real y3_init_s_a; 			// Initial condition for S & A for period 3; 		
   array[n_subject_2, 3] real y4_init_s_a; 			// the 1st restocked value for S, A for period 4; 	
   array[n_subject_2, 3] real y5_init_s_a; 			// the 2nd restocked value for S, A for period 5;
-  int <lower = 1> nts1;               			// # of data collection times in period 1; nts1  =  1		
-  int <lower = 1> nts2;               			// # of data collection times in period 2; nts2  =  1		
   int <lower = 1> nts3;               			// # of data collection times in period 3; nts3  =  1 	
   int <lower = 1> nts4;               			// # of data collection times in period 4; nts4  =  1		
   int <lower = 1> nts5;               			// # of data collection times in period 5; nts5  =  1  
-  real <lower = 1> t0_1;               			// starting time; t0_1  =  1
   real <lower = 1> t0_2;               			// starting time; t0_2  =  1
-  array[nts1] real <lower = t0_1> ts1;          		// data collection time in period 1; ts1  =  24[1]			 
-  array[nts2] real <lower = t0_1> ts2;          		// data collection time in period 2; ts2  =  48[1]			
   array[nts3] real <lower = t0_2> ts3;          		// data collection time in period 3; ts3  =  44[1]
   array[nts4] real <lower = t0_2> ts4;          		// data collection time in period 4; ts4  =  89[1]			
   array[nts5] real <lower = t0_2> ts5;          		// data collection time in period 5; ts5  =  134[1]			
-  array[n_subject_1, nts1 + nts2] real <lower = 0> S_obs_1; 		     // drift consumed observations period 1
   array[n_subject_2, nts3 + nts4 + nts5] real <lower = 0> S_obs_2;   // drift consumed observations period 1
-  array[n_subject_1, nts1 + nts2] real <lower = 0> A_obs_1;          // kelp consumed observations period 2
   array[n_subject_2, nts3 + nts4 + nts5] real <lower = 0> A_obs_2;   // kelp consumed observations period 2
 }
 
 transformed data {
   int x_i;
   int x_r;
-  int n_total_1;			// n_total_1 = nts1 + nts2 = 2
+  // int n_total_1;			// n_total_1 = nts1 + nts2 = 2
   int n_total_2;			// n_total_2 = nts3 + nts4 + nts5 = 3	
-  n_total_1 = nts1 + nts2;
+  // n_total_1 = nts1 + nts2;
   n_total_2 = nts3 + nts4 + nts5;
 }
 
@@ -94,24 +110,24 @@ parameters {
   real <lower = 0, upper = 2> v;
   real <lower = -30, upper = 10> w;
   real <lower = 2, upper = 7> q;
-  real <lower = 1, upper = 10> z;
+  real <lower = 0, upper = 20> z;
   real <lower = 10, upper = 20> sigma;
 }
 
 transformed parameters {
   array[5] real theta;
-  array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
-  array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
+  // array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
+  // array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
   array[nts4] vector[3] y4;					// two-dimensional container of size (nts4, 3)     
   array[nts5] vector[3] y5;					// two-dimensional container of size (nts5, 3)  
-  vector[3] init_1;
+  // vector[3] init_1;
   vector[3] init_2;
   vector[1] U;			
   
   // obs 
-  array[n_subject_1, n_total_1] real drift_1; 	// Drift remaining
-  array[n_subject_1, n_total_1] real kelp_1; 		// Kelp remaining
+  // array[n_subject_1, n_total_1] real drift_1; 	// Drift remaining
+  // array[n_subject_1, n_total_1] real kelp_1; 		// Kelp remaining
   array[n_subject_2, n_total_2] real drift_2; 	// Drift remaining
   array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
   
@@ -122,38 +138,38 @@ transformed parameters {
   theta[5] = z;
 
 
-  // Temporal sequence 1 -----------------------------------
-  for (i in 1:n_subject_1) {
-
-    // period 1
-    init_1[1] = y1_init_s_a[i, 1]; // initial drift
-    init_1[2] = y1_init_s_a[i, 2]; // initial kelp
-    init_1[3] = 0;                 // initial urchin gut fullness
-    U[1] = y1_init_s_a[i, 3];      // initial urchin
-    y1 = ode_rk45(resourceLoss, init_1, t0_1, ts1, theta, U);
-    drift_1[i, 1:nts1] = y1[, 1];
-    kelp_1[i, 1:nts1] = y1[, 2];
-	
-    // period 2
-    init_1[1] = y2_init_s_a[i, 1]; 		
-    init_1[2] = y2_init_s_a[i, 2];
-    init_1[3] = y1[nts1, 3];
-    U[1] = y2_init_s_a[i, 3];
-    y2 = ode_rk45(resourceLoss, init_1, ts1[nts1], ts2, theta, U);
-    drift_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 1];
-    kelp_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 2];
-    
-    // print(i, " init_1: ", init_1);
-    // print(i, " prm[a,v,w,q]: ", theta);
-    // print(i, " y1: ", y1);
-    // print(i, " y2: ", y2);
-    // print(i, " U: ", U);
-    // print(i, " dXdt: ", resourceLoss(t0_1, init_1, theta, U));
-    
-    // print(i, " drift_1: ", drift_1[i, ]);
-    // print(i, " kelp_1: ", kelp_1[i, ]);
-    // print(i, " sigma: ", sigma);
-  }
+  // // Temporal sequence 1 -----------------------------------
+  // for (i in 1:n_subject_1) {
+  // 
+  //   // period 1
+  //   init_1[1] = y1_init_s_a[i, 1]; // initial drift
+  //   init_1[2] = y1_init_s_a[i, 2]; // initial kelp
+  //   init_1[3] = 0;                 // initial urchin gut fullness
+  //   U[1] = y1_init_s_a[i, 3];      // initial urchin
+  //   y1 = ode_rk45(resourceLoss, init_1, t0_1, ts1, theta, U);
+  //   drift_1[i, 1:nts1] = y1[, 1];
+  //   kelp_1[i, 1:nts1] = y1[, 2];
+  // 
+  //   // period 2
+  //   init_1[1] = y2_init_s_a[i, 1]; 		
+  //   init_1[2] = y2_init_s_a[i, 2];
+  //   init_1[3] = y1[nts1, 3];
+  //   U[1] = y2_init_s_a[i, 3];
+  //   y2 = ode_rk45(resourceLoss, init_1, ts1[nts1], ts2, theta, U);
+  //   drift_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 1];
+  //   kelp_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 2];
+  //   
+  //   // print(i, " init_1: ", init_1);
+  //   // print(i, " prm[a,v,w,q]: ", theta);
+  //   // print(i, " y1: ", y1);
+  //   // print(i, " y2: ", y2);
+  //   // print(i, " U: ", U);
+  //   // print(i, " dXdt: ", resourceLoss(t0_1, init_1, theta, U));
+  //   
+  //   // print(i, " drift_1: ", drift_1[i, ]);
+  //   // print(i, " kelp_1: ", kelp_1[i, ]);
+  //   // print(i, " sigma: ", sigma);
+  // }
 
 
   // Temporal sequence 2 -----------------------------------
@@ -208,14 +224,14 @@ model {
   z ~ normal(10, 1);
   sigma ~ exponential(0.1);
 
-  for (i in 1:n_subject_1) {
-    if(y1_init_s_a[i, 1] > 0){
-      target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
-    }
-    if(y1_init_s_a[i, 2] > 0){
-      target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
-    }
-  }
+  // for (i in 1:n_subject_1) {
+  //   if(y1_init_s_a[i, 1] > 0){
+  //     target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
+  //   }
+  //   if(y1_init_s_a[i, 2] > 0){
+  //     target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
+  //   }
+  // }
 
   for (i in 1:n_subject_2) {
     if(y3_init_s_a[i, 1] > 0){

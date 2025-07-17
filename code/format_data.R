@@ -344,7 +344,26 @@ saveRDS(loss_dat,
         file = paste0(results,"/loss_dat.RData"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## data list for Stan ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+loss_dat_seq_1 <- list(
+  n_subject_2 = n_subject_2,
+  nts3 = nts3,
+  nts4 = nts4,
+  nts5 = nts5,
+  t0_2 = time_2[1],
+  ts3 = array(time_2[2], dim = c(1)),
+  ts4 = array(time_2[3], dim = c(1)),
+  ts5 = array(time_2[4], dim = c(1)),
+  y3_init_s_a = array(y3_init_SA, dim = c(dim.n_subject_2, col_3)),
+  y4_init_s_a = array(y4_init_SA, dim = c(dim.n_subject_2, col_3)),
+  y5_init_s_a = array(y5_init_SA, dim = c(dim.n_subject_2, col_3)),
+  S_obs_2 = array(s0_2, dim = c(dim.n_subject_2, dim.n_total_2)),
+  A_obs_2 = array(a0_2, dim = c(dim.n_subject_2, dim.n_total_2))
+)
 
+saveRDS(loss_dat, 
+        file = paste0(results,"/loss_dat_seq_1.RData"))
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 

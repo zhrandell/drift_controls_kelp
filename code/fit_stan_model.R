@@ -2,7 +2,8 @@
 ## ~~~~~~~~~~~ Fit system of ODEs to empirical data in STAN ~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-loss_dat <- readRDS(paste0(results,"/loss_dat.Rdata"))
+# loss_dat <- readRDS(paste0(results,"/loss_dat.Rdata"))
+loss_dat <- readRDS(paste0(results,"/loss_dat_seq_1.Rdata"))
 
 ## run Stan ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

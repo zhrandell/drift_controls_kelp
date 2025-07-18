@@ -9,8 +9,8 @@
 
 load(paste0(results,"/posterior_draws_", sel.model,".RDA"))
 
-A.level = c("low" = 30,
-            "high" = 300)
+A.level = c("low" = 50,
+            "high" = 250)
 
 for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
 
@@ -91,8 +91,8 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
     with(as.list(c(S0, A0, F0)),{
       
       # H = exp(- v * F)
-      H = 1 / (1 + exp(v * (F - z)))
-      
+      # H = 1 / (1 + exp(v * (F - z)))
+      H = 2 / (1 + exp( ( F / z )^v ))
       
       ## vanLeeuwen
       # We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q

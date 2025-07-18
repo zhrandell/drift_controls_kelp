@@ -50,9 +50,9 @@ dat$seq <- ifelse(dat$Trial <= 4, "seq1", "seq2")
 ## assign hours
 dat <- dat %>%
   mutate(hours = case_when(
-    seq == "seq1" & Period == 1 ~ 48,
-    seq == "seq1" & Period == 2 ~ 96,
-    seq == "seq1" & Period == 3 ~ 144,
+    seq == "seq1" & Period == 1 ~ 44,
+    seq == "seq1" & Period == 2 ~ 89,
+    seq == "seq1" & Period == 3 ~ 134,
     seq == "seq2" & Period == 1 ~ 24,
     seq == "seq2" & Period == 2 ~ 48,
     TRUE ~ NA_real_
@@ -197,7 +197,9 @@ fig2 <- function(data,
     geom_smooth(
       data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
       aes(color = Treatment, fill = Treatment),
-      linewidth = smoothSize, span = smoothSpan, level = smoothCI
+      linewidth = smoothSize, span = smoothSpan, level = smoothCI,
+      method = "loess",
+      formula = 'y ~ x'
     ) +
     scale_color_manual(values = palette) +
     scale_fill_manual(values = palette) +
@@ -283,7 +285,7 @@ all_consumption <- ggplot(dat, aes(x = Total_Initial, y = Total_Consumed)) +
     aes(x = Total_Initial, y = Total_Consumed,
         color = group_label_simple, fill = group_label_simple, group = group_label_simple),
     method = "loess",
-    formula = y ~ x,
+    formula = 'y ~ x',
     span = smoothSpan,
     linewidth = smoothSize,
     level = smoothCI
@@ -376,7 +378,9 @@ all_seq <- function(data,
     geom_smooth(
       data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
       aes(x = {{ xvar }}, y = {{ yvar }}, color = group_label, fill = group_label),
-      linewidth = smoothSize, span = smoothSpan, level = smoothCI
+      linewidth = smoothSize, span = smoothSpan, level = smoothCI,
+      method = 'loess',
+      formula = 'y ~ x'
     ) +
     scale_color_manual(values = palette) +
     scale_fill_manual(values = palette) +

@@ -86,7 +86,7 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   
   
   ## rarify to compensate for NA's produced during simulation 
-  rarify <- 990
+  rarify <- min(nrow(S_loss_P1), 990)
   S_loss_P1 <- S_loss_P1[sample(1:nrow(S_loss_P1), rarify), ]
   A_loss_P1 <- A_loss_P1[sample(1:nrow(A_loss_P1), rarify), ]
   F_fill_P1 <- F_fill_P1[sample(1:nrow(F_fill_P1), rarify), ]

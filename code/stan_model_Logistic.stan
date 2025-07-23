@@ -212,7 +212,7 @@ model {
       target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
     }
     if(y1_init_s_a[i, 2] > 0){
-      target += normal_lpdf(S_obs_1[i, ] | drift_1[i, ], sigma);
+      target += normal_lpdf(A_obs_1[i, ] | kelp_1[i, ], sigma);
     }
   }
 

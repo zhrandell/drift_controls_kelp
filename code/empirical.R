@@ -53,8 +53,8 @@ dat <- dat %>%
     seq == "seq1" & Period == 1 ~ 44,
     seq == "seq1" & Period == 2 ~ 89,
     seq == "seq1" & Period == 3 ~ 134,
-    seq == "seq2" & Period == 1 ~ 24,
-    seq == "seq2" & Period == 2 ~ 48,
+    seq == "seq2" & Period == 1 ~ 18,
+    seq == "seq2" & Period == 2 ~ 44,
     TRUE ~ NA_real_
   ))
 

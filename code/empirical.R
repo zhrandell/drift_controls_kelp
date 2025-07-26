@@ -50,11 +50,11 @@ dat$seq <- ifelse(dat$Trial <= 4, "seq1", "seq2")
 ## assign hours
 dat <- dat %>%
   mutate(hours = case_when(
-    seq == "seq1" & Period == 1 ~ 44,
-    seq == "seq1" & Period == 2 ~ 89,
-    seq == "seq1" & Period == 3 ~ 134,
-    seq == "seq2" & Period == 1 ~ 18,
-    seq == "seq2" & Period == 2 ~ 44,
+    seq == "seq1" & Period == 1 ~ 48,
+    seq == "seq1" & Period == 2 ~ 96,
+    seq == "seq1" & Period == 3 ~ 144,
+    seq == "seq2" & Period == 1 ~ 24,
+    seq == "seq2" & Period == 2 ~ 48,
     TRUE ~ NA_real_
   ))
 
@@ -150,7 +150,7 @@ no.legend = theme(legend.position="none")
 
 
 ## add text label to facet_wrap() 
-facet.label <- labeller(hours = function(x) paste0(x, " hours"))
+facet.label <- labeller(hours = function(x) paste0('"', x, " hours", '"'))
 
 
 ## graphing parameters
@@ -391,7 +391,6 @@ all_seq <- function(data,
     scale_y_continuous(limit = c(0, NA), oob = squish) +
     legend_elements
 }
-
 
 
 ## invoke function - drift as a function of drift

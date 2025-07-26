@@ -18,15 +18,17 @@ functions {
     real S = Y[1]; 			// Drift
     real A = Y[2]; 			// Kelp
     real F = Y[3];			// Stomach fullness 
-    real a = theta[1]; 			// per capita encounter rate
-    real w = theta[2]; 		  // baseline preference for drift over kelp
-    real q = theta[3];			// switching rate
-    real z = theta[4];      // evacuation rate
+    real a = theta[1]; 			// baseline attack rate
+    real b = theta[2];      // velocity reduction
+    real w = theta[3];			// preference par 1
+    real q = theta[4]; 		  // preference par 2
+    real s = theta[5];			// stomach satiation sensitivity
     real U = x_r[1]; 			  // Urchins
 
 
 // Hunger level
-  H = exp(- v * F);
+  H = exp(- s * F);
+  // H = 2 / (1 + exp( ( F / z )^s ));
 
 
 // Yodzis preference formulation [requiring constrained 0-1 prior on w]
@@ -42,13 +44,13 @@ functions {
   p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
 
 // Consumption rates
-  f_S = S * H * a * p;
-  f_A = A * H * a * (1 - p);
+  f_S = S * H * a * p     / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+  f_A = A * H * a * (1-p) / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
 
 // Drift, Kelp, Stomach
 	dS_dt = - U * f_S;
 	dA_dt = - U * f_A;
-	dF_dt =   (f_S + f_A) - z * F;
+	dF_dt =   f_S + f_A;
 
   return [dS_dt, dA_dt, dF_dt]';
   }
@@ -92,15 +94,16 @@ transformed data {
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
 parameters {
-  real <lower = 0, upper = 0.1> a;
-  real <lower = -1, upper = 8> w;
-  real <lower = -5, upper = 5> q;
-  real <lower = 0, upper = 0.05> v;
-  real <lower = 10, upper = 30> sigma;
+  real <lower =  0, upper = 0.05> a;
+  real <lower =  0, upper = 0.1>  b;
+  real <lower = -6, upper = 6>    w;
+  real <lower = -5, upper = 5>    q;
+  real <lower =  0, upper = 0.5>  s;
+  real <lower = 10, upper = 20>   sigma;
 }
 
 transformed parameters {
-  array[4] real theta;
+  array[5] real theta;
   array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
   array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
@@ -117,9 +120,10 @@ transformed parameters {
   array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
   
   theta[1] = a; 
-  theta[2] = w;
-  theta[3] = q;
-  theta[4] = z;
+  theta[2] = b;
+  theta[3] = w;
+  theta[4] = q;
+  theta[5] = s;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -133,7 +137,8 @@ transformed parameters {
     y1 = ode_rk45(resourceLoss, init_1, t0_1, ts1, theta, U);
     drift_1[i, 1:nts1] = y1[, 1];
     kelp_1[i, 1:nts1] = y1[, 2];
-	
+
+
     // period 2
     init_1[1] = y2_init_s_a[i, 1]; 		
     init_1[2] = y2_init_s_a[i, 2];
@@ -143,8 +148,7 @@ transformed parameters {
     drift_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 1];
     kelp_1[i, (nts1 + 1):(nts1 + nts2)] = y2[, 2];
     
-    // print(i, " init_1: ", init_1);
-    // print(i, " prm[a,v,w,q]: ", theta);
+    // print(i, " prm[a,b,w,q,s]: ", theta);
     // print(i, " y1: ", y1);
     // print(i, " y2: ", y2);
     // print(i, " U: ", U);
@@ -201,10 +205,11 @@ transformed parameters {
 }
 
 model {
-  a ~ exponential(1);
+  a ~ exponential(10);
+  b ~ exponential(10);
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
-  z ~ exponential(1);
+  s ~ exponential(1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

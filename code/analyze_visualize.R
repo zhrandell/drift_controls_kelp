@@ -25,7 +25,7 @@ rdat <- rdat[sel ,]
 ## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 ## list of params
 ## For vanLeeuwen, we use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-parms <- c("a", "v", "w", "q", "z", "sigma")
+parms <- c("a", "b", "w", "q", "s", "sigma")
 
 
 ## print param list output
@@ -77,7 +77,7 @@ ggplot2::ggsave(filename = paste0(figs, "/pairs_", sel.model, ".pdf"),
 
 
 ## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-draws2pull <- 1000
+draws2pull <- 2000
 posts_df_raw <- suppressWarnings(
   draws_df[1:min(nrow(draws_df), draws2pull), 
                                           1+(1:length(parms))]
@@ -152,18 +152,18 @@ plot.posterior <- function(x, param='a', label='a'){
 
 ## create posterior plots
 a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
-v_post <- plot.posterior(posts_df_raw, 'v', "Stomach sensitivity (v)")
-z_post <- plot.posterior(posts_df_raw, 'z', "Evacuation rate (e)")
+b_post <- plot.posterior(posts_df_raw, 'b', "Velocity reduction (\u03B2)")
 w_post <- plot.posterior(posts_df_raw, 'w', "Baseline preference (\u03c9)")
 q_post <- plot.posterior(posts_df_raw, 'q', "Switching rate (\u03C6)")
+s_post <- plot.posterior(posts_df_raw, 's', "Stomach sensitivity (\u03B3)")
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
 
 allparms <- ggarrange(
                   tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "c"),
-                  tag_facet(v_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(z_post + facet_wrap(~"time"), tag_pool = "e"),
+                  tag_facet(b_post + facet_wrap(~"time"), tag_pool = "b"),
+                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "c"),
+                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "d"),
+                  tag_facet(s_post + facet_wrap(~"time"), tag_pool = "e"),
                   tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
 
@@ -264,15 +264,20 @@ par(mar = c(3, 3, 1, 1),
   curve(Preference, 
         min(xlims), max(xlims), 
         add = TRUE,
-        col = 'black',
+        col = 'grey90',
         lwd = 5)
   curve(Preference, 
         min(xlims), max(xlims), 
         add = TRUE,
-        col = 'grey',
-        lwd = 3)
+        col = 'black',
+        lwd = 2)
   
   Po2o <- Pref.One2One[2]
+  segments(c(0, 0), c(0, Po2o), 
+           c(0, -10), c(Po2o, Po2o),
+           lty = 1,
+           lwd = 2,
+           col = 'grey80')
   segments(c(0, 0), c(0, Po2o), 
            c(0, -10), c(Po2o, Po2o),
            lty = 3,
@@ -281,6 +286,11 @@ par(mar = c(3, 3, 1, 1),
   
   sp <- 0.5
   Lsp <- LogSwitchPoint(sp)
+  segments(c(Lsp, Lsp), c(0, sp), 
+           c(Lsp, -10), c(sp, sp),
+           lty = 1,
+           lwd = 2,
+           col = 'grey80')
   segments(c(Lsp, Lsp), c(0, sp), 
            c(Lsp, -10), c(sp, sp),
            lty = 3,

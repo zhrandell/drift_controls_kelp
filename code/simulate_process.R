@@ -90,11 +90,11 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   S_loss_P1 <- S_loss_P1[sample(1:nrow(S_loss_P1), rarify), ]
   A_loss_P1 <- A_loss_P1[sample(1:nrow(A_loss_P1), rarify), ]
   F_fill_P1 <- F_fill_P1[sample(1:nrow(F_fill_P1), rarify), ]
-  
+
   S_loss_P2 <- S_loss_P2[sample(1:nrow(S_loss_P1), rarify), ]
   A_loss_P2 <- A_loss_P2[sample(1:nrow(A_loss_P1), rarify), ]
   F_fill_P2 <- F_fill_P2[sample(1:nrow(F_fill_P1), rarify), ]
-  
+
   S_loss_P3 <- S_loss_P3[sample(1:nrow(S_loss_P1), rarify), ]
   A_loss_P3 <- A_loss_P3[sample(1:nrow(A_loss_P1), rarify), ]
   F_fill_P3 <- F_fill_P3[sample(1:nrow(F_fill_P1), rarify), ]

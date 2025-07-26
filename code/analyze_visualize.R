@@ -155,7 +155,7 @@ a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
 b_post <- plot.posterior(posts_df_raw, 'b', "Velocity reduction (\u03B2)")
 w_post <- plot.posterior(posts_df_raw, 'w', "Baseline preference (\u03c9)")
 q_post <- plot.posterior(posts_df_raw, 'q', "Switching rate (\u03C6)")
-s_post <- plot.posterior(posts_df_raw, 's', "Stomach sensitivity (\u03B3)")
+s_post <- plot.posterior(posts_df_raw, 's', "Stomach sensitivity (\u03b3)")
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
 
 allparms <- ggarrange(

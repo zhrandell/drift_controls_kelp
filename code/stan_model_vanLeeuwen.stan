@@ -19,17 +19,15 @@
       real A = Y[2]; 			// Kelp
       real F = Y[3];			// Stomach fullness 
       real a = theta[1]; 			// baseline attack rate
-      real v = theta[2];			// stomach satiation sensitivity
-      real w = theta[3];			// relative preference
-      real q = theta[4]; 		  // switching rate
-      real z = theta[5]; 		  // evacuation rate
+      real b = theta[2];      // velocity reduction
+      real w = theta[3];			// preference par 1
+      real q = theta[4]; 		  // preference par 2
+      real s = theta[5];			// stomach satiation sensitivity
       real U = x_r[1]; 			  // Urchins
       
       // Hunger level
-      // H = exp( - v * F );
-      // H = 1 - v * F;
-      // H = 1 / (1 + exp(v * (F - z)));
-      H = 2 / (1 + exp( ( F / z )^v ));
+      H = exp( - s * F );
+      // H = 2 / (1 + exp( ( F / z )^s ));
       
       
       // vanLeeuwen et al.
@@ -40,8 +38,8 @@
       p = ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
       
       // Consumption rates
-      f_S = S * H * a * p;
-      f_A = A * H * a * (1 - p);      
+      f_S = S * H * a * p        / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+      f_A = A * H * a * (1 - p)  / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
 
       // Drift, Kelp, Stomach
       dS_dt = - U * f_S;
@@ -90,12 +88,12 @@ transformed data {
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
 parameters {
-  real <lower = 0, upper = 0.01> a;
-  real <lower = 0, upper = 2> v;
-  real <lower = -30, upper = 10> w;
-  real <lower = 2, upper = 7> q;
-  real <lower = 1, upper = 10> z;
-  real <lower = 10, upper = 20> sigma;
+  real <lower =   0, upper = 0.01> a;
+  real <lower =   0, upper = 0.1>  b;
+  real <lower = -10, upper = 30>   w;
+  real <lower =   2, upper = 15>   q;
+  real <lower =   0, upper = 0.5>  s;
+  real <lower =  10, upper = 20>   sigma;
 }
 
 transformed parameters {
@@ -116,10 +114,10 @@ transformed parameters {
   array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
   
   theta[1] = a; 
-  theta[2] = v;
+  theta[2] = b;
   theta[3] = w;
   theta[4] = q;
-  theta[5] = z;
+  theta[5] = s;
 
 
   // Temporal sequence 1 -----------------------------------
@@ -202,10 +200,10 @@ transformed parameters {
 
 model {
   a ~ exponential(1);
-  v ~ exponential(0.1);
+  b ~ exponential(0.1);
   w ~ normal(0, 10);
   q ~ normal(0, 10);
-  z ~ normal(10, 1);
+  s ~ exponential(0.1);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

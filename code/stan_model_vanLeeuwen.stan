@@ -34,8 +34,8 @@
       // p = ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
 
       // vanLeeuwen et al. reformulated
-      // We use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-      p = ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+      // We use parameters 'w = q-4' and 'q' for convenience though in the notes we use \nu for w and \psi for q
+      p = ( 1 -  ( 1 + exp( (q-4) + log(S / A) )) / ( 1 + exp( log(2) + (q-4) + log(S / A) ) + exp( q + 2 * log(S / A) )) );
       
       // Consumption rates
       f_S = S * H * a * p        / ( 1 + a * b * ( p * S + (1-p) * A )^2 );

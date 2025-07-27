@@ -152,10 +152,10 @@ plot.posterior <- function(x, param='a', label='a'){
 
 ## create posterior plots
 a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
-b_post <- plot.posterior(posts_df_raw, 'b', "Velocity reduction (\u03B2)")
-w_post <- plot.posterior(posts_df_raw, 'w', "Baseline preference (\u03c9)")
-q_post <- plot.posterior(posts_df_raw, 'q', "Switching rate (\u03C6)")
-s_post <- plot.posterior(posts_df_raw, 's', "Stomach sensitivity (\u03b3)")
+b_post <- plot.posterior(posts_df_raw, 'b', "Encounter reduction (\u03B2)")
+w_post <- plot.posterior(posts_df_raw, 'w', "Preference (\u03c9)")
+q_post <- plot.posterior(posts_df_raw, 'q', "Preference (\u03C6)")
+s_post <- plot.posterior(posts_df_raw, 's', "Hunger sensitivity (\u03b3)")
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
 
 allparms <- ggarrange(
@@ -192,13 +192,13 @@ if(sel.model == 'Logistic'){
   
 }else{
   Preference <- function(x){
-    1 - ( 1 + exp( w + x )) / 
-      ( 1 + exp( log(2) + w + x ) + exp( q + 2 * x )) 
+    1 - ( 1 + exp( (q-4) + x )) / 
+      ( 1 + exp( log(2) + (q-4) + x ) + exp( q + 2 * x )) 
   }
   
   LogSwitchPoint <- function(y){
     log(- (2 * y) / 
-     ( exp(w) * (2 * y - 1) - exp(q) * sqrt(exp(-2 * q) * (exp(2 * w) * (1 - 2 * y)^2 - 4 * exp(q) * (y - 1) * y)) ))
+     ( exp((q-4)) * (2 * y - 1) - exp(q) * sqrt(exp(-2 * q) * (exp(2 * (q-4)) * (1 - 2 * y)^2 - 4 * exp(q) * (y - 1) * y)) ))
   }
   
 }

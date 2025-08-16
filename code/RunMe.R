@@ -29,7 +29,7 @@ library(hexbin)
 library(janitor)
 library(diffdf)
 
-## Libraries for 'fit_stan_model.R' & 'analyze_visualize_stan_model.R'
+## Libraries for 'fit_stan_model.R' & 'analyze_visualize.R'
 library(cmdstanr)
 library(rstan)
 library(StanHeaders)
@@ -37,9 +37,10 @@ library(shinystan)
 library(posterior)
 library(bayesplot)
 
-## Libraries for 'analyze_visualize_stan_model.R'
+## Libraries for 'analyze_visualize.R'
 library(egg)
 library(Cairo) # requires installation of Xcode
+library(stargazer)
 
 ## Libraries for 'simulate.R' and 'plot_simulation'
 library(deSolve)

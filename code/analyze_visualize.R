@@ -77,7 +77,7 @@ ggplot2::ggsave(filename = paste0(figs, "/pairs_", sel.model, ".pdf"),
 
 
 ## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-draws2pull <- 2000
+draws2pull <- nrow(draws_df)
 posts_df_raw <- suppressWarnings(
   draws_df[1:min(nrow(draws_df), draws2pull), 
                                           1+(1:length(parms))]
@@ -111,7 +111,12 @@ if(sel.model=='Logistic'){
 CI <- data.frame(apply(posts_df_raw, 2, 
                        quantile, c(0.0250, 0.5, 0.975), 
                        na.rm = TRUE))
-
+out.parms <- data.frame(formatC(signif(t(CI[c(2,1,3),]), 4), 4, format="f"))
+out.parms <-  cbind(Par = rownames(out.parms),
+                    Pt = out.parms[,1],
+                    CI = paste0('(',out.parms[,2], '---', out.parms[,3], ')'))
+stargazer(out.parms,
+          out = paste0(results, '/Summary_posteriors_', sel.model, '.tex'))
 
 
 ## Custom posterior plot ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,7 +136,8 @@ plot.posterior <- function(x, param='a', label='a'){
   CI <- quantile(data.frame(x)[param], c(0.0250, 0.5, 0.975), na.rm = TRUE)
   
   fig <- ggplot(x, aes(.data[[param]])) + 
-    geom_density(fill = col, alpha = alp) +
+    geom_histogram(fill = col, bins = 100) +
+    # geom_density(fill = col, alpha = alp) +
     xlab(label) + 
     ylab('Density') + 
     geom_vline(xintercept = CI[1], 
@@ -151,19 +157,19 @@ plot.posterior <- function(x, param='a', label='a'){
 }
 
 ## create posterior plots
-a_post <- plot.posterior(posts_df_raw, 'a', "Encounter rate (\u03B1)")
-b_post <- plot.posterior(posts_df_raw, 'b', "Encounter reduction (\u03B2)")
-w_post <- plot.posterior(posts_df_raw, 'w', "Preference (\u03c9)")
-q_post <- plot.posterior(posts_df_raw, 'q', "Preference (\u03C6)")
-s_post <- plot.posterior(posts_df_raw, 's', "Hunger sensitivity (\u03b3)")
-sigma_post <- plot.posterior(posts_df_raw, 'sigma', "Variance (\u03C3)")
+a_post <- plot.posterior(posts_df_raw, 'a', expression("Search rate " (italic(a))))
+b_post <- plot.posterior(posts_df_raw, 'b', expression("Supression rate " (italic(b))))
+w_post <- plot.posterior(posts_df_raw, 'w', expression("Baseline preference " (tilde(italic("\u03c9")))))
+q_post <- plot.posterior(posts_df_raw, 'q', expression("Switching sensitivity " (italic("\u03C6"))))
+s_post <- plot.posterior(posts_df_raw, 's', expression("Stomach sensitivity " (italic(v))))
+sigma_post <- plot.posterior(posts_df_raw, 'sigma', expression("Variance " (italic(sigma))))
 
 allparms <- ggarrange(
                   tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
                   tag_facet(b_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "c"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(s_post + facet_wrap(~"time"), tag_pool = "e"),
+                  tag_facet(s_post + facet_wrap(~"time"), tag_pool = "c"),
+                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "d"),
+                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "e"),
                   tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
                   nrow = 2, ncol = 3)
 

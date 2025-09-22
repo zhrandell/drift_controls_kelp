@@ -75,43 +75,75 @@ my.theme = theme(
 
 
 
-## function to create custom legend via grob ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## fixed-size custom legends ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 library(grid)
 
-# Function to return a grob for custom legend
-custom_legend_grob <- function(low_col, high_col) {
-  legend_df <- data.frame(
-    x = 0.55,
-    y = c(1.00, 0.87),
-    label = c("Low", "High"),
-    fill = c(low_col, high_col)
+# Function to return a grob for custom legend with absolute sizes (mm units)
+fixed_legend_grob <- function(low_col, high_col,
+                              square_mm = 6,
+                              gap_mm = 2,
+                              text_cex = 1.3) {
+
+  # vertical positions (from bottom) for the two legend rows
+  y_low  <- unit(3,  "mm")
+  y_high <- unit(10, "mm")
+
+  grobTree(
+    # optional transparent background
+    rectGrob(gp = gpar(fill = NA, col = NA)),
+
+    # Low square
+    rectGrob(x = unit(0, "mm"), y = y_low,
+             width = unit(square_mm, "mm"), height = unit(square_mm, "mm"),
+             just = c("left","bottom"),
+             gp = gpar(fill = low_col, col = NA)),
+
+    # High square
+    rectGrob(x = unit(0, "mm"), y = y_high,
+             width = unit(square_mm, "mm"), height = unit(square_mm, "mm"),
+             just = c("left","bottom"),
+             gp = gpar(fill = high_col, col = NA)),
+
+    # Labels
+    textGrob("Low",
+             x = unit(square_mm + gap_mm, "mm"),
+             y = y_low + unit(square_mm/2, "mm"),
+             just = c("left","center"),
+             gp = gpar(cex = text_cex)),
+
+    textGrob("High",
+             x = unit(square_mm + gap_mm, "mm"),
+             y = y_high + unit(square_mm/2, "mm"),
+             just = c("left","center"),
+             gp = gpar(cex = text_cex))
   )
-  
-  ggplot(legend_df, aes(x = x, y = y)) +
-    geom_tile(aes(fill = fill),
-              width = 0.2,
-              height = 0.075,
-              show.legend = FALSE) +
-    geom_text(aes(label = label),
-              hjust = 0,
-              nudge_x = 0.25,
-              size = 5) +
-    scale_fill_identity() +
-    theme_void() +
-    coord_fixed(
-      ratio = 1.5,
-      xlim = c(0.5, 1.1),
-      ylim = c(0.8, 1.05),  
-      expand = FALSE
-    )
 }
 
-
-## create the three legends
-legend_drift <- ggplotGrob(custom_legend_grob(low_drift_col, high_drift_col))
-legend_kelp <- ggplotGrob(custom_legend_grob(low_kelp_col, high_kelp_col))
-legend_full <- ggplotGrob(custom_legend_grob(low_fullness_col, high_fullness_col))
+## create the three legends (consistent across panels)
+legend_drift <- fixed_legend_grob(low_drift_col,  high_drift_col)
+legend_kelp  <- fixed_legend_grob(low_kelp_col,   high_kelp_col)
+legend_full  <- fixed_legend_grob(low_fullness_col, high_fullness_col)
 ## END custom legend ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+## function to place legend using proportions of the panel ranges ~~~~~~~~~~~~~~
+place_legend <- function(p, legend_grob, x_max, y_max,
+                         x_prop = c(0.7, 1.08),
+                         y_prop = c(0.75, 1.02)) {
+  p + annotation_custom(
+    grob  = legend_grob,   # now a fixed-size grid grob
+    xmin  = x_prop[1] * x_max,
+    xmax  = x_prop[2] * x_max,
+    ymin  = y_prop[1] * y_max,
+    ymax  = y_prop[2] * y_max
+  )
+}
+
+## max x across panels 
+x_max <- max(combined_high$S0, combined_low$S0, na.rm = TRUE)
+## END legend placement function ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 
 
@@ -135,7 +167,14 @@ plot.dynamics <- function(high_dat, var,
                       plot_title,
                       ymax){ ## axis label and ylim params
 
-## High Kelp treatment  
+## title options 
+  title_layer <- if (is.null(plot_title)) {
+    theme(plot.title = element_blank())
+  } else {
+    ggplot2::labs(title = plot_title)
+  }
+
+## High Kelp treatment   
   plot <- ggplot(data = high_dat,
                  aes(x = {{ var }})) + 
     my.theme +
@@ -273,9 +312,11 @@ drift.3 <- plot.dynamics(
 
 
 ## edit axis labels as required for final, aggregated figure
-drift.3 <- drift.3 + x.blank + y.blank +
-  annotation_custom(grob = legend_drift, xmin = 200, xmax = 300, ymin = 80, ymax = 130)
+drift.3 <- drift.3 + x.blank + y.blank 
+drift.3 <- place_legend(drift.3, legend_drift, x_max, ymax_loss)
+  #annotation_custom(grob = legend_drift, xmin = 200, xmax = 300, ymin = 80, ymax = 130)
 ## END Period 3 drift consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 
 
@@ -300,7 +341,7 @@ kelp.1 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Kelp consumed",
-  plot_title =  element_blank(),
+  plot_title = NULL,
   ymax = ymax_loss
 )
 
@@ -333,7 +374,7 @@ kelp.2 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Kelp consumed",
-  plot_title =  element_blank(),
+  plot_title = NULL,
   ymax = ymax_loss
 )
 
@@ -366,14 +407,15 @@ kelp.3 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Kelp consumed",
-  plot_title =  element_blank(),
+  plot_title = NULL,
   ymax = ymax_loss
 )
 
 
 ## edit axis labels as required for final, aggregated figure
-kelp.3 <- kelp.3 + x.blank + y.blank +
-  annotation_custom(grob = legend_kelp, xmin = 200, xmax = 300, ymin = 80, ymax = 130)
+kelp.3 <- kelp.3 + x.blank + y.blank 
+kelp.3  <- place_legend(kelp.3,  legend_kelp,  x_max, ymax_loss)
+#annotation_custom(grob = legend_kelp, xmin = 200, xmax = 300, ymin = 80, ymax = 130)
 ## END Period 3 kelp consumption ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -400,7 +442,7 @@ fullness.1 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Stomach fullness",
-  plot_title =  element_blank(),
+  plot_title = NULL,
   ymax = ymax_fill
 )
 ## END Period 1 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -429,7 +471,7 @@ fullness.2 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Stomach fullness",
-  plot_title =  element_blank(),
+  plot_title = NULL,
   ymax = ymax_fill
 )
 
@@ -462,15 +504,16 @@ fullness.3 <- plot.dynamics(
   
   x_axis_text = "Initial drift",
   y_axis_text = "Stomach fullness",
-  plot_title =  element_blank(),
+  plot_title = NULL,
   ymax = ymax_fill
 )
 
 
 ## edit axis labels as required for final, aggregated figure
-fullness.3 <- fullness.3 + y.blank +
-  annotation_custom(grob = legend_full, 
-                    xmin = 200, xmax = 300, ymin = 0, ymax = 2)
+fullness.3 <- fullness.3 + y.blank 
+fullness.3 <- place_legend(fullness.3, legend_full, x_max, ymax_fill)
+#annotation_custom(grob = legend_full, 
+ #                   xmin = 200, xmax = 300, ymin = 0, ymax = 2)
 ## END Period 2 cumulative fullness ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -478,7 +521,7 @@ fullness.3 <- fullness.3 + y.blank +
 
 
 ## plot all 9 panes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-all.temporal.dynamics <- ggarrange(
+all.temporal.dynamics <- egg::ggarrange(
   tag_facet(drift.1 + facet_wrap(~ "time"), tag_pool = "a"),
   tag_facet(drift.2 + facet_wrap(~ "time"), tag_pool = "b"),
   tag_facet(drift.3 + facet_wrap(~ "time"), tag_pool = "c"),

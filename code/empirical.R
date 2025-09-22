@@ -188,7 +188,7 @@ fig2 <- function(data,
                  show_legend = TRUE) {
   
   legend_theme <- if (show_legend) {
-    upper.R.legend
+    upper.R.legend.2
   } else {
     no.legend
   }

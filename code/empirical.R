@@ -255,7 +255,7 @@ seq1_results <- ggarrange(p1, p2, p3, nrow = 3)
 
 
 ## save 
-ggsave(paste0(figs,"/fig2.pdf"), 
+ggsave(paste0(figs,"/fig2_empirical_results.pdf"), 
        plot = seq1_results, 
        width = 10, 
        height = 12, 

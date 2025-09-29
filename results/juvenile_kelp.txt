@@ -1,0 +1,4 @@
+Rows used: 1164
+ECDF at x = 0.699: y = 0.9107 (91.1%)
+Natural-scale x prior to the log10(x+1) transformation: 4.000
+

@@ -1,4 +1,7 @@
 Rows used: 1164
-ECDF at x = 0.699: y = 0.9107 (91.1%)
-Natural-scale x prior to the log10(x+1) transformation: 4.000
+Shaded band (log10 scale) at the 20 m^2 spatial scale: [1.301, 1.903]
+Shaded band (log10 scale) at the 1 m^2 spatial scale: [0.065, 0.095]
+Shaded band natural scale (10^x) at the 20 m^2 spatial scale: [20.000, 80.000]
+Shaded band natural scale (10^x) at the 1 m^2 spatial scale: [1.000, 4.000]
+Percentage of ECDF shaded: 19.59%
 

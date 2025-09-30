@@ -128,6 +128,8 @@ plot_ecdf <- function(data,
       "Shaded band (log10 scale) at the 1 m^2 spatial scale: [%.3f, %.3f]\n",
       "Shaded band natural scale (10^x) at the 20 m^2 spatial scale: [%.3f, %.3f]\n",
       "Shaded band natural scale (10^x) at the 1 m^2 spatial scale: [%.3f, %.3f]\n",
+      "Cumulative percentage at band minimum: %.2f%%\n",
+      "Cumulative percentage at band maximum: %.2f%%\n",
       "Percentage of ECDF shaded: %.2f%%\n"
     ),
     n_used,
@@ -135,6 +137,8 @@ plot_ecdf <- function(data,
     log_min_1m2, log_max_1m2,
     nat_min, nat_max,
     nat_min_1m2, nat_max_1m2,
+    100 * y_min,
+    100 * y_max,
     perc_shaded
   )
   

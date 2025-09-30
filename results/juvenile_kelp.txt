@@ -3,5 +3,7 @@ Shaded band (log10 scale) at the 20 m^2 spatial scale: [1.301, 1.903]
 Shaded band (log10 scale) at the 1 m^2 spatial scale: [0.065, 0.095]
 Shaded band natural scale (10^x) at the 20 m^2 spatial scale: [20.000, 80.000]
 Shaded band natural scale (10^x) at the 1 m^2 spatial scale: [1.000, 4.000]
+Cumulative percentage at band minimum: 71.65%
+Cumulative percentage at band maximum: 91.24%
 Percentage of ECDF shaded: 19.59%
 

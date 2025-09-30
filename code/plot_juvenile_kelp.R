@@ -35,16 +35,19 @@ df <- data.frame(
 
 
 ## divide by 20 to provide counts per 1m^2 
-df <- df / 20 
-
-
-## log10 transform 
-df$MacJuv_log10 <- round(log10(df$MacJuv + 1), 3)
-df$MacPyr_log10 <- round(log10(df$MacPyr + 1), 3)
+#df <- df / 20 
 
 
 ## drop all 0's from MacJuv, as any associated MacPyr rows
-df <- df %>% filter(MacJuv_log10 != 0)
+df <- df %>% filter(MacJuv != 0)
+
+## log10 transform 
+df$MacJuv_log10 <- round(log10(df$MacJuv), 3)
+df$MacPyr_log10 <- round(log10(df$MacPyr), 3)
+
+
+## drop all 0's from MacJuv, as any associated MacPyr rows
+#df <- df %>% filter(MacJuv_log10 != 0)
 ## END data prep ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -59,55 +62,83 @@ my.theme = theme(panel.grid.major = element_blank(),
                  axis.title=element_text(size=20),
                  axis.text=element_text(size=18),
                  plot.title = element_text(size=20))
-
-
-graphics.off()
-windows(10,10,record=TRUE)
 ## END graphing params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
 
 
-## function to create ecdf figure ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## function to create ECDF with shaded band between two log10() x-values
 plot_ecdf <- function(data, 
                       col,
                       breaks_by = 0.2,
-                      shade_to  = log10(5)) {
+                      shade_min = log10(20),
+                      shade_max = log10(80)) {
   
   vals <- dplyr::pull(data, {{ col }})
   vals <- vals[!is.na(vals)]
   n_used <- length(vals)
   
   ecdf_fun <- ecdf(vals)
-  xs <- sort(unique(vals))
-  ecdf_df <- tibble::tibble(x = xs, y = ecdf_fun(xs))
-  shade_df <- dplyr::filter(ecdf_df, x <= shade_to)
+  xs <- sort(unique(c(vals, shade_min, shade_max)))
+  ecdf_df  <- tibble::tibble(x = xs, y = ecdf_fun(xs))
+  shade_df <- dplyr::filter(ecdf_df, x >= shade_min & x <= shade_max)
   
-  y_at_cut     <- ecdf_fun(shade_to)
-  x_raw_at_cut <- 10^shade_to - 1
   xmax <- max(vals, na.rm = TRUE)
+  
+  # % of ECDF shaded
+  y_min <- ecdf_fun(shade_min)
+  y_max <- ecdf_fun(shade_max)
+  perc_shaded <- 100 * (y_max - y_min)
   
   p <- ggplot() +
     geom_area(data = shade_df, aes(x = x, y = y),
               fill = "steelblue", alpha = 0.2) +
     stat_ecdf(data = tibble::tibble(v = vals), aes(x = v),
               geom = "step", linewidth = 0.75, na.rm = TRUE) +
-    geom_hline(yintercept = y_at_cut, linetype = "dashed", linewidth = 1.25) +
     labs(
-      title = expression("Juvenile Giant Kelp per 1m"^2),
-      x     = expression("log"[10] * "(x+1) juvenile Giant Kelp"),
+      title = expression("Juvenile Giant Kelp per 1 m"^2),
+      x     = expression("log"[10] * "(x) juvenile Giant Kelp"),
       y     = "Cumulative proportion"
     ) +
-    scale_x_continuous(breaks = seq(0, xmax, by = breaks_by)) +
-    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) + 
+    scale_x_continuous(
+      breaks = seq(0, xmax, by = breaks_by),
+      labels = function(x) x / 20   # divide ticks by 20
+    ) +
+    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     my.theme
   
-  ## text output 
+  ## text output
+  # raw natural-scale bounds
+  nat_min <- 10^shade_min
+  nat_max <- 10^shade_max
+  
+  # rescale to 1m^2 (divide by 20)
+  nat_min_1m2 <- nat_min / 20
+  nat_max_1m2 <- nat_max / 20
+  
+  # log10-scale bounds rescaled to 1m^2 (divide inside the log10)
+  log_min_1m2 <- shade_min / 20
+  log_max_1m2 <- shade_max / 20
+  
   text_out <- sprintf(
-    "Rows used: %d\nECDF at x = %.3f: y = %.4f (%.1f%%)\nNatural-scale x prior to the log10(x+1) transformation: %.3f\n",
-    n_used, shade_to, y_at_cut, 100 * y_at_cut, x_raw_at_cut
+    paste0(
+      "Rows used: %d\n",
+      "Shaded band (log10 scale) at the 20 m^2 spatial scale: [%.3f, %.3f]\n",
+      "Shaded band (log10 scale) at the 1 m^2 spatial scale: [%.3f, %.3f]\n",
+      "Shaded band natural scale (10^x) at the 20 m^2 spatial scale: [%.3f, %.3f]\n",
+      "Shaded band natural scale (10^x) at the 1 m^2 spatial scale: [%.3f, %.3f]\n",
+      "Percentage of ECDF shaded: %.2f%%\n"
+    ),
+    n_used,
+    shade_min, shade_max,
+    log_min_1m2, log_max_1m2,
+    nat_min, nat_max,
+    nat_min_1m2, nat_max_1m2,
+    perc_shaded
   )
+  
   cat(text_out)
   writeLines(text_out, file.path(results, "juvenile_kelp.txt"))
   
@@ -120,13 +151,11 @@ plot_ecdf <- function(data,
 
 
 ## view plot and save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-p1 <- plot_ecdf(
-  df, 
-  MacJuv_log10, 
-  breaks_by = 0.2, 
-  shade_to = log10(5)
-  )
-
+p1 <- plot_ecdf(df, 
+                    MacJuv_log10,
+                    breaks_by = 0.2,
+                    shade_min = log10(20),
+                    shade_max = log10(80))
 print(p1)
 
 

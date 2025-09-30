@@ -39,7 +39,7 @@ library(bayesplot)
 
 ## Libraries for 'analyze_visualize.R'
 library(egg)
-library(Cairo) # requires installation of Xcode
+library(Cairo) # requires installation of XQuartz on machine
 library(stargazer)
 
 ## Libraries for 'simulate.R' and 'plot_simulation'
@@ -50,6 +50,8 @@ library(egg)
 library(tidyselect)
 library(scales)
 library(pbapply)
+
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -70,6 +72,7 @@ figs <- "../figs"
 
 
 ## source files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source('plot_juvenile_kelp.R')
 source('empirical.R')
 source('format_data.R')
 source('fit_stan_model.R')
@@ -77,6 +80,7 @@ source('analyze_visualize.R')
 source('simulate.R')
 source('simulate_process.R')
 source('plot_simulation.R')
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

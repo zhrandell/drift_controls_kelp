@@ -4,20 +4,7 @@
 
 
 
-
-
 ## load ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rm(list=ls())
-
-library(readr)
-library(tidyverse)
-
-getwd()
-setwd("../")
-
-data <- "data"
-results <- "results"
-figs <- "figs"
 
 dat <- read.csv(file.path(data, "juvenile_kelp_SNI_subtidal_timeseries.csv"))
 ## END load ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,21 +20,13 @@ df <- data.frame(
   MacPyr = as.numeric(dat$MacPyr)
 )
 
-
-## divide by 20 to provide counts per 1m^2 
-#df <- df / 20 
-
-
 ## drop all 0's from MacJuv, as any associated MacPyr rows
 df <- df %>% filter(MacJuv != 0)
 
 ## log10 transform 
-df$MacJuv_log10 <- round(log10(df$MacJuv), 3)
-df$MacPyr_log10 <- round(log10(df$MacPyr), 3)
+df$MacJuv_log10 <- log10(df$MacJuv)
 
 
-## drop all 0's from MacJuv, as any associated MacPyr rows
-#df <- df %>% filter(MacJuv_log10 != 0)
 ## END data prep ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -69,13 +48,13 @@ my.theme = theme(panel.grid.major = element_blank(),
 
 
 ## function to create ECDF with shaded band between two log10() x-values
-plot_ecdf <- function(data, 
+plot_ecdf <- function(dat, 
                       col,
-                      breaks_by = 0.2,
+                      breaks_by = 1,
                       shade_min = log10(20),
                       shade_max = log10(80)) {
   
-  vals <- dplyr::pull(data, {{ col }})
+  vals <- dplyr::pull(dat, {{ col }})
   vals <- vals[!is.na(vals)]
   n_used <- length(vals)
   
@@ -96,17 +75,23 @@ plot_ecdf <- function(data,
     stat_ecdf(data = tibble::tibble(v = vals), aes(x = v),
               geom = "step", linewidth = 0.75, na.rm = TRUE) +
     labs(
-      title = expression("Juvenile Giant Kelp per 1 m"^2),
-      x     = expression("log"[10] * "(x) juvenile Giant Kelp"),
+      title = '',
+      x     = expression("Juvenile Giant Kelp per 1 m"^2),
       y     = "Cumulative proportion"
     ) +
     scale_x_continuous(
-      breaks = seq(0, xmax, by = breaks_by),
-      labels = function(x) x / 20 
+      breaks = seq(-4, xmax, by = breaks_by),
+      labels = function(x){ (10^x) / 20 }
     ) +
-    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
+    scale_y_continuous(limits = c(0, 1), 
+                       expand = c(0, 0),
+                       breaks = seq(0, 1, by = 0.1)) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    my.theme
+    my.theme +
+    annotate( 'text',
+              x = (shade_min + shade_max) / 2, 
+              y = 0.3,
+              label = 'Experimental\nrange')
   
   ## text output
   ## raw natural-scale bounds
@@ -156,7 +141,7 @@ plot_ecdf <- function(data,
 ## view plot and save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 p1 <- plot_ecdf(df, 
                     MacJuv_log10,
-                    breaks_by = 0.2,
+                    breaks_by = 1,
                     shade_min = log10(20),
                     shade_max = log10(80))
 print(p1)
@@ -164,12 +149,12 @@ print(p1)
 
 ## save pdf 
 ggsave(
-  filename = file.path(figs, "juvenile_kelp.pdf"),
+  filename = paste0(figs, "/juvenile_kelp.pdf"),
   plot = p1,
   device = cairo_pdf,
   dpi = 1200,
   width = 10,
-  height = 10,
+  height = 7,
   units = "in"
 )
 ## END view and save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

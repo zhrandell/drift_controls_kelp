@@ -86,7 +86,6 @@ plot_ecdf <- function(data,
   
   xmax <- max(vals, na.rm = TRUE)
   
-  # % of ECDF shaded
   y_min <- ecdf_fun(shade_min)
   y_max <- ecdf_fun(shade_max)
   perc_shaded <- 100 * (y_max - y_min)
@@ -103,22 +102,22 @@ plot_ecdf <- function(data,
     ) +
     scale_x_continuous(
       breaks = seq(0, xmax, by = breaks_by),
-      labels = function(x) x / 20   # divide ticks by 20
+      labels = function(x) x / 20 
     ) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     my.theme
   
   ## text output
-  # raw natural-scale bounds
+  ## raw natural-scale bounds
   nat_min <- 10^shade_min
   nat_max <- 10^shade_max
   
-  # rescale to 1m^2 (divide by 20)
+  ## rescale to 1m^2 (divide by 20)
   nat_min_1m2 <- nat_min / 20
   nat_max_1m2 <- nat_max / 20
   
-  # log10-scale bounds rescaled to 1m^2 (divide inside the log10)
+  ## log10-scale bounds rescaled to 1m^2 (divide by 20) 
   log_min_1m2 <- shade_min / 20
   log_max_1m2 <- shade_max / 20
   

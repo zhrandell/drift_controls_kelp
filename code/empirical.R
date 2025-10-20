@@ -44,6 +44,15 @@ dat$Treatment[dat$Treatment == "High_Control"] <- "High"
 dat$Treatment[dat$Treatment == "Low_Control"] <- "Low"
 
 
+## average weight of kelp individual
+kelp.ind.wt <- dat$Kelp_Initial / dat$Kelp_Ind
+kelp.ind.wt <- kelp.ind.wt[dat$Kelp_Ind > 0 & !is.na(dat$Kelp_Initial)]
+kelp.ind.wt.avg <- round(mean(kelp.ind.wt, na.rm = TRUE), 2)
+kelp.ind.wt.sd <- round(sd(kelp.ind.wt, na.rm = TRUE), 2)
+print(paste0('Average weight of kelp individual: ', kelp.ind.wt.avg, 
+             ' (SD: ', kelp.ind.wt.sd,')'))
+
+
 ## create new column seq for sequence 
 dat$seq <- ifelse(dat$Trial <= 4, "seq1", "seq2")
 

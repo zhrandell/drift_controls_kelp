@@ -28,11 +28,11 @@ These results provide practical guidance for managers considering the use of dri
 ## 
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/05915d15-01e9-4040-a498-43e06553a643" alt="stockingCage" width="35%" style="object-fit: cover; height: 300px;">
-  <img src="https://github.com/user-attachments/assets/0890c64f-3d33-4b6a-ab79-9c2dcacb8aa5" alt="freshCage" width="35%" style="object-fit: cover; height: 300px;">
+  <img src="https://github.com/user-attachments/assets/05915d15-01e9-4040-a498-43e06553a643" alt="stockingCage" width="40%" style="object-fit: cover; height: 300px;">
+  <img src="https://github.com/user-attachments/assets/0890c64f-3d33-4b6a-ab79-9c2dcacb8aa5" alt="freshCage" width="40%" style="object-fit: cover; height: 300px;">
 </p>
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/4e5ca068-34d1-4a35-8a68-d37d8f017b2a" alt="tuckedAway" width="35%" style="object-fit: cover; height: 300px;">
-  <img src="https://github.com/user-attachments/assets/37f7daf0-5d2c-44ed-8124-5042179d1f50" alt="activeGrazing" width="35%" style="object-fit: cover; height: 300px;">
+  <img src="https://github.com/user-attachments/assets/4e5ca068-34d1-4a35-8a68-d37d8f017b2a" alt="tuckedAway" width="40%" style="object-fit: cover; height: 300px;">
+  <img src="https://github.com/user-attachments/assets/37f7daf0-5d2c-44ed-8124-5042179d1f50" alt="activeGrazing" width="40%" style="object-fit: cover; height: 300px;">
 </p>
 

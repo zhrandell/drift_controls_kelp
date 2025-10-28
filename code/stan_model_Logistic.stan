@@ -126,7 +126,7 @@ transformed parameters {
   theta[5] = s;
 
 
-  // Temporal sequence 1 -----------------------------------
+  // Temporal sequence 2 -----------------------------------
   for (i in 1:n_subject_1) {
 
     // period 1
@@ -160,7 +160,7 @@ transformed parameters {
   }
 
 
-  // Temporal sequence 2 -----------------------------------
+  // Temporal sequence 1 -----------------------------------
   for (i in 1:n_subject_2) {      
    
     // period 3

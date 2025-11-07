@@ -238,8 +238,8 @@ drift.1 <- plot.dynamics(
   low_init = S0,
   low_period = S_P1, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Drift consumed",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 1",
   ymax = ymax_loss
 )
@@ -271,8 +271,8 @@ drift.2 <- plot.dynamics(
   low_init = S0,
   low_period = S_P2, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Drift consumed",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 2",
   ymax = ymax_loss
 )
@@ -304,8 +304,8 @@ drift.3 <- plot.dynamics(
   low_init = S0,
   low_period = S_P3, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Drift consumed",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 3",
   ymax = ymax_loss
 )
@@ -339,8 +339,8 @@ kelp.1 <- plot.dynamics(
   low_init = S0,
   low_period = A_P1, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Kelp consumed",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
   ymax = ymax_loss
 )
@@ -372,8 +372,8 @@ kelp.2 <- plot.dynamics(
   low_init = S0,
   low_period = A_P2, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Kelp consumed",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
   ymax = ymax_loss
 )
@@ -405,8 +405,8 @@ kelp.3 <- plot.dynamics(
   low_init = S0,
   low_period = A_P3, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Kelp consumed",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
   ymax = ymax_loss
 )
@@ -440,8 +440,8 @@ fullness.1 <- plot.dynamics(
   low_init = S0,
   low_period = F_P1, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Stomach fullness",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Stomach fullness (g)",
   plot_title = NULL,
   ymax = ymax_fill
 )
@@ -469,8 +469,8 @@ fullness.2 <- plot.dynamics(
   low_init = S0,
   low_period = F_P2, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Stomach fullness",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Stomach fullness (g)",
   plot_title = NULL,
   ymax = ymax_fill
 )
@@ -502,8 +502,8 @@ fullness.3 <- plot.dynamics(
   low_init = S0,
   low_period = F_P3, 
   
-  x_axis_text = "Initial drift",
-  y_axis_text = "Stomach fullness",
+  x_axis_text = "Initial drift (g)",
+  y_axis_text = "Stomach fullness (g)",
   plot_title = NULL,
   ymax = ymax_fill
 )
@@ -534,12 +534,6 @@ all.temporal.dynamics <- egg::ggarrange(
   nrow = 3,
   ncol = 3
 )
-
-
-## view plot, if desired
-#graphics.off()
-#windows(11, 8)
-#print(all.temporal.dynamics)
 
 
 ## save pdf 

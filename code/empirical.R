@@ -15,7 +15,6 @@ dat <- read.csv(file.path(data, "drift_kelp_loss.csv"))
 
 
 
-
 ## format data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Subtract initial wet-weight of bags used in the field 
 ## -20g wet weight for Drift bags 
@@ -305,8 +304,8 @@ all_consumption <- ggplot(dat, aes(x = Total_Initial, y = Total_Consumed)) +
   guides(fill = guide_legend(nrow = 3), color = "none") +
   labs(
     title = "Total biomass (kelp + drift) consumed across all eight experimental Trials",
-    x = "Biomass available",
-    y = "Biomass consumed"
+    x = "Biomass available (g)",
+    y = "Biomass consumed (g)"
   ) +
   facet_grid(cols = vars(hours), labeller = facet.label) +
   scale_y_continuous(limit = c(-1, NA), oob = squish) +

@@ -22,10 +22,11 @@ rdat <- rdat[sel ,]
 ## END start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+## basic posterior check ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## list of params
-## For vanLeeuwen, we use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-parms <- c("a", "b", "w", "q", "s", "sigma")
+## For vanLeeuwen, we use parameters 'w' and 'q' for convenience
+# though in the notes we use \nu for w and \psi for q
+parms <- c("a", "b", "w", "q", "s", "e", "sigma")
 
 
 ## print param list output
@@ -47,8 +48,8 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 
 
 ## trace plot 
-t1 <- mcmc_trace(draws_array, pars = parms) 
-print(t1)  
+t1 <- mcmc_trace(draws_array, pars = parms)
+print(t1)
 
 ggplot2::ggsave(filename = paste0(figs, "/trace_", sel.model, ".pdf"), 
                 plot = t1, 
@@ -58,8 +59,8 @@ ggplot2::ggsave(filename = paste0(figs, "/trace_", sel.model, ".pdf"),
                 units = "in")
 
 
-## pairs plot 
-pairsplot <- mcmc_pairs(draws_array, 
+## pairs plot
+pairsplot <- mcmc_pairs(draws_array,
                         pars = parms,
                         off_diag_args = list(size = 0.75))
 print(pairsplot)
@@ -76,7 +77,7 @@ ggplot2::ggsave(filename = paste0(figs, "/pairs_", sel.model, ".pdf"),
 
 
 
-## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 draws2pull <- nrow(draws_df)
 posts_df_raw <- suppressWarnings(
   draws_df[1:min(nrow(draws_df), draws2pull), 
@@ -165,12 +166,12 @@ s_post <- plot.posterior(posts_df_raw, 's', expression("Stomach sensitivity " (i
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', expression("Variance " (italic(sigma))))
 
 allparms <- ggarrange(
-                  tag_facet(a_post + facet_wrap(~"time"), tag_pool = "a"),
-                  tag_facet(b_post + facet_wrap(~"time"), tag_pool = "b"),
-                  tag_facet(s_post + facet_wrap(~"time"), tag_pool = "c"),
-                  tag_facet(w_post + facet_wrap(~"time"), tag_pool = "d"),
-                  tag_facet(q_post + facet_wrap(~"time"), tag_pool = "e"),
-                  tag_facet(sigma_post + facet_wrap(~"time"), tag_pool = "f"),
+                  a_post + facet_wrap(~"time") + labs(tag = "a"),
+                  b_post + facet_wrap(~"time") + labs(tag = "b"),
+                  s_post + facet_wrap(~"time") + labs(tag = "c"),
+                  w_post + facet_wrap(~"time") + labs(tag = "d"),
+                  q_post + facet_wrap(~"time") + labs(tag = "e"),
+                  sigma_post + facet_wrap(~"time") + labs(tag = "f"),
                   nrow = 2, ncol = 3)
 
 ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"), 

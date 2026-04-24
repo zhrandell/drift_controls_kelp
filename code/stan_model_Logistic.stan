@@ -23,6 +23,7 @@ functions {
     real w = theta[3];			// preference par 1
     real q = theta[4]; 		  // preference par 2
     real s = theta[5];			// stomach satiation sensitivity
+    real e = theta[6];			// stomach evacuation rate 
     real U = x_r[1]; 			  // Urchins
 
 
@@ -44,13 +45,13 @@ functions {
   p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
 
 // Consumption rates
-  f_S = S * H * a * p     / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
-  f_A = A * H * a * (1-p) / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+  f_S = S * H * a * p;
+  f_A = A * H * a * (1-p);
 
 // Drift, Kelp, Stomach
 	dS_dt = - U * f_S;
 	dA_dt = - U * f_A;
-	dF_dt =   f_S + f_A;
+	dF_dt =   f_S + f_A - e * F;
 
   return [dS_dt, dA_dt, dF_dt]';
   }
@@ -98,12 +99,13 @@ parameters {
   real <lower =  0, upper = 0.1>  b;
   real <lower = -6, upper = 6>    w;
   real <lower = -5, upper = 5>    q;
-  real <lower =  0, upper = 0.5>  s;
+  real <lower =  0, upper = 2>  s;
+  real <lower =  0, upper = 0.1> e;
   real <lower = 10, upper = 20>   sigma;
 }
 
 transformed parameters {
-  array[5] real theta;
+  array[6] real theta;
   array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
   array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
@@ -124,7 +126,7 @@ transformed parameters {
   theta[3] = w;
   theta[4] = q;
   theta[5] = s;
-
+  theta[6] = e;
 
   // Temporal sequence 2 -----------------------------------
   for (i in 1:n_subject_1) {
@@ -209,7 +211,8 @@ model {
   b ~ exponential(10);
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
-  s ~ exponential(1);
+  s ~ exponential(10);
+  e ~ exponential(10);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

@@ -12,7 +12,7 @@ sel.model <- c('Logistic', 'vanLeeuwen')[1]
 ## Libraries for 'empirical.R'
 library(tidyverse)
 library(scales)
-library(ggpubr)
+library(patchwork)
 
 ## Libraries for 'format_data.R' 
 library(stats)
@@ -35,7 +35,7 @@ library(posterior)
 library(bayesplot)
 
 ## Libraries for 'analyze_visualize.R'
-library(egg)
+library(patchwork)
 library(Cairo) # requires installation of XQuartz on machine
 library(stargazer)
 
@@ -43,7 +43,6 @@ library(stargazer)
 library(deSolve)
 library(reshape2)
 library(ggplot2)
-library(egg)
 library(tidyselect)
 library(scales)
 library(pbapply)

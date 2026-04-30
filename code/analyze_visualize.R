@@ -167,7 +167,7 @@ s_post <- plot.posterior(posts_df_raw, 's', expression("Stomach sensitivity " (i
 z_post <- plot.posterior(posts_df_raw, 'z', expression("Stomach clearance " (italic(z))), '(f)')
 sigma_post <- plot.posterior(posts_df_raw, 'sigma', expression("Variance " (italic(sigma))), '(g)')
 
-allparms <- ggarrange(
+allparms <- wrap_plots(
                   a_post,
                   b_post,
                   s_post,
@@ -175,9 +175,9 @@ allparms <- ggarrange(
                   q_post,
                   z_post,
                   sigma_post,
-                  labels = c('(a)','(b)','(c)','(d)','(e)','(f)'),
-                  label.args = list(gp = grid::gpar(cex = 1.2, face = "plain")),
-                  nrow = 3, ncol = 3)
+                  nrow = 3, ncol = 3) +
+  plot_annotation(tag_levels = 'a', tag_prefix = '(', tag_suffix = ')') &
+  theme(plot.tag = element_text(size = rel(1.2), face = "plain"))
 
 ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"), 
                 plot = allparms, 

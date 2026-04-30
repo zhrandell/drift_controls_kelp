@@ -259,7 +259,7 @@ p3 <- fig2(
 
 
 ## combine all rows into 1
-seq1_results <- ggarrange(p1, p2, p3, nrow = 3)
+seq1_results <- wrap_plots(p1, p2, p3, nrow = 3)
 
 
 ## save 
@@ -442,8 +442,7 @@ p6 <- all_seq(
 
 
 ## aggregate
-pAll <- ggarrange(p4, p5, p6,
-                  nrow = 3)
+pAll <- wrap_plots(p4, p5, p6, nrow = 3)
 
 
 ## save

@@ -521,16 +521,16 @@ fullness.3 <- place_legend(fullness.3, legend_full, x_max, ymax_fill)
 
 
 ## plot all 9 panes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-all.temporal.dynamics <- egg::ggarrange(
-  tag_facet(drift.1 + facet_wrap(~ "time"), tag_pool = "a"),
-  tag_facet(drift.2 + facet_wrap(~ "time"), tag_pool = "b"),
-  tag_facet(drift.3 + facet_wrap(~ "time"), tag_pool = "c"),
-  tag_facet(kelp.1 + facet_wrap(~ "time"), tag_pool = "d"),
-  tag_facet(kelp.2 + facet_wrap(~ "time"), tag_pool = "e"),
-  tag_facet(kelp.3 + facet_wrap(~ "time"), tag_pool = "f"),
-  tag_facet(fullness.1 + facet_wrap(~ "time"), tag_pool = "g"),
-  tag_facet(fullness.2 + facet_wrap(~ "time"), tag_pool = "h"),
-  tag_facet(fullness.3 + facet_wrap(~ "time"), tag_pool = "i"),
+all.temporal.dynamics <- wrap_plots(
+  drift.1    + facet_wrap(~ "time") + labs(tag = "a"),
+  drift.2    + facet_wrap(~ "time") + labs(tag = "b"),
+  drift.3    + facet_wrap(~ "time") + labs(tag = "c"),
+  kelp.1     + facet_wrap(~ "time") + labs(tag = "d"),
+  kelp.2     + facet_wrap(~ "time") + labs(tag = "e"),
+  kelp.3     + facet_wrap(~ "time") + labs(tag = "f"),
+  fullness.1 + facet_wrap(~ "time") + labs(tag = "g"),
+  fullness.2 + facet_wrap(~ "time") + labs(tag = "h"),
+  fullness.3 + facet_wrap(~ "time") + labs(tag = "i"),
   nrow = 3,
   ncol = 3
 )

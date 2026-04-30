@@ -40,7 +40,6 @@ draws_df <- posterior::as_draws_df(draws_array)
 
 ## plot posteriors
 posts <- mcmc_hist(fit$draws(parms))
-# print(posts)
 
 
 ## sampling diagnostics 
@@ -49,7 +48,6 @@ diagnostic_df <- as_draws_df(fit$sampler_diagnostics())
 
 ## trace plot 
 t1 <- mcmc_trace(draws_array, pars = parms)
-print(t1)
 
 ggplot2::ggsave(filename = paste0(figs, "/trace_", sel.model, ".pdf"), 
                 plot = t1, 
@@ -63,7 +61,6 @@ ggplot2::ggsave(filename = paste0(figs, "/trace_", sel.model, ".pdf"),
 pairsplot <- mcmc_pairs(draws_array,
                         pars = parms,
                         off_diag_args = list(size = 0.75))
-print(pairsplot)
 
 ggplot2::ggsave(filename = paste0(figs, "/pairs_", sel.model, ".pdf"), 
                 plot = pairsplot, 

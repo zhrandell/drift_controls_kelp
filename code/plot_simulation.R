@@ -76,17 +76,17 @@ my.theme = theme(
 
 
 ## fixed-size custom legends ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-library(grid)
-
 # Function to return a grob for custom legend with absolute sizes (mm units)
 fixed_legend_grob <- function(low_col, high_col,
                               square_mm = 6,
                               gap_mm = 2,
-                              text_cex = 1.3) {
+                              text_cex = 1.3,
+                              y_low_mm  = 3,
+                              y_high_mm = 10) {
 
   # vertical positions (from bottom) for the two legend rows
-  y_low  <- unit(3,  "mm")
-  y_high <- unit(10, "mm")
+  y_low  <- unit(y_low_mm,  "mm")
+  y_high <- unit(y_high_mm, "mm")
 
   grobTree(
     # optional transparent background
@@ -96,13 +96,13 @@ fixed_legend_grob <- function(low_col, high_col,
     rectGrob(x = unit(0, "mm"), y = y_low,
              width = unit(square_mm, "mm"), height = unit(square_mm, "mm"),
              just = c("left","bottom"),
-             gp = gpar(fill = low_col, col = NA)),
+             gp = gpar(fill = low_col, col = NA, alpha = alph)),
 
     # High square
     rectGrob(x = unit(0, "mm"), y = y_high,
              width = unit(square_mm, "mm"), height = unit(square_mm, "mm"),
              just = c("left","bottom"),
-             gp = gpar(fill = high_col, col = NA)),
+             gp = gpar(fill = high_col, col = NA, alpha = alph)),
 
     # Labels
     textGrob("Low",
@@ -120,9 +120,12 @@ fixed_legend_grob <- function(low_col, high_col,
 }
 
 ## create the three legends (consistent across panels)
-legend_drift <- fixed_legend_grob(low_drift_col,  high_drift_col)
-legend_kelp  <- fixed_legend_grob(low_kelp_col,   high_kelp_col)
-legend_full  <- fixed_legend_grob(low_fullness_col, high_fullness_col)
+legend_drift <- fixed_legend_grob(low_drift_col,    high_drift_col,    
+                                  square_mm = 4, text_cex = 0.9, y_high_mm = 7)
+legend_kelp  <- fixed_legend_grob(low_kelp_col,     high_kelp_col,     
+                                  square_mm = 4, text_cex = 0.9, y_high_mm = 7)
+legend_full  <- fixed_legend_grob(low_fullness_col, high_fullness_col, 
+                                  square_mm = 4, text_cex = 0.9, y_high_mm = 7)
 ## END custom legend ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -522,18 +525,19 @@ fullness.3 <- place_legend(fullness.3, legend_full, x_max, ymax_fill)
 
 ## plot all 9 panes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 all.temporal.dynamics <- wrap_plots(
-  drift.1    + facet_wrap(~ "time") + labs(tag = "a"),
-  drift.2    + facet_wrap(~ "time") + labs(tag = "b"),
-  drift.3    + facet_wrap(~ "time") + labs(tag = "c"),
-  kelp.1     + facet_wrap(~ "time") + labs(tag = "d"),
-  kelp.2     + facet_wrap(~ "time") + labs(tag = "e"),
-  kelp.3     + facet_wrap(~ "time") + labs(tag = "f"),
-  fullness.1 + facet_wrap(~ "time") + labs(tag = "g"),
-  fullness.2 + facet_wrap(~ "time") + labs(tag = "h"),
-  fullness.3 + facet_wrap(~ "time") + labs(tag = "i"),
+  drift.1,
+  drift.2,
+  drift.3,
+  kelp.1,
+  kelp.2,
+  kelp.3,
+  fullness.1,
+  fullness.2,
+  fullness.3,
   nrow = 3,
-  ncol = 3
-)
+  ncol = 3) +
+    plot_annotation(tag_levels = 'a', tag_prefix = '(', tag_suffix = ')') &
+    theme(plot.tag = element_text(size = rel(1.2), face = "plain"))
 
 
 ## save pdf 

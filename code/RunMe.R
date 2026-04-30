@@ -47,6 +47,7 @@ library(tidyselect)
 library(scales)
 library(pbapply)
 library(parallel)
+library(grid)
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -69,6 +70,9 @@ figs <- "../figs"
 source('plot_juvenile_kelp.R')
 source('empirical.R')
 source('format_data.R')
+
+warmup_iter <- 200
+sampling_iter <- 500
 source('fit_stan_model.R')
 source('analyze_visualize.R')
 

@@ -227,8 +227,8 @@ p1 <- fig2(
   xvar = Drift_Initial,
   yvar = Drift_Consumed,
   palette = pal_drift,
-  plot_title = "Drift consumed vs Drift available",
-  xlab_text = "initial Drift (g)",
+  plot_title = "Drift consumed vs available",
+  xlab_text = "Initial drift (g)",
   ylab_text = "Drift consumed (g)",
   show_legend = TRUE
 )
@@ -251,8 +251,8 @@ p3 <- fig2(
   xvar = Kelp_Initial,
   yvar = Kelp_Consumed,
   palette = pal_kelp,
-  plot_title = "Kelp consumed vs Kelp available",
-  xlab_text = "initial Kelp (g)",
+  plot_title = "Kelp consumed vs available",
+  xlab_text = "Initial kelp (g)",
   ylab_text = "Kelp consumed (g)",
   show_legend = FALSE
 )
@@ -410,8 +410,8 @@ p4 <- all_seq(
   yvar = Drift_Consumed,
   palette = pal_custom,
   plot_title = "Drift consumed vs available drift",
-  xlab_text = "initial drift (g)",
-  ylab_text = "drift consumed (g)",
+  xlab_text = "Initial drift (g)",
+  ylab_text = "Drift consumed (g)",
   show_legend = FALSE
 )
 
@@ -422,8 +422,8 @@ p5 <- all_seq(
   yvar = Kelp_Consumed,
   palette = pal_custom,
   plot_title = "Kelp consumed vs available drift",
-  xlab_text = "initial drift (g)",
-  ylab_text = "kelp consumed (g)",
+  xlab_text = "Initial drift (g)",
+  ylab_text = "Kelp consumed (g)",
   show_legend = FALSE
 )
 
@@ -435,8 +435,8 @@ p6 <- all_seq(
   yvar = Kelp_Consumed,
   palette = pal_custom,
   plot_title = "Kelp consumed vs available kelp",
-  xlab_text = "initial kelp (g)",
-  ylab_text = "kelp consumed (g)",
+  xlab_text = "Initial kelp (g)",
+  ylab_text = "Kelp consumed (g)",
   show_legend = TRUE
 )
 

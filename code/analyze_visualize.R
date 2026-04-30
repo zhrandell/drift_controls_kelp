@@ -26,7 +26,7 @@ rdat <- rdat[sel ,]
 ## list of params
 ## For vanLeeuwen, we use parameters 'w' and 'q' for convenience
 # though in the notes we use \nu for w and \psi for q
-parms <- c("a", "b", "w", "q", "s", "e", "sigma")
+parms <- c("a", "b", "w", "q", "s", "z", "sigma")
 
 
 ## print param list output
@@ -123,7 +123,7 @@ stargazer(out.parms,
 ## Custom posterior plot ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Function to visualize posteriors w/ CI and median values 
-plot.posterior <- function(x, param='a', label='a'){
+plot.posterior <- function(x, param='a', label='a', tag = '(a)'){
   ## graphical parameters
   col <- "#2FAA96"
   alp <- 1
@@ -147,6 +147,7 @@ plot.posterior <- function(x, param='a', label='a'){
                color = med_col, linewidth = sz1, linetype= lty1) + 
     geom_vline(xintercept = CI[3], 
                color = CI_col, linewidth = sz2, linetype = lty2) + 
+    labs(tag = tag) +
     theme(panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
           panel.background = element_blank(), 
@@ -158,28 +159,32 @@ plot.posterior <- function(x, param='a', label='a'){
 }
 
 ## create posterior plots
-a_post <- plot.posterior(posts_df_raw, 'a', expression("Search rate " (italic(a))))
-b_post <- plot.posterior(posts_df_raw, 'b', expression("Supression rate " (italic(b))))
-w_post <- plot.posterior(posts_df_raw, 'w', expression("Baseline preference " (tilde(italic("\u03c9")))))
-q_post <- plot.posterior(posts_df_raw, 'q', expression("Switching sensitivity " (italic("\u03C6"))))
-s_post <- plot.posterior(posts_df_raw, 's', expression("Stomach sensitivity " (italic(v))))
-sigma_post <- plot.posterior(posts_df_raw, 'sigma', expression("Variance " (italic(sigma))))
+a_post <- plot.posterior(posts_df_raw, 'a', expression("Search rate " (italic(a))), '(a)')
+b_post <- plot.posterior(posts_df_raw, 'b', expression("Supression rate " (italic(b))), '(b)')
+w_post <- plot.posterior(posts_df_raw, 'w', expression("Baseline preference " (tilde(italic("\u03c9")))), '(c)')
+q_post <- plot.posterior(posts_df_raw, 'q', expression("Switching sensitivity " (italic("\u03C6"))), '(d)')
+s_post <- plot.posterior(posts_df_raw, 's', expression("Stomach sensitivity " (italic(v))), '(e)')
+z_post <- plot.posterior(posts_df_raw, 'z', expression("Stomach clearance " (italic(z))), '(f)')
+sigma_post <- plot.posterior(posts_df_raw, 'sigma', expression("Variance " (italic(sigma))), '(g)')
 
 allparms <- ggarrange(
-                  a_post + facet_wrap(~"time") + labs(tag = "a"),
-                  b_post + facet_wrap(~"time") + labs(tag = "b"),
-                  s_post + facet_wrap(~"time") + labs(tag = "c"),
-                  w_post + facet_wrap(~"time") + labs(tag = "d"),
-                  q_post + facet_wrap(~"time") + labs(tag = "e"),
-                  sigma_post + facet_wrap(~"time") + labs(tag = "f"),
-                  nrow = 2, ncol = 3)
+                  a_post,
+                  b_post,
+                  s_post,
+                  w_post,
+                  q_post,
+                  z_post,
+                  sigma_post,
+                  labels = c('(a)','(b)','(c)','(d)','(e)','(f)'),
+                  label.args = list(gp = grid::gpar(cex = 1.2, face = "plain")),
+                  nrow = 3, ncol = 3)
 
 ggplot2::ggsave(filename = paste0(figs, "/posteriors_", sel.model,".pdf"), 
                 plot = allparms, 
                 device = cairo_pdf,
                 dpi = 1200, 
                 width = 16,
-                height = 4, 
+                height = 8, 
                 units = "in")
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

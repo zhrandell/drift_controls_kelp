@@ -6,12 +6,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Choose the model [1] or [2]
 sel.model <- c('Logistic', 'vanLeeuwen')[1]
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
 ## Libraries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Libraries for 'empirical.R'
 library(tidyverse)
@@ -51,23 +47,21 @@ library(egg)
 library(tidyselect)
 library(scales)
 library(pbapply)
+library(parallel)
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## check wd is appropriate
-getwd()
-
 ## relative file paths
 code <- "../code"
 data <- "../data"
 results <- "../results"
 figs <- "../figs"
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -78,7 +72,12 @@ source('empirical.R')
 source('format_data.R')
 source('fit_stan_model.R')
 source('analyze_visualize.R')
+
+cl <- makeCluster(max(1L, detectCores() - 1L))
+clusterEvalQ(cl, library(deSolve))
 source('simulate.R')
+stopCluster(cl)
+
 source('simulate_process.R')
 source('plot_simulation.R')
 

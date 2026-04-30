@@ -138,30 +138,42 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   t.list_P3_restock <- seq(P1 + P2 + 1, P1 + P2 + P3, by = 1)
   
   
-  ## nested lapply 
+  ## flatten parameter x initial-condition grid for better parallel utilisation
   print(paste('Kelp level', AL, 'of', length(A.level)))
-  outs_parms <- pblapply(full_parm_list, function(x){
-    lapply(inits_P1, function(y){
-      
-      p1 <- ode(y,
-                times = t.list_P1_restock,
-                func = resourceLoss,
-                parms = x)
-  
-      p2 <- ode(c(y[1], y[2], p1[P1, 4]), 
-                times = t.list_P2_restock,
-                func = resourceLoss,
-                parms = x)
-  
-      p3 <- ode(c(y[1], y[2], p2[P2, 4]), 
-                times = t.list_P3_restock,
-                func = resourceLoss,
-                parms = x)
-      
-      return(rbind(p1, p2, p3))
-  
-    })
-  })
+  n_parms <- length(full_parm_list)
+  n_inits <- length(inits_P1)
+  combos  <- expand.grid(init_idx = seq_len(n_inits), parm_idx = seq_len(n_parms))
+
+  clusterExport(cl,
+    c("full_parm_list", "inits_P1", "combos",
+      "t.list_P1_restock", "t.list_P2_restock", "t.list_P3_restock",
+      "resourceLoss", "P1", "P2", "U"),
+    envir = environment())
+
+  flat_results <- pblapply(seq_len(nrow(combos)), function(i) {
+    x <- full_parm_list[[combos$parm_idx[i]]]
+    y <- inits_P1[[combos$init_idx[i]]]
+
+    p1 <- ode(y,
+              times = t.list_P1_restock,
+              func  = resourceLoss,
+              parms = x)
+
+    p2 <- ode(c(y[1], y[2], p1[P1, 4]),
+              times = t.list_P2_restock,
+              func  = resourceLoss,
+              parms = x)
+
+    p3 <- ode(c(y[1], y[2], p2[P2, 4]),
+              times = t.list_P3_restock,
+              func  = resourceLoss,
+              parms = x)
+
+    rbind(p1, p2, p3)
+  }, cl = cl)
+
+  ## re-nest into original outs_parms[[parm_idx]][[init_idx]] structure
+  outs_parms <- split(flat_results, combos$parm_idx)
 
 save(outs_parms, 
      file = paste0(results,"/ODE_kelp_", names(A.level[AL]), '_', sel.model, ".RDA"))

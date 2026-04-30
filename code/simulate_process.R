@@ -37,67 +37,34 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   }
   
   
-  ## Drift loss
-  S_loss_P1 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Sloss_P1(y)))
-  A_loss_P1 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Aloss_P1(y)))
-  F_fill_P1 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Ffill_P1(y)))
-  
-  
-  S_loss_P2 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Sloss_P2(y)))
-  A_loss_P2 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Aloss_P2(y)))
-  F_fill_P2 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Ffill_P2(y)))
-  
-  
-  S_loss_P3 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Sloss_P3(y)))
-  A_loss_P3 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Aloss_P3(y)))
-  F_fill_P3 <- lapply(outs_parms, function(x)
-    lapply(x, function(y) extract_Ffill_P3(y)))
-  
-  
-  ## convert to df 
-  S_loss_P1 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, S_loss_P1)), 
-                                            ncol=len_init)))
-  A_loss_P1 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, A_loss_P1)), 
-                                            ncol=len_init)))
-  F_fill_P1 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, F_fill_P1)), 
-                                            ncol=len_init)))
-  
-  S_loss_P2 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, S_loss_P2)), 
-                                            ncol=len_init)))
-  A_loss_P2 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, A_loss_P2)), 
-                                            ncol=len_init)))
-  F_fill_P2 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, F_fill_P2)), 
-                                            ncol=len_init)))
-  
-  S_loss_P3 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, S_loss_P3)), 
-                                            ncol=len_init)))
-  A_loss_P3 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, A_loss_P3)), 
-                                            ncol=len_init)))
-  F_fill_P3 <- na.omit(as.data.frame(matrix(unlist(do.call(rbind, F_fill_P3)), 
-                                            ncol=len_init)))
-  
-  
-  ## rarify to compensate for NA's produced during simulation 
-  rarify <- min(nrow(S_loss_P1), 990)
-  S_loss_P1 <- S_loss_P1[sample(1:nrow(S_loss_P1), rarify), ]
-  A_loss_P1 <- A_loss_P1[sample(1:nrow(A_loss_P1), rarify), ]
-  F_fill_P1 <- F_fill_P1[sample(1:nrow(F_fill_P1), rarify), ]
+  ## extract all 9 state values in a single pass (avoids 9 separate list traversals)
+  extracted_raw <- lapply(outs_parms, function(x) {
+    vapply(x, function(y) {
+      c(extract_Sloss_P1(y), extract_Aloss_P1(y), extract_Ffill_P1(y),
+        extract_Sloss_P2(y), extract_Aloss_P2(y), extract_Ffill_P2(y),
+        extract_Sloss_P3(y), extract_Aloss_P3(y), extract_Ffill_P3(y))
+    }, numeric(9))  # returns 9 x len_init matrix per parameter set
+  })
 
-  S_loss_P2 <- S_loss_P2[sample(1:nrow(S_loss_P1), rarify), ]
-  A_loss_P2 <- A_loss_P2[sample(1:nrow(A_loss_P1), rarify), ]
-  F_fill_P2 <- F_fill_P2[sample(1:nrow(F_fill_P1), rarify), ]
+  ## stack into 9 x len_init x n_parms array, slice by variable into data.frames
+  all_data <- simplify2array(extracted_raw)  # dims: 9 x len_init x n_parms
+  make_df  <- function(k) na.omit(as.data.frame(t(all_data[k, , ])))
 
-  S_loss_P3 <- S_loss_P3[sample(1:nrow(S_loss_P1), rarify), ]
-  A_loss_P3 <- A_loss_P3[sample(1:nrow(A_loss_P1), rarify), ]
-  F_fill_P3 <- F_fill_P3[sample(1:nrow(F_fill_P1), rarify), ]
+  S_loss_P1 <- make_df(1); A_loss_P1 <- make_df(2); F_fill_P1 <- make_df(3)
+  S_loss_P2 <- make_df(4); A_loss_P2 <- make_df(5); F_fill_P2 <- make_df(6)
+  S_loss_P3 <- make_df(7); A_loss_P3 <- make_df(8); F_fill_P3 <- make_df(9)
+
+
+  ## rarify using a single consistent set of indices across all variables and periods
+  rarify <- min(nrow(S_loss_P1), nrow(A_loss_P1), nrow(F_fill_P1),
+                nrow(S_loss_P2), nrow(A_loss_P2), nrow(F_fill_P2),
+                nrow(S_loss_P3), nrow(A_loss_P3), nrow(F_fill_P3), 990)
+  idx <- sample(nrow(S_loss_P1), rarify)
+
+  S_loss_P1 <- S_loss_P1[idx, ]; A_loss_P1 <- A_loss_P1[idx, ]; F_fill_P1 <- F_fill_P1[idx, ]
+  S_loss_P2 <- S_loss_P2[idx, ]; A_loss_P2 <- A_loss_P2[idx, ]; F_fill_P2 <- F_fill_P2[idx, ]
+  S_loss_P3 <- S_loss_P3[idx, ]; A_loss_P3 <- A_loss_P3[idx, ]; F_fill_P3 <- F_fill_P3[idx, ]
+
   
   
   ## calculate median from simulations

@@ -1,6 +1,7 @@
 
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 rm(list = ls())
+closeAllConnections()
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,14 +75,14 @@ source('format_data.R')
 warmup_iter <- 200
 sampling_iter <- 500
 source('fit_stan_model.R')
-source('analyze_visualize.R')
+source('visualize_stan_model.R')
 
 cl <- makeCluster(max(1L, detectCores() - 1L))
 clusterEvalQ(cl, library(deSolve))
 source('simulate.R')
 stopCluster(cl)
 
-source('simulate_process.R')
+source('process_simulation.R')
 source('plot_simulation.R')
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

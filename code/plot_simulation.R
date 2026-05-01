@@ -3,15 +3,10 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-
-
-
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 load(paste0(results,"/ODE_toPlot_kelp_high_", sel.model,".RDA"))
 load(paste0(results,"/ODE_toPlot_kelp_low_", sel.model,".RDA"))
 ## END set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 
 
@@ -153,22 +148,23 @@ x_max <- max(combined_high$S0, combined_low$S0, na.rm = TRUE)
 
 
 ## function to plot single Period for Low and High Kelp treatments ~~~~~~~~~~~~~ 
-plot.dynamics <- function(high_dat, var, 
-                      high_lower_ribbon, 
-                      high_upper_ribbon, 
+plot.dynamics <- function(high_dat, var,
+                      high_lower_ribbon,
+                      high_upper_ribbon,
                       high_fill, ## params to plot High Kelp ribbon
-                      high_init, 
-                      high_period, ## params to plot High Kelp median value line across x-axis 
-                      low_dat, 
-                      low_lower_ribbon, 
-                      low_upper_ribbon, 
+                      high_init,
+                      high_period, ## params to plot High Kelp median value line across x-axis
+                      low_dat,
+                      low_lower_ribbon,
+                      low_upper_ribbon,
                       low_fill, ## params to plot Low Kelp ribbon
-                      low_init, 
+                      low_init,
                       low_period, ## params to plot Low Kelp median value line across x-axis
-                      x_axis_text, 
-                      y_axis_text, 
+                      x_axis_text,
+                      y_axis_text,
                       plot_title,
-                      ymax){ ## axis label and ylim params
+                      ymax,
+                      y_breaks = waiver()){ ## axis label and ylim params
 
 ## title options 
   title_layer <- if (is.null(plot_title)) {
@@ -213,7 +209,7 @@ plot.dynamics <- function(high_dat, var,
     xlab(x_axis_text) +
     ylab(y_axis_text) +
     ggtitle(plot_title) +
-    ylim(0, ymax)
+    scale_y_continuous(limits = c(0, ymax), breaks = y_breaks)
 
   return(plot)
 }
@@ -244,7 +240,8 @@ drift.1 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 1",
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -277,7 +274,8 @@ drift.2 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 2",
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -310,7 +308,8 @@ drift.3 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 3",
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -345,7 +344,8 @@ kelp.1 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -378,7 +378,8 @@ kelp.2 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -411,7 +412,8 @@ kelp.3 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 

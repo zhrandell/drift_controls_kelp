@@ -23,37 +23,34 @@ functions {
     real w = theta[3];			// preference par 1
     real q = theta[4]; 		  // preference par 2
     real s = theta[5];			// stomach satiation sensitivity
-    real e = theta[6];			// stomach evacuation rate 
+    real z = theta[6];			// stomach clearance rate 
     real U = x_r[1]; 			  // Urchins
-
-
-// Hunger level
-  H = exp(- s * F);
-  // H = 2 / (1 + exp( ( F / z )^s ));
-
-
-// Yodzis preference formulation [requiring constrained 0-1 prior on w]
-//   p = (( w  *   pow(S, q)) / ( (w * pow(S, q)) + ((1-w) * pow(A, q)) ));
-
-// Logistic preference formulation [requiring constrained 0-1 prior on w]
-  // p = ( 1 - ( 1 / ( 1 + (w / (1 - w)) * pow((S / A), q)) ));
-
-// Logistic preference - multiplicative log formulation [permitting Normal prior on w]
-  // p = ( 1 - ( 1 / ( 1 + exp(w) * pow((S / A), q)) ));
   
-// Logistic preference - additive log formulation [permitting Normal priors on w and q]
-  p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+  // ## Do Not Remove the ODE_BODY_START and ODE_BODY_END flags ###
 
-// Consumption rates
-  f_S = S * H * a * p;
-  f_A = A * H * a * (1-p);
+  // ## ODE_BODY_START ##
+  
+    // Hunger level
+    H = exp(- F);
+    // H = 2 / (1 + exp( ( F / z )^s ));
+    
+    // Logistic preference - additive log formulation [permitting Normal priors on w and q]
+    p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
+  
+    // Consumption rates
+    f_S = S * H * a * p;        //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+    f_A = A * H * a * (1-p);    //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+  
+    // Drift, Kelp, Stomach
+  	dS_dt = - U * f_S;
+  	dA_dt = - U * f_A;
+  	dF_dt =   f_S + f_A - z * F;
+  	
+  // ## ODE_BODY_END ##
 
-// Drift, Kelp, Stomach
-	dS_dt = - U * f_S;
-	dA_dt = - U * f_A;
-	dF_dt =   f_S + f_A - e * F;
-
-  return [dS_dt, dA_dt, dF_dt]';
+  ////  REMEMBER TO UPDATE THE MODEL IN `simulate.R' AS WELL  ////
+  
+    return [dS_dt, dA_dt, dF_dt]';
   }
 }
 
@@ -99,8 +96,8 @@ parameters {
   real <lower =  0, upper = 0.1>  b;
   real <lower = -6, upper = 6>    w;
   real <lower = -5, upper = 5>    q;
-  real <lower =  0, upper = 2>  s;
-  real <lower =  0, upper = 0.1> e;
+  real <lower =  0, upper = 2>    s;
+  real <lower =  0, upper = 0.1>  z;
   real <lower = 10, upper = 20>   sigma;
 }
 
@@ -126,7 +123,7 @@ transformed parameters {
   theta[3] = w;
   theta[4] = q;
   theta[5] = s;
-  theta[6] = e;
+  theta[6] = z;
 
   // Temporal sequence 2 -----------------------------------
   for (i in 1:n_subject_1) {
@@ -212,7 +209,7 @@ model {
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
   s ~ exponential(10);
-  e ~ exponential(10);
+  z ~ exponential(10);
   sigma ~ exponential(0.1);
 
   for (i in 1:n_subject_1) {

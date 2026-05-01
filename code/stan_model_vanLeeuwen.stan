@@ -25,26 +25,28 @@
       real s = theta[5];			// stomach satiation sensitivity
       real U = x_r[1]; 			  // Urchins
       
+       // ## Do Not Remove the ODE_BODY_START and ODE_BODY_END flags ###
+       
+      // ## ODE_BODY_START ##
+      
       // Hunger level
       H = exp( - s * F );
       // H = 2 / (1 + exp( ( F / z )^s ));
       
-      
-      // vanLeeuwen et al.
-      // p = ( 1 - ( 1 + w * (1 / q) * (S / A) ) / ( 1 + w * (1 / q) * (S / A) * 2 + ( w * (S / A) )^2 ) );
-
       // vanLeeuwen et al. reformulated
       // We use parameters 'w = q-4' and 'q' for convenience though in the notes we use \nu for w and \psi for q
       p = ( 1 -  ( 1 + exp( (q-4) + log(S / A) )) / ( 1 + exp( log(2) + (q-4) + log(S / A) ) + exp( q + 2 * log(S / A) )) );
       
       // Consumption rates
-      f_S = S * H * a * p        / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
-      f_A = A * H * a * (1 - p)  / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+      f_S = S * H * a * p;        //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+      f_A = A * H * a * (1 - p);  //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
 
       // Drift, Kelp, Stomach
       dS_dt = - U * f_S;
       dA_dt = - U * f_A;
       dF_dt =   f_S + f_A;
+      
+      // ## ODE_BODY_END ##
       
       return [dS_dt, dA_dt, dF_dt]';
   }

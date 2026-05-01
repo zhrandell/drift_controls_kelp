@@ -4,13 +4,42 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
+# Specify assumed kelp abundances (grams)
+A.level = c("low" = 50,
+            "high" = 250)
+
+
 ## ode() with multiple params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## load posts_Df
 
 load(paste0(results,"/posterior_draws_", sel.model,".RDA"))
 
-A.level = c("low" = 50,
-            "high" = 250)
+## generate resourceLoss_*.R from the bracketed ODE body in the Stan file
+make_resourceLoss <- function(sel.model, code_dir) {
+  stan_lines <- readLines(paste0(code_dir, "/stan_model_", sel.model, ".stan"))
+
+  start <- which(grepl("## ODE_BODY_START ##", stan_lines)) + 1
+  end   <- which(grepl("## ODE_BODY_END ##",   stan_lines)) - 1
+
+  body <- stan_lines[start:end]
+  body <- gsub("//", "#",  body)                    # Stan comments -> R comments
+  body <- gsub(";(\\s*#|\\s*$)", "\\1", body)       # remove semicolons before # or at end of line
+
+  writeLines(c(
+    paste0("resourceLoss_", sel.model, " <- function(S0, A0, F0, params) {"),
+    "  with(as.list(c(S0, A0, F0)), {",
+    body,
+    "    return(list(c(dS_dt, dA_dt, dF_dt)))",
+    "  })",
+    "}"
+  ), paste0(code_dir, "/resourceLoss_", sel.model, ".R"))
+}
+
+make_resourceLoss(sel.model, code)
+source(paste0(code, "/resourceLoss_", sel.model, ".R"))
+resourceLoss <- get(paste0("resourceLoss_", sel.model))
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
 
@@ -46,92 +75,31 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
                      SIMPLIFY = FALSE)
   inits_P1 <- lapply(inits_P1, function(x){ names(x) <- sub("ff", "F", names(x)); x})
   
-  
-  ## list of params 
-  aL <- posts_df_raw$a 
-  bL <- posts_df_raw$b
-  wL <- posts_df_raw$w
-  qL <- posts_df_raw$q
-  sL <- posts_df_raw$s
-  
-  
-  ## first set of params 
-  parm_list = c(a = aL[1],
-                b = bL[1],
-                w = wL[1],
-                q = qL[1],
-                s = sL[1]
-                )
-  
-  
-  ## specify ODE functions
-  
-  resourceLoss_Logistic <- function(S0, A0, F0, params) {
-    with(as.list(c(S0, A0, F0)),{
-      
-      H = exp(- s * F)
-      # H = 2 / (1 + exp( ( F / z )^s ))
-   
-      ## logistic
-      p = (1 - (1 / (1 + exp(w + q * log(S / A)))))
-      
-      f_S = S * H * a * p         / ( 1 + a * b * ( p * S + (1-p) * A )^2 )
-      f_A = A * H * a * (1 - p)   / ( 1 + a * b * ( p * S + (1-p) * A )^2 )
-      
-      dS_dt = - U * f_S
-      dA_dt = - U * f_A
-      dF_dt = f_S + f_A
-      
-      return(list(c(dS_dt, dA_dt, dF_dt)))
-    })
-  }
-  
-  resourceLoss_vanLeeuwen <- function(S0, A0, F0, params) {
-    with(as.list(c(S0, A0, F0)),{
-      
-      H = exp(- s * F)
-      # H = 2 / (1 + exp( ( F / z )^s ))
-      
-      ## vanLeeuwen
-      # We use parameters 'w = q-4' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-      p = (1 - (1 + exp((q-4) + log(S / A))) / (1 + exp(log(2) + (q-4) + log(S / A)) + exp(q + 2 * log(S / A))))
-      
-      f_S = S * H * a * p        / ( 1 + a * b * ( p * S + (1-p) * A )^2 )
-      f_A = A * H * a * (1 - p)  / ( 1 + a * b * ( p * S + (1-p) * A )^2 )
-    
-      dS_dt = - U * f_S
-      dA_dt = - U * f_A
-      dF_dt = f_S + f_A
-      
-      return(list(c(dS_dt, dA_dt, dF_dt)))
-    })
-  }
-  
-  if(sel.model == 'Logistic'){
-    resourceLoss <- resourceLoss_Logistic
-  }
-  if(sel.model == 'vanLeeuwen'){
-    resourceLoss <- resourceLoss_vanLeeuwen
-  }
-  
-  
+
+  ## derive ODE parameter columns automatically from posts_df_raw
+  non_ode_parms <- c("sigma")   # Stan params not used in the ODE
+  ode_parm_cols <- setdiff(
+    names(posts_df_raw)[!startsWith(names(posts_df_raw), ".")],
+    non_ode_parms
+  )
+
+  ## first set of params (single draw, for test ODE run)
+  parm_list <- setNames(as.numeric(posts_df_raw[1, ode_parm_cols]), ode_parm_cols)
+
+
   ## run single ODE 
   out_P1 <- ode(init_P1, 
                 times = t.list_P1,
                 func = resourceLoss,
                 parms = parm_list)
   
-  
-  ## concatenate params into list of lists
-  full_parm_list <- mapply(c, 
-                           a = aL, 
-                           b = bL,
-                           w = wL, 
-                           q = qL, 
-                           s = sL, 
-                           SIMPLIFY = FALSE)
-  
-  
+
+  ## full list of params (all draws, for parallel run)
+  full_parm_list <- lapply(seq_len(nrow(posts_df_raw)), function(i)
+    setNames(as.numeric(posts_df_raw[i, ode_parm_cols]), ode_parm_cols)
+  )
+
+
   ## t.lists for restocking model
   t.list_P1_restock <- seq(1, P1, by = 1)
   t.list_P2_restock <- seq(P1 + 1, P1 + P2, by = 1)

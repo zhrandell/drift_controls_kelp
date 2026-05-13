@@ -5,7 +5,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 # Initiate clusters for parallel implementation
-cat('Initiating parallel simulation of model.')
+cat('Initiating parallel simulation of model.\n')
 invisible(clusterEvalQ(cl, library(deSolve)))
 
 
@@ -151,4 +151,4 @@ save(outs_parms,
 ## END ODE simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 stopCluster(cl)
-cat('Clusters closed')
+cat('Clusters closed.\n')

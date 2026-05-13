@@ -16,7 +16,7 @@ warmup_iter <- 200
 sampling_iter <- 500
 
 # Specify number of cores to use for parallel computing
-cl <- makeCluster(max(1L, detectCores() - 1L))
+n_cores <- max(1L, detectCores() - 1L)
 
 # Specify kelp abundances (grams) at which to simulate
 A.level = c("low" = 50,

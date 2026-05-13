@@ -6,6 +6,7 @@
 
 # Initiate clusters for parallel implementation
 cat('Initiating parallel simulation of model.\n')
+cl <- makeCluster(n_cores)
 invisible(clusterEvalQ(cl, library(deSolve)))
 
 

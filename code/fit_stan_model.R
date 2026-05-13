@@ -20,7 +20,7 @@ fit <- model$sample(data = loss_dat,
                   iter_warmup = warmup_iter,
                   iter_sampling = sampling_iter,
                   adapt_delta = 0.80, 
-                  parallel_chains = 4)
+                  parallel_chains = cl)
 
 
 ## save via cmdstan's preferred method

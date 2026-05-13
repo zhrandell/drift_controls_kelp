@@ -4,9 +4,8 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-# Specify assumed kelp abundances (grams)
-A.level = c("low" = 50,
-            "high" = 250)
+# Initiate clusters for parallel implementation
+invisible(clusterEvalQ(cl, library(deSolve)))
 
 
 ## ode() with multiple params ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,4 +149,4 @@ save(outs_parms,
 
 ## END ODE simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+stopCluster(cl)

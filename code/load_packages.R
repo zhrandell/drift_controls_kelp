@@ -1,40 +1,46 @@
 ## Libraries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## Libraries for 'empirical.R'
-library(tidyverse)
-library(scales)
-library(patchwork)
 
-## Libraries for 'format_data.R' 
-library(stats)
-library(gridExtra)
-library(gtable)
-library(grid)
-library(deSolve)
-library(rstudioapi)
-library(reshape2)
-library(hexbin)
-library(janitor)
-library(diffdf)
+load_pkg <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
+  library(pkg, character.only = TRUE)
+}
+
+## Libraries for 'empirical.R'
+load_pkg("tidyverse")
+load_pkg("scales")
+load_pkg("patchwork")
+
+## Libraries for 'format_data.R'
+load_pkg("stats")
+load_pkg("gridExtra")
+load_pkg("gtable")
+load_pkg("grid")
+load_pkg("deSolve")
+load_pkg("rstudioapi")
+load_pkg("reshape2")
+load_pkg("hexbin")
+load_pkg("janitor")
+load_pkg("diffdf")
 
 ## Libraries for 'fit_stan_model.R' & 'analyze_visualize.R'
-library(cmdstanr)
-library(rstan)
-library(StanHeaders)
-library(shinystan)
-library(posterior)
-library(bayesplot)
+load_pkg("cmdstanr")
+load_pkg("rstan")
+load_pkg("StanHeaders")
+load_pkg("shinystan")
+load_pkg("posterior")
+load_pkg("bayesplot")
 
 ## Libraries for 'analyze_visualize.R'
-library(patchwork)
-library(Cairo) # requires installation of XQuartz on machine
-library(stargazer)
+load_pkg("patchwork")
+load_pkg("Cairo") # requires installation of XQuartz on machine
+load_pkg("stargazer")
 
 ## Libraries for 'simulate.R' and 'plot_simulation'
-library(deSolve)
-library(reshape2)
-library(ggplot2)
-library(tidyselect)
-library(scales)
-library(pbapply)
-library(parallel)
-library(grid)
+load_pkg("deSolve")
+load_pkg("reshape2")
+load_pkg("ggplot2")
+load_pkg("tidyselect")
+load_pkg("scales")
+load_pkg("pbapply")
+load_pkg("parallel")
+load_pkg("grid")

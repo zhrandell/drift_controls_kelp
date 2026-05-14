@@ -14,9 +14,10 @@ functions {
     real f_S;         // Feeding rate on drift
     real f_A;         // Feeding rate on kelp
     real H;           // Hunger level
+    real M;           // Movement rate
     real p;           // Preference for drift
-    real S = Y[1]; 			// Drift
-    real A = Y[2]; 			// Kelp
+    real S = fmax(Y[1], 1e-10); 	// Drift (clamped to prevent log(0) or log(negative))
+    real A = fmax(Y[2], 1e-10); 	// Kelp  (clamped to prevent log(0) or log(negative))
     real F = Y[3];			// Stomach fullness 
     real a = theta[1]; 			// baseline attack rate
     real b = theta[2];      // velocity reduction
@@ -34,21 +35,23 @@ functions {
     H = exp(- F);
     // H = 2 / (1 + exp( ( F / z )^s ));
     
+    // Movement slowdown
+    // M = 1 / (1 + b * S^s);
+    M = 1 / (1 + exp(b + s * log(S)));
+    
     // Logistic preference - additive log formulation [permitting Normal priors on w and q]
     p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
   
     // Consumption rates
-    f_S = S * H * a * p;        //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
-    f_A = A * H * a * (1-p);    //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+    f_S = S * H * a * p * M;        //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+    f_A = A * H * a * (1-p) * M;    //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
   
     // Drift, Kelp, Stomach
   	dS_dt = - U * f_S;
   	dA_dt = - U * f_A;
-  	dF_dt =   f_S + f_A - z * F;
+  	dF_dt =  (f_S + f_A) - z * F;
   	
   // ## ODE_BODY_END ##
-
-  ////  REMEMBER TO UPDATE THE MODEL IN `simulate.R' AS WELL  ////
   
     return [dS_dt, dA_dt, dF_dt]';
   }
@@ -93,10 +96,10 @@ transformed data {
 // but keep wide enough to not affect accepted priors
 parameters {
   real <lower =  0, upper = 0.05> a;
-  real <lower =  0, upper = 0.1>  b;
+  real <lower =  -5, upper = 5>  b;
   real <lower = -6, upper = 6>    w;
   real <lower = -5, upper = 5>    q;
-  real <lower =  0, upper = 2>    s;
+  real <lower =  0, upper = 3>    s;
   real <lower =  0, upper = 0.1>  z;
   real <lower = 10, upper = 20>   sigma;
 }
@@ -139,7 +142,7 @@ transformed parameters {
 
 
     // period 2
-    init_1[1] = y2_init_s_a[i, 1]; 		
+    init_1[1] = y2_init_s_a[i, 1];
     init_1[2] = y2_init_s_a[i, 2];
     init_1[3] = y1[nts1, 3];
     U[1] = y2_init_s_a[i, 3];
@@ -170,16 +173,16 @@ transformed parameters {
     y3 = ode_rk45(resourceLoss, init_2, t0_2, ts3, theta, U);
     drift_2[i, 1:nts3] = y3[, 1];
     kelp_2[i, 1:nts3] = y3[, 2];
-	
+
     // period 4
-    init_2[1] = y4_init_s_a[i, 1]; 		
+    init_2[1] = y4_init_s_a[i, 1];
     init_2[2] = y4_init_s_a[i, 2];
     init_2[3] = y3[nts3, 3];
     U[1] = y4_init_s_a[i, 3];
     y4 = ode_rk45(resourceLoss, init_2, ts3[nts3], ts4, theta, U);
     drift_2[i, (nts3 + 1):(nts3 + nts4)] = y4[, 1];
     kelp_2[i, (nts3 + 1):(nts3 + nts4)] = y4[, 2];
-    
+
     // period 5
     init_2[1] = y5_init_s_a[i, 1];
     init_2[2] = y5_init_s_a[i, 2];
@@ -205,10 +208,12 @@ transformed parameters {
 
 model {
   a ~ exponential(10);
-  b ~ exponential(10);
+  // b ~ exponential(10);
+  b ~ normal(0, 1);
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
-  s ~ exponential(10);
+  // s ~ exponential(1);
+  s ~ normal(0, 1);
   z ~ exponential(10);
   sigma ~ exponential(0.1);
 

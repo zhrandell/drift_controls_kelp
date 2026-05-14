@@ -15,8 +15,8 @@
       real f_A;         // Feeding rate on kelp
       real H;           // Hunger level
       real p;           // Preference for drift
-      real S = Y[1]; 			// Drift
-      real A = Y[2]; 			// Kelp
+      real S = fmax(Y[1], 1e-10); 		// Drift (clamped to prevent log(0) or log(negative))
+      real A = fmax(Y[2], 1e-10); 		// Kelp  (clamped to prevent log(0) or log(negative))
       real F = Y[3];			// Stomach fullness 
       real a = theta[1]; 			// baseline attack rate
       real b = theta[2];      // velocity reduction

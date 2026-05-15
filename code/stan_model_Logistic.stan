@@ -30,27 +30,26 @@ functions {
   // ## Do Not Remove the ODE_BODY_START and ODE_BODY_END flags ###
 
   // ## ODE_BODY_START ##
-  
+
     // Hunger level
-    H = exp(- F);
-    // H = 2 / (1 + exp( ( F / z )^s ));
-    
-    // Movement slowdown
-    // M = 1 / (1 + b * S^s);
-    M = 1 / (1 + exp(b + s * log(S)));
+    H = exp(- s * F);
     
     // Logistic preference - additive log formulation [permitting Normal priors on w and q]
     p = ( 1 - ( 1 / ( 1 + exp( w + q * log(S / A) ))));
   
+    // Movement slowdown
+    M = 1 / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+    
     // Consumption rates
-    f_S = S * H * a * p * M;        //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
-    f_A = A * H * a * (1-p) * M;    //   / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
-  
+    f_S = S * H * M * a * p;
+    f_A = A * H * M * a * (1-p);
+    
     // Drift, Kelp, Stomach
   	dS_dt = - U * f_S;
   	dA_dt = - U * f_A;
-  	dF_dt =  (f_S + f_A) - z * F;
-  	
+  	dF_dt =   f_S + f_A;
+
+  
   // ## ODE_BODY_END ##
   
     return [dS_dt, dA_dt, dF_dt]';
@@ -94,15 +93,27 @@ transformed data {
 
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
+// parameters {
+//   real <lower =  0, upper = 0.05> a;
+//   real <lower =  0, upper = 0.1>  b;
+//   real <lower = -6, upper = 6>    w;
+//   real <lower = -5, upper = 5>    q;
+//   real <lower =  0, upper = 3>    s;
+//   real <lower =  0, upper = 0.1>  z;
+//   real <lower = 10, upper = 20>   sigma;
+// }
+
 parameters {
   real <lower =  0, upper = 0.05> a;
-  real <lower =  -5, upper = 5>  b;
+  real <lower =  0, upper = 0.1>  b;
   real <lower = -6, upper = 6>    w;
   real <lower = -5, upper = 5>    q;
-  real <lower =  0, upper = 3>    s;
+  real <lower =  0, upper = 0.5>  s;
   real <lower =  0, upper = 0.1>  z;
   real <lower = 10, upper = 20>   sigma;
 }
+
+
 
 transformed parameters {
   array[6] real theta;
@@ -207,15 +218,24 @@ transformed parameters {
 }
 
 model {
-  a ~ exponential(10);
+  // a ~ exponential(10);
   // b ~ exponential(10);
-  b ~ normal(0, 1);
+  // // b ~ normal(0, 1);
+  // w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
+  // q ~ normal(0, 10);
+  // s ~ exponential(1);
+  // // s ~ normal(0, 1);
+  // z ~ exponential(10);
+  // sigma ~ exponential(0.1);
+  
+  a ~ exponential(10);
+  b ~ exponential(10);
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
-  // s ~ exponential(1);
-  s ~ normal(0, 1);
+  s ~ exponential(1);
   z ~ exponential(10);
   sigma ~ exponential(0.1);
+
 
   for (i in 1:n_subject_1) {
     if(y1_init_s_a[i, 1] > 0){

@@ -12,10 +12,23 @@
 
 source('fit_stan_model.R')             # defines fit_model()
 
+## Validate that every name in `model_names` has a matching .stan file.
+stan_files <- paste0(models, "/stan_model_", model_names, ".stan")
+missing    <- model_names[!file.exists(stan_files)]
+if (length(missing) > 0) {
+  stop("Missing Stan model file(s) in ", normalizePath(models, mustWork = FALSE), ":\n  ",
+       paste(paste0("stan_model_", missing, ".stan"), collapse = ", "),
+       "\nCheck spelling of model_names in RunMe.R or add the .stan file(s).",
+       call. = FALSE)
+}
+
 if (parallel_models) {
   ## Concurrent fits: give each fit a single core for chain parallelism so total
   ## load = length(model_names) * 4 chains. Adjust if memory is tight.
   n_per_fit <- max(1L, floor(n_cores / length(model_names)))
+  cat("Fitting", length(model_names), "models in parallel (",
+      paste(model_names, collapse = ", "), ") with",
+      n_per_fit, "chain core(s) per model.\n")
   fits <- parallel::mclapply(model_names,
                              FUN = function(m) fit_model(m, parallel = n_per_fit),
                              mc.cores = length(model_names))

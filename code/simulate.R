@@ -27,8 +27,10 @@
 
 ## Build R-callable resourceLoss_<name>(S0, A0, F0, params) from the Stan source
 ## by extracting the body between the ## ODE_BODY_START ## / END markers.
-make_resourceLoss <- function(model_name, code_dir) {
-  stan_lines <- readLines(paste0(code_dir, "/stan_model_", model_name, ".stan"))
+## Reads the .stan source from `models_dir` and writes the generated .R helper
+## to `out_dir`.
+make_resourceLoss <- function(model_name, models_dir, out_dir) {
+  stan_lines <- readLines(paste0(models_dir, "/stan_model_", model_name, ".stan"))
 
   start <- which(grepl("## ODE_BODY_START ##", stan_lines)) + 1
   end   <- which(grepl("## ODE_BODY_END ##",   stan_lines)) - 1
@@ -44,7 +46,7 @@ make_resourceLoss <- function(model_name, code_dir) {
     "    return(list(c(dS_dt, dA_dt, dF_dt)))",
     "  })",
     "}"
-  ), paste0(code_dir, "/resourceLoss_", model_name, ".R"))
+  ), paste0(out_dir, "/resourceLoss_", model_name, ".R"))
 }
 
 simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores) {
@@ -59,7 +61,7 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores)
   }
 
   ## build ODE function from Stan source
-  make_resourceLoss(model_name, code)
+  make_resourceLoss(model_name, models, code)
   source(paste0(code, "/resourceLoss_", model_name, ".R"))
   resourceLoss <- get(paste0("resourceLoss_", model_name))
 

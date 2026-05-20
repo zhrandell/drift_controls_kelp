@@ -4,8 +4,8 @@
 
 ## Defines visualize_model(model_name): produces per-model trace / pairs /
 ## posterior / preference plots and posterior summary outputs for the fit
-## previously written by fit_model(). Reads `results`, `figs`, `code` from the
-## caller's environment. Models with a stomach-clearance parameter `z` are
+## previously written by fit_model(). Reads `results`, `figs`, `models` from
+## the caller's environment. Models with a stomach-clearance parameter `z` are
 ## treated as Logistic-family (Logistic, typeII, ...); models without `z` use
 ## the vanLeeuwen preference form.
 
@@ -56,7 +56,7 @@ rdat <- rdat[sel ,]
 ## auto-detect sampled parameters by parsing the Stan source's `parameters`
 ## block. fit$metadata()$model_params is unreliable here -- it returns every
 ## variable in the CSV (transformed params, generated quantities, lp__).
-parms <- parse_param_block(paste0(code, "/stan_model_", model_name, ".stan"))
+parms <- parse_param_block(paste0(models, "/stan_model_", model_name, ".stan"))
 has_z <- "z" %in% parms      # proxy for Logistic-family preference form
 
 

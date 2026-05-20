@@ -9,7 +9,7 @@
 ##   * (optionally) subsamples to `n_draws` posterior draws,
 ##   * extracts the ODE body from stan_model_<model_name>.stan,
 ##   * integrates the ODE over a grid of initial conditions and posterior draws,
-##   * writes results/ODE_kelp_<level>_<model_name>.RDA for each entry of A.level.
+##   * writes tmp/ODE_kelp_<level>_<model_name>.RDA for each entry of A.level.
 ##
 ## When invoked from inside parallel::mclapply (parallel_models = TRUE in
 ## RunMe.R), pass `internal_cores = 1L` to avoid nested cluster oversubscription.
@@ -52,7 +52,7 @@ make_resourceLoss <- function(model_name, models_dir, out_dir) {
 simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores) {
 
   ## load posts_df_raw
-  load(paste0(results, "/posterior_draws_", model_name, ".RDA"))
+  load(paste0(tmp, "/posterior_draws_", model_name, ".RDA"))
 
   ## optional subsampling of posterior draws
   if (!is.null(n_draws) && n_draws < nrow(posts_df_raw)) {
@@ -180,7 +180,7 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores)
     outs_parms <- split(flat_results, combos$parm_idx)
 
     save(outs_parms, P1, P2, P3, S0, A0, F0,
-         file = paste0(results, "/ODE_kelp_", names(A.level[AL]), '_', model_name, ".RDA"))
+         file = paste0(tmp, "/ODE_kelp_", names(A.level[AL]), '_', model_name, ".RDA"))
 
     ## drop heavy iteration-local objects so the pblapply closure on the next
     ## AL iteration does not pick them up via lexical scoping (each worker

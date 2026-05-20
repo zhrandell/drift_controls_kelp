@@ -38,7 +38,7 @@ visualize_model <- function(model_name) {
 fit <- readRDS(paste0(results, "/model_output_", model_name, ".RDS"))
 
 # rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
-rdat <- readRDS(paste0(results,"/loss_dat.RData"))
+rdat <- readRDS(paste0(tmp, "/loss_dat.RData"))
 rdat <- data.frame(rbind(rdat$y1_init_s_a,
                          rdat$y2_init_s_a,
                          rdat$y3_init_s_a,
@@ -111,7 +111,7 @@ ggplot2::ggsave(filename = paste0(figs, "/pairs_", model_name, ".pdf"),
 posts_df_raw <- as.data.frame(draws_df)[, parms, drop = FALSE]
 
 ## save RDA file with posteriors from a single chain
-save(posts_df_raw, file = paste0(results, "/posterior_draws_", model_name, ".RDA"))
+save(posts_df_raw, file = paste0(tmp, "/posterior_draws_", model_name, ".RDA"))
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -144,7 +144,7 @@ out.parms <-  cbind(Par = rownames(out.parms),
                     CI = paste0('(',out.parms[,2], '---', out.parms[,3], ')'))
 invisible(capture.output(
   stargazer(out.parms,
-            out = paste0(results, '/Summary_posteriors_', model_name, '.tex'))
+            out = paste0(tables, '/Summary_posteriors_', model_name, '.tex'))
 ))
 
 

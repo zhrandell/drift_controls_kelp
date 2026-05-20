@@ -9,8 +9,8 @@
 plot_model_sim <- function(model_name) {
 
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-load(paste0(results,"/ODE_toPlot_kelp_high_", model_name,".RDA"))
-load(paste0(results,"/ODE_toPlot_kelp_low_", model_name,".RDA"))
+load(paste0(tmp,"/ODE_toPlot_kelp_high_", model_name,".RDA"))
+load(paste0(tmp,"/ODE_toPlot_kelp_low_", model_name,".RDA"))
 ## END set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

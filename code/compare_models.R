@@ -81,7 +81,7 @@ print(pareto_k_summary)
 ## order as the Stan generated-quantities loops (drift_1, kelp_1, drift_2,
 ## kelp_2 - subjects x periods, row-major).
 
-loss_dat <- readRDS(paste0(results, "/loss_dat.Rdata"))
+loss_dat <- readRDS(paste0(tmp, "/loss_dat.RData"))
 y_obs <- c(
   as.numeric(t(loss_dat$S_obs_1)),
   as.numeric(t(loss_dat$A_obs_1)),

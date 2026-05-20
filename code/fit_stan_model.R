@@ -5,16 +5,16 @@
 ## Defines `fit_model(name)` which compiles 'models/stan_model_<name>.stan',
 ## samples using the shared `loss_dat` object, and writes the resulting
 ## CmdStanMCMC fit to results/model_output_<name>.RDS.
-## Callers (fit_all_models.R) supply `models`, `results`, `warmup_iter`,
-## `sampling_iter`, and `n_cores` from the global environment.
+## Callers (fit_all_models.R) supply `models`, `results`, `tmp`,
+## `warmup_iter`, `sampling_iter`, and `n_cores` from the global environment.
 ##
 ## Skip-if-unchanged: when `reuse_existing` is TRUE (default driven by the
 ## `reuse_existing_fits` global), the function md5sums the .stan source and
-## compares against results/model_output_<name>.hash. If the hash matches the
+## compares against tmp/model_output_<name>.hash. If the hash matches the
 ## previous fit's, it loads and returns the saved RDS instead of resampling.
 
 fit_model <- function(name,
-                      data_path     = paste0(results, "/loss_dat.Rdata"),
+                      data_path     = paste0(tmp, "/loss_dat.RData"),
                       warmup        = warmup_iter,
                       sampling      = sampling_iter,
                       chains        = 4L,
@@ -30,7 +30,7 @@ fit_model <- function(name,
   }
 
   out_file     <- paste0(results, "/model_output_", name, ".RDS")
-  hash_file    <- paste0(results, "/model_output_", name, ".hash")
+  hash_file    <- paste0(tmp, "/model_output_", name, ".hash")
   current_hash <- unname(tools::md5sum(stan_file))
 
   ## Reuse cached fit if .stan unchanged and a prior fit exists

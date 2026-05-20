@@ -340,8 +340,8 @@ loss_dat <- list(
 )
 
 
-saveRDS(loss_dat, 
-        file = paste0(results,"/loss_dat.RData"))
+saveRDS(loss_dat,
+        file = paste0(tmp, "/loss_dat.RData"))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

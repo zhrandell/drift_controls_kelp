@@ -3,10 +3,10 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 ## Defines process_model_sim(model_name): consumes
-## results/ODE_kelp_<level>_<model_name>.RDA produced by simulate_model() and
-## writes results/ODE_toPlot_kelp_<level>_<model_name>.RDA holding the per-
+## tmp/ODE_kelp_<level>_<model_name>.RDA produced by simulate_model() and
+## writes tmp/ODE_toPlot_kelp_<level>_<model_name>.RDA holding the per-
 ## period median, 95% CI, and initial-condition columns expected by
-## plot_simulation.R. Reads `results`, `A.level` from the caller's environment.
+## plot_simulation.R. Reads `tmp`, `A.level` from the caller's environment.
 
 process_model_sim <- function(model_name) {
 
@@ -14,7 +14,7 @@ for (AL in 1:length(A.level)) { # initial kelp abundance (low and high)
 
   ## calculate and plot 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## loads outs_parms plus P1, P2, P3, S0, A0, F0 stashed by simulate_model().
-  load(paste0(results, "/ODE_kelp_", names(A.level[AL]), '_', model_name, ".RDA"))
+  load(paste0(tmp, "/ODE_kelp_", names(A.level[AL]), '_', model_name, ".RDA"))
 
   ## functions to extract state values from list of lists
   extract_Sloss_P1 = function(y) {
@@ -167,10 +167,10 @@ for (AL in 1:length(A.level)) { # initial kelp abundance (low and high)
 } # end AL (kelp low or high) loop
 
 save(combined_low,
-     file = paste0(results, "/ODE_toPlot_kelp_low_",
+     file = paste0(tmp, "/ODE_toPlot_kelp_low_",
                    model_name, ".RDA"))
 save(combined_high,
-     file = paste0(results, "/ODE_toPlot_kelp_high_",
+     file = paste0(tmp, "/ODE_toPlot_kelp_high_",
                    model_name, ".RDA"))
 
 invisible(NULL)

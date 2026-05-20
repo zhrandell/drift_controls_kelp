@@ -1,11 +1,22 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+## ~~~~~~~~~~~ Process ODE simulation output for plotting ~~~~~~~~~~~~~~~~~~~~ ##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
-  
+## Defines process_model_sim(model_name): consumes
+## results/ODE_kelp_<level>_<model_name>.RDA produced by simulate_model() and
+## writes results/ODE_toPlot_kelp_<level>_<model_name>.RDA holding the per-
+## period median, 95% CI, and initial-condition columns expected by
+## plot_simulation.R. Reads `results`, `A.level` from the caller's environment.
+
+process_model_sim <- function(model_name) {
+
+for (AL in 1:length(A.level)) { # initial kelp abundance (low and high)
+
   ## calculate and plot 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
-  load(paste0(results,"/ODE_kelp_", names(A.level[AL]), '_', sel.model, ".RDA"))
-  
-  ## functions to extract state values from list of lists 
+  ## loads outs_parms plus P1, P2, P3, S0, A0, F0 stashed by simulate_model().
+  load(paste0(results, "/ODE_kelp_", names(A.level[AL]), '_', model_name, ".RDA"))
+
+  ## functions to extract state values from list of lists
   extract_Sloss_P1 = function(y) {
     y[[1, 1]] <- y[[1, 2]] - y[[P1, 2]]
   }
@@ -15,7 +26,7 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   extract_Ffill_P1 = function(y) {
     y[[1, 1]] <- (-1 * (y[[1, 4]] - y[[P1, 4]]))
   }
-  
+
   extract_Sloss_P2 = function(y) {
     y[[1, 1]] <- y[[1, 2]] - y[[(P1 + P2), 2]]
   }
@@ -25,7 +36,7 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   extract_Ffill_P2 = function(y) {
     y[[1, 1]] <- (-1 * (y[[1, 4]] - y[[(P1 + P2), 4]]))
   }
-  
+
   extract_Sloss_P3 = function(y) {
     y[[1, 1]] <- y[[1, 2]] - y[[(P1 + P2 + P3), 2]]
   }
@@ -35,8 +46,8 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   extract_Ffill_P3 = function(y) {
     y[[1, 1]] <- (-1 * (y[[1, 4]] - y[[(P1 + P2 + P3), 4]]))
   }
-  
-  
+
+
   ## extract all 9 state values in a single pass (avoids 9 separate list traversals)
   extracted_raw <- lapply(outs_parms, function(x) {
     vapply(x, function(y) {
@@ -65,36 +76,36 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   S_loss_P2 <- S_loss_P2[idx, ]; A_loss_P2 <- A_loss_P2[idx, ]; F_fill_P2 <- F_fill_P2[idx, ]
   S_loss_P3 <- S_loss_P3[idx, ]; A_loss_P3 <- A_loss_P3[idx, ]; F_fill_P3 <- F_fill_P3[idx, ]
 
-  
-  
+
+
   ## calculate median from simulations
   S_P1 <- as.data.frame(matrix(apply(S_loss_P1, 2, median), ncol = 1))
   A_P1 <- as.data.frame(matrix(apply(A_loss_P1, 2, median), ncol = 1))
   F_P1 <- as.data.frame(matrix(apply(F_fill_P1, 2, median), ncol = 1))
-  
+
   S_P2 <- as.data.frame(matrix(apply(S_loss_P2, 2, median), ncol = 1))
   A_P2 <- as.data.frame(matrix(apply(A_loss_P2, 2, median), ncol = 1))
   F_P2 <- as.data.frame(matrix(apply(F_fill_P2, 2, median), ncol = 1))
-  
+
   S_P3 <- as.data.frame(matrix(apply(S_loss_P3, 2, median), ncol = 1))
   A_P3 <- as.data.frame(matrix(apply(A_loss_P3, 2, median), ncol = 1))
   F_P3 <- as.data.frame(matrix(apply(F_fill_P3, 2, median), ncol = 1))
-  
-  
+
+
   ## calculate 95 CI
   S_loss_P1 <- apply(S_loss_P1, 2, quantile, c(0.025, 0.975))
   A_loss_P1 <- apply(A_loss_P1, 2, quantile, c(0.025, 0.975))
   F_fill_P1 <- apply(F_fill_P1, 2, quantile, c(0.025, 0.975))
-  
+
   S_loss_P2 <- apply(S_loss_P2, 2, quantile, c(0.025, 0.975))
   A_loss_P2 <- apply(A_loss_P2, 2, quantile, c(0.025, 0.975))
   F_fill_P2 <- apply(F_fill_P2, 2, quantile, c(0.025, 0.975))
-  
+
   S_loss_P3 <- apply(S_loss_P3, 2, quantile, c(0.025, 0.975))
   A_loss_P3 <- apply(A_loss_P3, 2, quantile, c(0.025, 0.975))
   F_fill_P3 <- apply(F_fill_P3, 2, quantile, c(0.025, 0.975))
-  
-  
+
+
   ## bind df
   df <- as.data.frame(t(
     rbind(
@@ -112,7 +123,7 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
       F0
     )
   ))
-  
+
   names(df)[1] = "Smin_1"
   names(df)[2] = "Smax_1"
   names(df)[3] = "Amin_1"
@@ -131,11 +142,11 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   names(df)[16] = "Amax_3"
   names(df)[17] = "Fmin_3"
   names(df)[18] = "Fmax_3"
-  
-  
+
+
   ## bind data frames with median
   means <- as.data.frame(cbind(S_P1, A_P1, F_P1, S_P2, A_P2, F_P2, S_P3, A_P3, F_P3))
-  
+
   names(means)[1] = "S_P1"
   names(means)[2] = "A_P1"
   names(means)[3] = "F_P1"
@@ -145,24 +156,26 @@ for(AL in 1:length(A.level)){ # initial kelp abundance (low and high)
   names(means)[7] = "S_P3"
   names(means)[8] = "A_P3"
   names(means)[9] = "F_P3"
-  
+
   ## END data configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
+
   ## save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
-  ## use to plot both in final figure: high kelp simulation
   varName <- paste0('combined_', names(A.level[AL]))
   assign(varName, cbind(df, means))
   ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 } # end AL (kelp low or high) loop
 
-save(combined_low, 
-     file = paste0(results, "/ODE_toPlot_kelp_low_", 
-                   sel.model, ".RDA"))
-save(combined_high, 
-     file = paste0(results, "/ODE_toPlot_kelp_high_", 
-                   sel.model, ".RDA"))
+save(combined_low,
+     file = paste0(results, "/ODE_toPlot_kelp_low_",
+                   model_name, ".RDA"))
+save(combined_high,
+     file = paste0(results, "/ODE_toPlot_kelp_high_",
+                   model_name, ".RDA"))
 
+invisible(NULL)
+}  # end process_model_sim()
 
-
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

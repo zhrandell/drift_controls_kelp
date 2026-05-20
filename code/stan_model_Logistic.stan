@@ -83,12 +83,14 @@ data {
 }
 
 transformed data {
-  int x_i; 				 
-  int x_r;              
+  int x_i;
+  int x_r;
   int n_total_1;			// n_total_1 = nts1 + nts2 = 2
-  int n_total_2;			// n_total_2 = nts3 + nts4 + nts5 = 3	
+  int n_total_2;			// n_total_2 = nts3 + nts4 + nts5 = 3
+  int N_obs;			// total observations for log_lik / y_rep
   n_total_1 = nts1 + nts2;
   n_total_2 = nts3 + nts4 + nts5;
+  N_obs     = 2 * n_subject_1 * n_total_1 + 2 * n_subject_2 * n_total_2;
 }
 
 // Narrow down limits to increase sampling efficiency, 
@@ -252,6 +254,44 @@ model {
     }
     if(y3_init_s_a[i, 2] > 0){
       target += normal_lpdf(A_obs_2[i, ] | kelp_2[i, ], sigma);
+    }
+  }
+}
+
+// Per-observation log_lik for PSIS-LOO (loo::loo) and y_rep for posterior predictive checks (bayesplot::ppc_*).
+// log_lik / y_rep ordering: drift_1 (subjects x periods row-major), kelp_1, drift_2, kelp_2.
+generated quantities {
+  vector[N_obs] log_lik;
+  array[N_obs] real y_rep;
+  {
+    int idx = 1;
+    for (i in 1:n_subject_1) {
+      for (t in 1:n_total_1) {
+        log_lik[idx] = normal_lpdf(S_obs_1[i, t] | drift_1[i, t], sigma);
+        y_rep[idx]   = normal_rng(drift_1[i, t], sigma);
+        idx += 1;
+      }
+    }
+    for (i in 1:n_subject_1) {
+      for (t in 1:n_total_1) {
+        log_lik[idx] = normal_lpdf(A_obs_1[i, t] | kelp_1[i, t], sigma);
+        y_rep[idx]   = normal_rng(kelp_1[i, t], sigma);
+        idx += 1;
+      }
+    }
+    for (i in 1:n_subject_2) {
+      for (t in 1:n_total_2) {
+        log_lik[idx] = normal_lpdf(S_obs_2[i, t] | drift_2[i, t], sigma);
+        y_rep[idx]   = normal_rng(drift_2[i, t], sigma);
+        idx += 1;
+      }
+    }
+    for (i in 1:n_subject_2) {
+      for (t in 1:n_total_2) {
+        log_lik[idx] = normal_lpdf(A_obs_2[i, t] | kelp_2[i, t], sigma);
+        y_rep[idx]   = normal_rng(kelp_2[i, t], sigma);
+        idx += 1;
+      }
     }
   }
 }

@@ -2,10 +2,15 @@
 ## function to plot simulated temporal dynamics code ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## Defines plot_model_sim(model_name): consumes the per-period summary tables
+## produced by process_model_sim() and writes figs/ODE_simulation_<model>.pdf.
+## Reads `results`, `figs` from the caller's environment.
+
+plot_model_sim <- function(model_name) {
 
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-load(paste0(results,"/ODE_toPlot_kelp_high_", sel.model,".RDA"))
-load(paste0(results,"/ODE_toPlot_kelp_low_", sel.model,".RDA"))
+load(paste0(results,"/ODE_toPlot_kelp_high_", model_name,".RDA"))
+load(paste0(results,"/ODE_toPlot_kelp_low_", model_name,".RDA"))
 ## END set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -543,7 +548,7 @@ all.temporal.dynamics <- wrap_plots(
 
 
 ## save pdf 
-ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", sel.model, ".pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", model_name, ".pdf"), 
                 plot = all.temporal.dynamics, 
                 dpi = 1200, 
                 width = 11,
@@ -551,8 +556,8 @@ ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", sel.model, ".pdf"),
                 units = "in")
 ## END plotting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
+invisible(NULL)
+}  # end plot_model_sim()
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

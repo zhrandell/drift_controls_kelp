@@ -9,8 +9,13 @@ source('load_packages.R')
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Choices ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Choose the model [1] or [2]
-sel.model <- c('Logistic', 'vanLeeuwen')[1]
+# Models to fit and compare. Each entry must have a 'stan_model_<name>.stan' file.
+# Set to a single-element vector to fit just one model.
+model_names <- c("Logistic")#, "vanLeeuwen")
+
+# Fit models concurrently? FALSE = sequential (safer for RAM).
+# TRUE multiplies memory by length(model_names) since each fit also runs 4 parallel chains.
+parallel_models <- FALSE
 
 # Specify number of MCMC iterations
 warmup_iter <- 200
@@ -18,6 +23,10 @@ sampling_iter <- 500
 
 # Specify number of cores to use for parallel computing
 n_cores <- max(1L, detectCores() - 1L)
+
+# Number of posterior draws to use in simulate_model(). NULL = keep all draws.
+# Lower this (e.g. 200) to speed up the ODE simulation at the cost of CI estimation.
+n_sim_draws <- 200
 
 # Specify kelp abundances (grams) at which to simulate
 A.level = c("low" = 50,
@@ -38,12 +47,28 @@ source('plot_juvenile_kelp.R')
 source('empirical.R')
 source('format_data.R')
 
-source('fit_stan_model.R')
-source('visualize_stan_model.R')
+source('fit_all_models.R')
+source('compare_models.R')
 
-source('simulate.R')
-source('process_simulation.R')
-source('plot_simulation.R')
+source('visualize_stan_model.R')          # defines visualize_model()
+source('simulate.R')                      # defines simulate_model()
+source('process_simulation.R')            # defines process_model_sim()
+source('plot_simulation.R')               # defines plot_model_sim()
+
+if (parallel_models) {
+  mc_n <- min(length(model_names), n_cores)
+  invisible(parallel::mclapply(model_names, visualize_model,   mc.cores = mc_n))
+  invisible(parallel::mclapply(model_names, simulate_model,
+                               n_draws = n_sim_draws, internal_cores = 1L,
+                               mc.cores = mc_n))
+  invisible(parallel::mclapply(model_names, process_model_sim, mc.cores = mc_n))
+  invisible(parallel::mclapply(model_names, plot_model_sim,    mc.cores = mc_n))
+} else {
+  invisible(lapply(model_names, visualize_model))
+  invisible(lapply(model_names, simulate_model, n_draws = n_sim_draws))
+  invisible(lapply(model_names, process_model_sim))
+  invisible(lapply(model_names, plot_model_sim))
+}
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

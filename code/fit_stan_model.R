@@ -2,31 +2,41 @@
 ## ~~~~~~~~~~~ Fit system of ODEs to empirical data in STAN ~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-loss_dat <- readRDS(paste0(results,"/loss_dat.Rdata"))
+## Defines `fit_model(name)` which compiles 'stan_model_<name>.stan', samples
+## using the shared `loss_dat` object, and writes the resulting CmdStanMCMC fit
+## to results/model_output_<name>.RDS.
+## Callers (fit_all_models.R) supply `code`, `results`, `warmup_iter`,
+## `sampling_iter`, and `n_cores` from the global environment.
 
-## run Stan ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+fit_model <- function(name,
+                      data_path     = paste0(results, "/loss_dat.Rdata"),
+                      warmup        = warmup_iter,
+                      sampling      = sampling_iter,
+                      chains        = 4L,
+                      parallel      = n_cores,
+                      adapt_delta   = 0.80,
+                      force_recompile = FALSE) {
 
+  loss_dat <- readRDS(data_path)
 
-## compile model
-model <- cmdstan_model(file <- paste0(code,
-                                      "/stan_model_",
-                                      sel.model,
-                                      ".stan"))
+  stan_file <- paste0(code, "/stan_model_", name, ".stan")
+  if (!file.exists(stan_file)) {
+    stop(sprintf("Stan file not found: %s", stan_file))
+  }
 
+  model <- cmdstan_model(stan_file, force_recompile = force_recompile)
 
-## initiate sampling 
-fit <- model$sample(data = loss_dat,
-                  chains = 4,
-                  iter_warmup = warmup_iter,
-                  iter_sampling = sampling_iter,
-                  adapt_delta = 0.80, 
-                  parallel_chains = n_cores)
+  fit <- model$sample(data            = loss_dat,
+                      chains          = chains,
+                      iter_warmup     = warmup,
+                      iter_sampling   = sampling,
+                      adapt_delta     = adapt_delta,
+                      parallel_chains = parallel)
 
-
-## save via cmdstan's preferred method
-fit$save_object(file = paste0(results, "/model_output_", 
-                              sel.model, ".RDS"))
-
+  out_file <- paste0(results, "/model_output_", name, ".RDS")
+  fit$save_object(file = out_file)
+  invisible(fit)
+}
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

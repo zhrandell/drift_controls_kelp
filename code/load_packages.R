@@ -30,6 +30,10 @@ load_pkg("shinystan")
 load_pkg("posterior")
 load_pkg("bayesplot")
 
+## Libraries for 'compare_models.R'
+load_pkg("loo")
+load_pkg("bayesplot")
+
 ## Libraries for 'analyze_visualize.R'
 load_pkg("patchwork")
 load_pkg("Cairo") # requires installation of XQuartz on machine

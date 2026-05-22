@@ -17,9 +17,6 @@ tmp     <- "../results/tmp"
 tables  <- "../tables"
 figs    <- "../figs"
 
-dir.create(tmp,    showWarnings = FALSE, recursive = TRUE)
-dir.create(tables, showWarnings = FALSE, recursive = TRUE)
-
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Choices ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -11,8 +11,14 @@
 ##   * integrates the ODE over a grid of initial conditions and posterior draws,
 ##   * writes tmp/ODE_kelp_<level>_<model_name>.RDA for each entry of A.level.
 ##
-## When invoked from inside parallel::mclapply (parallel_models = TRUE in
+## When invoked from inside parallel::parLapply (parallel_models = TRUE in
 ## RunMe.R), pass `internal_cores = 1L` to avoid nested cluster oversubscription.
+##
+## Skip-if-unchanged: when `reuse_existing` is TRUE (default driven by the
+## `reuse_existing_sims` global), the function builds a signature from the .stan
+## source, posterior_draws_<name>.RDA, simulate.R, A.level, and n_draws, and
+## compares against tmp/ODE_kelp_<name>.hash. If the signature matches and all
+## per-level ODE_kelp_<level>_<name>.RDA outputs exist, the simulation is skipped.
 
 ## Muffle the cosmetic "closing unused connection" warnings emitted by R's GC
 ## when PSOCK cluster sockets get finalized. Legitimate warnings still surface.
@@ -49,7 +55,32 @@ make_resourceLoss <- function(model_name, models_dir, out_dir) {
   ), paste0(out_dir, "/resourceLoss_", model_name, ".R"))
 }
 
-simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores) {
+simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
+                           reuse_existing = if (exists("reuse_existing_sims", inherits = TRUE))
+                                              reuse_existing_sims else FALSE) {
+
+  ## Reuse cached simulation if inputs unchanged and all per-level outputs exist.
+  stan_file  <- paste0(models, "/stan_model_",      model_name, ".stan")
+  draws_file <- paste0(tmp,    "/posterior_draws_", model_name, ".RDA")
+  sim_R_file <- paste0(code,   "/simulate.R")
+  hash_file  <- paste0(tmp,    "/ODE_kelp_",        model_name, ".hash")
+  out_files  <- paste0(tmp,    "/ODE_kelp_", names(A.level), "_", model_name, ".RDA")
+
+  current_sig <- c(
+    paste0("stan=",       unname(tools::md5sum(stan_file))),
+    paste0("draws=",      unname(tools::md5sum(draws_file))),
+    paste0("simulate_R=", unname(tools::md5sum(sim_R_file))),
+    paste0("A.level=",    paste(names(A.level), A.level, sep = ":", collapse = ",")),
+    paste0("n_draws=",    if (is.null(n_draws)) "NULL" else as.character(n_draws))
+  )
+
+  if (reuse_existing && all(file.exists(out_files)) && file.exists(hash_file)) {
+    saved_sig <- readLines(hash_file, warn = FALSE)
+    if (identical(saved_sig, current_sig)) {
+      message("[", model_name, "] reusing cached simulation (inputs unchanged).")
+      return(invisible(NULL))
+    }
+  }
 
   ## load posts_df_raw
   load(paste0(tmp, "/posterior_draws_", model_name, ".RDA"))
@@ -188,6 +219,8 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores)
     rm(outs_parms, flat_results)
 
   } # end AL (kelp low or high) loop
+
+  writeLines(current_sig, hash_file)
 
   invisible(NULL)
 }

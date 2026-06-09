@@ -19,51 +19,47 @@ loo_list <- setNames(lapply(model_names, function(m) {
   fits[[m]]$loo(cores = n_cores)
 }), model_names)
 
-## ---- 2. Pairwise comparison ----------------------------------------------- ##
-## loo_compare() / loo_model_weights() require >= 2 models. With a single model
-## we just emit its ELPD summary; the diff / weight columns are not defined.
+## ---- 2. Pairwise comparison (LaTeX export) -------------------------------- ##
+## loo_compare() / loo_model_weights() require >= 2 models, so the comparison
+## table is only meaningful then. With a single model we just print its ELPD
+## summary to screen and skip the table.
+##
+## Plain ASCII column headers are required: stargazer's `out=` path runs an
+## internal text-width pass that returns NA from nchar() when headers contain
+## LaTeX math markers ($...$, backslashes), erroring in .text.column.width.
 
 if (length(model_names) >= 2) {
 
-  loo_cmp <- loo::loo_compare(loo_list)
-  print(loo_cmp)
-
-  ## Stacking / pseudo-BMA weights for model averaging
+  loo_cmp   <- loo::loo_compare(loo_list)
   stack_wts <- loo::loo_model_weights(loo_list, method = "stacking")
   pbma_wts  <- loo::loo_model_weights(loo_list, method = "pseudobma")
+  print(loo_cmp)
 
-  cmp_df <- data.frame(
-    model     = rownames(loo_cmp),
-    elpd_diff = loo_cmp[, "elpd_diff"],
-    se_diff   = loo_cmp[, "se_diff"],
-    elpd_loo  = loo_cmp[, "elpd_loo"],
-    se_elpd   = loo_cmp[, "se_elpd_loo"],
-    p_loo     = loo_cmp[, "p_loo"],
-    stacking_weight  = as.numeric(stack_wts[rownames(loo_cmp)]),
-    pseudobma_weight = as.numeric(pbma_wts[rownames(loo_cmp)])
+  cmp_tex <- data.frame(
+    Model            = rownames(loo_cmp),
+    `ELPD diff`      = round(loo_cmp[, "elpd_diff"],    2),
+    `SE diff`        = round(loo_cmp[, "se_diff"],      2),
+    `ELPD loo`       = round(loo_cmp[, "elpd_loo"],     2),
+    `SE ELPD loo`    = round(loo_cmp[, "se_elpd_loo"],  2),
+    `p loo`          = round(loo_cmp[, "p_loo"],        2),
+    `Stacking wt.`   = round(as.numeric(stack_wts[rownames(loo_cmp)]), 2),
+    `Pseudo-BMA wt.` = round(as.numeric(pbma_wts[rownames(loo_cmp)]),  2),
+    check.names      = FALSE,
+    row.names        = NULL
   )
+
+  invisible(capture.output(
+    stargazer::stargazer(
+      cmp_tex,
+      summary  = FALSE,
+      rownames = FALSE,
+      out      = paste0(tables, "/Summary_model_comparison.tex")
+    )
+  ))
 
 } else {
-
-  m <- model_names[1]
-  est <- loo_list[[m]]$estimates    # rows: elpd_loo, p_loo, looic; cols: Estimate, SE
-  print(loo_list[[m]])
-  cmp_df <- data.frame(
-    model     = m,
-    elpd_diff = NA_real_,
-    se_diff   = NA_real_,
-    elpd_loo  = est["elpd_loo", "Estimate"],
-    se_elpd   = est["elpd_loo", "SE"],
-    p_loo     = est["p_loo",    "Estimate"],
-    stacking_weight  = NA_real_,
-    pseudobma_weight = NA_real_
-  )
-
+  print(loo_list[[model_names[1]]])
 }
-
-write.csv(cmp_df,
-          file = paste0(results, "/model_comparison.csv"),
-          row.names = FALSE)
 
 ## ---- 3. Pareto-k diagnostics (flag unreliable obs per model) -------------- ##
 
@@ -98,6 +94,68 @@ for (m in model_names) {
   ggplot2::ggsave(paste0(figs, "/ppc_dens_", m, ".pdf"),
                   plot = p, width = 7, height = 5)
 }
+
+## ---- 5. Combined preference summary (LaTeX, all models) ------------------- ##
+## For each model, compute the equal-preference switch point (g kelp per 1 g
+## drift) and the equal-abundance baseline preference (probability, log-odds,
+## odds).
+
+## preference() and log_switch_point() (defined in preference_helpers.R) dispatch
+## on the model name via model_family().
+
+fmt_med_ci <- function(v, digits) {
+  qs <- stats::quantile(v, c(0.025, 0.5, 0.975), na.rm = TRUE)
+  sprintf("%.*f (%.*f, %.*f)",
+          digits, qs[2], digits, qs[1], digits, qs[3])
+}
+
+summary_rows <- lapply(model_names, function(m) {
+  parms <- parse_param_block(paste0(models, "/stan_model_", m, ".stan"))
+  if (!all(c("w", "q") %in% parms)) {
+    message("[", m, "] preference summary skipped: 'w' and 'q' not both sampled.")
+    return(NULL)
+  }
+  draws <- posterior::as_draws_df(fits[[m]]$draws(c("w", "q")))
+  w <- draws$w; q <- draws$q
+
+  pref     <- preference(0, w, q, m)
+  switch_g <- 1 / exp(log_switch_point(0.5, w, q, m))
+  logodds  <- log(pref / (1 - pref))
+  odds     <- exp(logodds)
+
+  c(
+    fmt_med_ci(switch_g, digits = 2),
+    fmt_med_ci(pref,     digits = 3),
+    fmt_med_ci(logodds,  digits = 3),
+    fmt_med_ci(odds,     digits = 2)
+  )
+})
+
+## Drop models that were skipped (e.g. missing w/q) so the row count matches.
+keep       <- !vapply(summary_rows, is.null, logical(1))
+summary_df <- data.frame(
+  Model = model_names[keep],
+  do.call(rbind, summary_rows[keep]),
+  stringsAsFactors = FALSE,
+  check.names      = FALSE,
+  row.names        = NULL
+)
+colnames(summary_df) <- c(
+  "Model",
+  "Switch point (g kelp per 1 g drift)",
+  "Baseline preference (drift)",
+  "Baseline log-odds (drift to kelp)",
+  "Baseline odds (drift to kelp)"
+)
+
+invisible(capture.output(
+  stargazer::stargazer(
+    summary_df,
+    summary  = FALSE,
+    rownames = FALSE,
+    out      = paste0(tables, "/Summary_preference.tex")
+  )
+))
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

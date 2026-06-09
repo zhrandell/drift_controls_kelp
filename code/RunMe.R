@@ -29,13 +29,19 @@ model_names <- c("Logistic",
                  "vanLeeuwen_wq")
 
 # Fit models concurrently? FALSE = sequential (safer for RAM).
-# TRUE multiplies memory by length(model_names) since each fit also runs 4 parallel chains.
+# TRUE multiplies memory by length(model_names) since each fit also runs parallel chains.
 parallel_models <- TRUE
 
 # Skip re-fitting a model whose .stan file is unchanged since the previous fit.
 # Detected by md5sum of the .stan source, stored alongside model_output_<name>.RDS.
 # Set FALSE to force a fresh fit regardless of the cache.
 reuse_existing_fits <- TRUE
+
+# Skip re-simulating a model whose ODE inputs are unchanged since the previous
+# simulation. Detected by a signature of the .stan source, posterior_draws_<name>.RDA,
+# simulate.R, A.level, and n_sim_draws, stored at tmp/ODE_kelp_<name>.hash.
+# Set FALSE to force fresh simulations regardless of the cache.
+reuse_existing_sims <- TRUE
 
 # Specify number of MCMC iterations
 warmup_iter <- 200
@@ -60,24 +66,48 @@ source('empirical.R')
 source('format_data.R')
 
 source('fit_all_models.R')
-source('compare_models.R')
 
+source('preference_helpers.R')            # defines preference() / log_switch_point()
 source('visualize_stan_model.R')          # defines visualize_model()
 source('simulate.R')                      # defines simulate_model()
 source('process_simulation.R')            # defines process_model_sim()
 source('plot_simulation.R')               # defines plot_model_sim()
+
+## compare_models.R runs at source time and reuses parse_param_block() defined
+## by visualize_stan_model.R, so it must be sourced after the definitions above.
+source('compare_models.R')
 
 if (parallel_models) {
   mc_n <- min(length(model_names), n_cores)
   cat("Running visualize / simulate / process / plot stages for",
       length(model_names), "models in parallel (",
       paste(model_names, collapse = ", "), ") on", mc_n, "core(s).\n")
-  invisible(parallel::mclapply(model_names, visualize_model,   mc.cores = mc_n))
-  invisible(parallel::mclapply(model_names, simulate_model,
-                               n_draws = n_sim_draws, internal_cores = 1L,
-                               mc.cores = mc_n))
-  invisible(parallel::mclapply(model_names, process_model_sim, mc.cores = mc_n))
-  invisible(parallel::mclapply(model_names, plot_model_sim,    mc.cores = mc_n))
+
+  ## PSOCK cluster (cross-platform: macOS, Windows, Linux). Workers start
+  ## with empty environments, so we export the globals/functions they need
+  ## and source load_packages.R on each one. `fits` is excluded -- each
+  ## worker re-reads model_output_<name>.RDS from disk inside visualize_model().
+  ##
+  ## First-run startup cost: spawning workers + sourcing load_packages.R on
+  ## each takes a few seconds. The cluster is reused across all four stages
+  ## (visualize / simulate / process / plot), so this cost is paid once.
+  cl <- parallel::makeCluster(mc_n)
+  wd <- getwd()
+  to_export <- setdiff(ls(envir = .GlobalEnv, all.names = TRUE), "fits")
+  parallel::clusterExport(cl, varlist = to_export, envir = .GlobalEnv)
+  parallel::clusterCall(cl, function(w) {
+    setwd(w)
+    source("load_packages.R")
+    options(device = function(...) pdf(NULL))
+  }, wd)
+
+  tryCatch({
+    invisible(parallel::parLapply(cl, model_names, visualize_model))
+    invisible(parallel::parLapply(cl, model_names, simulate_model,
+                                  n_draws = n_sim_draws, internal_cores = 1L))
+    invisible(parallel::parLapply(cl, model_names, process_model_sim))
+    invisible(parallel::parLapply(cl, model_names, plot_model_sim))
+  }, finally = parallel::stopCluster(cl))
 } else {
   invisible(lapply(model_names, visualize_model))
   invisible(lapply(model_names, simulate_model, n_draws = n_sim_draws))

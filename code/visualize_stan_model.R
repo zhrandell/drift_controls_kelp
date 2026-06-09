@@ -5,9 +5,9 @@
 ## Defines visualize_model(model_name): produces per-model trace / pairs /
 ## posterior / preference plots and posterior summary outputs for the fit
 ## previously written by fit_model(). Reads `results`, `figs`, `models` from
-## the caller's environment. Models with a stomach-clearance parameter `z` are
-## treated as Logistic-family (Logistic, typeII, ...); models without `z` use
-## the vanLeeuwen preference form.
+## the caller's environment. The preference form is selected by model name via
+## model_family() in preference_helpers.R (names starting with "Logistic" or
+## "vanLeeuwen").
 
 ## Parse the names declared in a Stan file's `parameters { ... }` block.
 ## Returns the base identifiers only (no indices), e.g. c("a", "b", ...).
@@ -56,8 +56,8 @@ rdat <- rdat[sel ,]
 ## auto-detect sampled parameters by parsing the Stan source's `parameters`
 ## block. fit$metadata()$model_params is unreliable here -- it returns every
 ## variable in the CSV (transformed params, generated quantities, lp__).
-parms <- parse_param_block(paste0(models, "/stan_model_", model_name, ".stan"))
-has_z <- "z" %in% parms      # proxy for Logistic-family preference form
+parms  <- parse_param_block(paste0(models, "/stan_model_", model_name, ".stan"))
+family <- model_family(model_name)  # "Logistic" or "vanLeeuwen"
 
 
 ## print param list output
@@ -123,7 +123,7 @@ InvLogit <- function(x){
   1 / (1 + exp( -x ))
 }
 
-if(has_z && "w" %in% parms){
+if(family == "Logistic" && "w" %in% parms){
   # Logistic-family Yodzis preference (for Drift)
   posts_df_raw$w_y <- InvLogit(posts_df_raw$w)
 }else{
@@ -234,28 +234,11 @@ if (!all(c("w", "q") %in% parms)) {
   return(invisible(NULL))
 }
 
-if(has_z){
-
-  Preference <- function(x){
-    1 - ( 1 / ( 1 + exp( w + q * x ) ) )
-  }
-
-  LogSwitchPoint <- function(y){
-    ( log( -y / ( y - 1 ) ) - w ) / q
-  }
-
-}else{
-  Preference <- function(x){
-    1 - ( 1 + exp( (q-4) + x )) /
-      ( 1 + exp( log(2) + (q-4) + x ) + exp( q + 2 * x ))
-  }
-
-  LogSwitchPoint <- function(y){
-    log(- (2 * y) /
-     ( exp((q-4)) * (2 * y - 1) - exp(q) * sqrt(exp(-2 * q) * (exp(2 * (q-4)) * (1 - 2 * y)^2 - 4 * exp(q) * (y - 1) * y)) ))
-  }
-
-}
+## One-arg closures over the loop-local `w`, `q` (and `model_name`) so the
+## existing `curve(Preference, ...)` and `LogSwitchPoint(sp)` call sites work
+## unchanged. Math lives in preference_helpers.R, shared with compare_models.R.
+Preference     <- function(x) preference(x, w, q, model_name)
+LogSwitchPoint <- function(y) log_switch_point(y, w, q, model_name)
 
 initial.ratios <- rdat$Drift_Initial / rdat$Kelp_Initial
 initial.ratios <- log2(initial.ratios[is.finite(initial.ratios)])/log2(exp(1))
@@ -266,19 +249,16 @@ ratio.vals <- log10(10^seq(-ratio.lim, ratio.lim, ratio.step))/log2(exp(1))
 Pref.Predicts <- array(NA,
                      dim = c(nrow(posts_df_raw), length(ratio.vals)))
 Pref.One2Ones <- vector()
-Switch.Predictions <- vector()
 
 for(i in 1:nrow(posts_df_raw)){
   w <- posts_df_raw$w[i]
   q <- posts_df_raw$q[i]
   Pref.Predicts[i,] <- Preference(ratio.vals)
   Pref.One2Ones[i] <- Preference(0)
-  Switch.Predictions[i] <- 1/exp(LogSwitchPoint(0.5))
 }
 
 Pref.Predictions <- apply(Pref.Predicts, 2, median)
 Pref.One2One <- round(quantile(Pref.One2Ones, c(0.025, 0.5, 0.975)), 3)
-Switch.Prediction <- round(quantile(Switch.Predictions, c(0.025, 0.5, 0.975)), 3)
 
 pdf(paste0(figs, '/preference_', model_name,'.pdf'),
     height = 4,
@@ -363,43 +343,6 @@ par(mar = c(3, 3, 1, 1),
   box(lwd = 1)
 
 dev.off()
-
-sink(paste0(results, "/Summary_", model_name, ".txt"))
-cat('Abundance switch point (equal preference):\n 1g drift to ', 
-             round(1/exp(Lsp), 2), 
-             'g (',
-             Switch.Prediction[1],
-             'g-',
-             Switch.Prediction[3],
-             'g) kelp.\n')
-cat('Baseline preference (equal abundance):\n', 
-             Pref.One2One[2], 
-             ' (',
-             Pref.One2One[1],
-             '-',
-             Pref.One2One[3],
-             ') drift to ',
-             1-Pref.One2One[2], 
-             ' (',
-             1-Pref.One2One[3],
-             '-',
-             1-Pref.One2One[1],
-             ') kelp.\n')
-cat('Baseline preference (equal abundance) log-odds:\n', 
-    Logit(Pref.One2One[2]), 
-    ' (',
-    Logit(Pref.One2One[1]),
-    '-',
-    Logit(Pref.One2One[3]),
-    ') drift to kelp.\n')
-cat('Baseline preference (equal abundance) odds:\n', 
-    exp(Logit(Pref.One2One[2])), 
-    ' (',
-    exp(Logit(Pref.One2One[1])),
-    '-',
-    exp(Logit(Pref.One2One[3])),
-    ') drift to kelp.\n')
-sink()
 
 invisible(NULL)
 }  # end visualize_model()

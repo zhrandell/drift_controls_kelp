@@ -5,7 +5,7 @@
 ## Reads from the caller's environment (set in RunMe.R):
 ##   code, results, tmp, models, warmup_iter, sampling_iter, n_cores
 ##   model_names      character vector of models to fit
-##   parallel_models  TRUE = fit models concurrently via a PSOCK cluster
+##   parallel_models  TRUE = fit models concurrently via future::multisession
 ##                    (cross-platform: macOS, Windows, Linux; memory-heavy);
 ##                    FALSE = sequential. Each model fit already uses 4 parallel
 ##                    chains internally, so concurrent models multiply RAM/CPU
@@ -75,45 +75,49 @@ if (length(missing) > 0) {
 
 ## Wrap fit_model() so any error -- e.g. cmdstanr's "No chains finished
 ## successfully" -- is captured as an error object instead of unwinding the
-## worker. parLapply otherwise aborts on the first failure and reports only
-## "N nodes produced errors", giving no clue which model(s) blew up.
+## worker. Errors thrown inside future_lapply otherwise propagate through
+## the master and abort the whole batch with no per-model attribution.
 safe_fit <- function(m, parallel) {
   tryCatch(fit_model(m, parallel = parallel),
            error = function(e) e)
 }
 
+## Parallel mode uses future::multisession + progressr for a per-model bar.
+## Serial mode uses a plain for loop so each fit's cmdstanr per-chain progress
+## prints directly to the console without any future_lapply stdout capture.
 if (parallel_models) {
-  ## Concurrent fits: give each fit a single core for chain parallelism so total
-  ## load = length(model_names) * 4 chains. Adjust if memory is tight.
   n_per_fit <- max(1L, floor(n_cores / length(model_names)))
   cat("Fitting", length(model_names), "models in parallel (",
       paste(model_names, collapse = ", "), ") with",
       n_per_fit, "chain core(s) per model.\n")
+  plan(multisession, workers = length(model_names))
+  on.exit(plan(sequential), add = TRUE)
+  handlers(global = TRUE)
+  handlers("progress")
 
-  ## PSOCK cluster (cross-platform: macOS, Windows, Linux). Workers start with
-  ## empty environments, so paths, fit_model(), and the iteration settings are
-  ## exported and load_packages.R is sourced on each one. First parallel block
-  ## in the pipeline pays a one-time startup cost (~seconds) for worker spawn
-  ## and package loading; subsequent stages in RunMe.R rebuild their own
-  ## cluster but the package install/compile cache is warm by then.
-  cl <- parallel::makeCluster(length(model_names))
-  wd <- getwd()
-  parallel::clusterExport(
-    cl,
-    varlist = c("fit_model", "safe_fit", "models", "results", "tmp",
-                "warmup_iter", "sampling_iter", "n_cores",
-                "reuse_existing_fits", "n_per_fit"),
-    envir = .GlobalEnv)
-  parallel::clusterCall(cl, function(w) {
-    setwd(w); source("load_packages.R")
-  }, wd)
-
-  fits <- tryCatch(
-    parallel::parLapply(cl, model_names,
-                        fun = function(m) safe_fit(m, parallel = n_per_fit)),
-    finally = parallel::stopCluster(cl))
+  fits <- with_progress({
+    p <- progressor(steps = length(model_names))
+    future_lapply(
+      model_names,
+      function(m) {
+        source("load_packages.R")
+        out <- safe_fit(m, parallel = n_per_fit)
+        p(sprintf("[%s] done", m))
+        out
+      },
+      future.globals = TRUE,
+      future.seed    = TRUE,
+      future.stdout  = NA
+    )
+  })
 } else {
-  fits <- lapply(model_names, safe_fit, parallel = n_cores)
+  n_per_fit <- n_cores
+  fits <- vector("list", length(model_names))
+  for (i in seq_along(model_names)) {
+    m <- model_names[i]
+    cat(sprintf("\n[%d/%d] fitting %s...\n", i, length(model_names), m))
+    fits[[i]] <- safe_fit(m, parallel = n_per_fit)
+  }
 }
 
 names(fits) <- model_names

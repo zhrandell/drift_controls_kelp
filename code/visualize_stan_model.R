@@ -63,6 +63,39 @@ family <- model_family(model_name)  # "Logistic" or "vanLeeuwen"
 ## print param list output
 print(fit, parms)
 
+## label map for known parameters; unknown ones get their raw name.
+param_labels <- list(
+  a     = expression("Search rate "          (italic(a))),
+  b     = expression("Supression rate "      (italic(b))),
+  w     = expression("Baseline preference "  (tilde(italic("\u03c9")))),
+  q     = expression("Switching sensitivity " (italic("\u03C6"))),
+  s     = expression("Stomach sensitivity "  (italic(v))),
+  z     = expression("Stomach clearance "    (italic(z))),
+  sigma = expression("Variance "             (italic(sigma)))
+)
+
+## Render a param_labels plot expression as a LaTeX-friendly string for
+## stargazer(): "Search rate " (italic(a)) -> "Search rate ($a$)".
+math_to_tex <- function(x) {
+  if (is.call(x)) {
+    fn    <- as.character(x[[1]])
+    inner <- math_to_tex(x[[2]])
+    if (fn == "tilde") return(paste0("\\tilde{", inner, "}"))
+    return(inner)  # italic() etc. -- math mode handles italics
+  }
+  greek <- c("\u03c9" = "\\omega",
+             "\u03C6" = "\\varphi",
+             "sigma"  = "\\sigma")
+  s <- as.character(x)
+  if (s %in% names(greek)) return(unname(greek[s]))
+  s
+}
+label_to_tex <- function(e) {
+  if (is.null(e)) return(NA_character_)
+  ex <- e[[1]]
+  paste0(trimws(as.character(ex[[1]])), " ($", math_to_tex(ex[[2]]), "$)")
+}
+
 
 ## extract draw information (sampled parameters only; pulling fit$draws() with
 ## no args includes log_lik, y_rep, theta, drift_*, kelp_*, etc., which inflates
@@ -110,27 +143,15 @@ ggplot2::ggsave(filename = paste0(figs, "/pairs_", model_name, ".pdf"),
 ## extract posteriors for subsequent simulation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 posts_df_raw <- as.data.frame(draws_df)[, parms, drop = FALSE]
 
+## vanLeeuwen variants without a sampled `w` (e.g. vanLeeuwen_q) fix w = q - 4
+## in the Stan model; derive it here so downstream preference math uses the
+## same value the model was fit with.
+if (family == "vanLeeuwen" && !("w" %in% parms) && "q" %in% parms) {
+  posts_df_raw$w <- posts_df_raw$q - 4
+}
+
 ## save RDA file with posteriors from a single chain
 save(posts_df_raw, file = paste0(tmp, "/posterior_draws_", model_name, ".RDA"))
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Transform baseline preference parameter to Yodzis w form
-Logit <- function(x){
-  log(x / (1-x) )
-}
-InvLogit <- function(x){
-  1 / (1 + exp( -x ))
-}
-
-if(family == "Logistic" && "w" %in% parms){
-  # Logistic-family Yodzis preference (for Drift)
-  posts_df_raw$w_y <- InvLogit(posts_df_raw$w)
-}else{
-  # vanLeeuwen-family or no w sampled
-  posts_df_raw$w_y <- NA_real_
-}
-
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -139,13 +160,41 @@ CI <- data.frame(apply(posts_df_raw, 2,
                        quantile, c(0.0250, 0.5, 0.975), 
                        na.rm = TRUE))
 out.parms <- data.frame(formatC(signif(t(CI[c(2,1,3),]), 4), 4, format="f"))
-out.parms <-  cbind(Par = rownames(out.parms),
-                    Pt = out.parms[,1],
+par_lbls <- vapply(rownames(out.parms),
+                   function(p) {
+                     lbl <- param_labels[[p]]
+                     if (is.null(lbl)) p else label_to_tex(lbl)
+                   },
+                   character(1))
+out.parms <-  cbind(Parameter = par_lbls,
+                    Estimate = out.parms[,1],
                     CI = paste0('(',out.parms[,2], '---', out.parms[,3], ')'))
-invisible(capture.output(
-  stargazer(out.parms,
-            out = paste0(tables, '/Summary_posteriors_', model_name, '.tex'))
-))
+colnames(out.parms) <- c("Parameter", "Estimate", "CI")
+
+## stargazer chokes on LaTeX math markers in cell contents -- its internal
+## text-width pass returns NA from nchar() and errors in .text.column.width
+## (same issue documented in compare_models.R). Write the LaTeX directly.
+tab_caption <- paste0("Parameter posterior median point estimates and ",
+                      "95\\% credible intervals.")
+tab_label   <- paste0("tab:post_", model_name)
+tab_path    <- paste0(tables, "/Summary_posteriors_", model_name, ".tex")
+tex_rows    <- apply(out.parms, 1, function(r) {
+                     paste0(paste(r, collapse = " & "), " \\\\")
+                     })
+writeLines(c(
+  "\\begin{table}[!htbp] \\centering",
+  paste0("  \\caption{", tab_caption, "}"),
+  paste0("  \\label{",   tab_label,   "}"),
+  "\\begin{tabular}{@{\\extracolsep{5pt}} lcc}",
+  "\\\\[-1.8ex]\\hline",
+  "\\hline \\\\[-1.8ex]",
+  "Parameter & Estimate & CI \\\\",
+  "\\hline \\\\[-1.8ex]",
+  tex_rows,
+  "\\hline \\\\[-1.8ex]",
+  "\\end{tabular}",
+  "\\end{table}"
+), tab_path)
 
 
 ## Custom posterior plot ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,16 +235,6 @@ plot.posterior <- function(x, param='a', label='a', tag = '(a)'){
   return(fig)
 }
 
-## label map for known parameters; unknown ones get their raw name.
-param_labels <- list(
-  a     = expression("Search rate "          (italic(a))),
-  b     = expression("Supression rate "      (italic(b))),
-  w     = expression("Baseline preference "  (tilde(italic("\u03c9")))),
-  q     = expression("Switching sensitivity " (italic("\u03C6"))),
-  s     = expression("Stomach sensitivity "  (italic(v))),
-  z     = expression("Stomach clearance "    (italic(z))),
-  sigma = expression("Variance "             (italic(sigma)))
-)
 
 ## one panel per sampled parameter
 posterior_panels <- lapply(parms, function(p) {
@@ -227,10 +266,11 @@ ggplot2::ggsave(filename = paste0(figs, "/posteriors_", model_name,".pdf"),
 # For vanLeeuwen, divide numerator and denominator by A and substitute S/A = exp(x).
 # For van Leeuwen we use parameters 'w' and 'q' for convenience though in the notes we use \nu for w and \psi for q
 
-## Preference plot requires `w` and `q` to be sampled and a known model family
-## (Logistic-style vs. vanLeeuwen-style). Skip cleanly otherwise.
-if (!all(c("w", "q") %in% parms)) {
-  message("[", model_name, "] preference plot skipped: parameters 'w' and 'q' not both sampled.")
+## Preference plot requires `w` and `q` to be available in posts_df_raw.
+## For vanLeeuwen variants without a sampled `w`, w was derived above as q - 4.
+## Skip cleanly if the inputs still aren't there.
+if (!all(c("w", "q") %in% names(posts_df_raw))) {
+  message("[", model_name, "] preference plot skipped: parameters 'w' and 'q' not both available.")
   return(invisible(NULL))
 }
 

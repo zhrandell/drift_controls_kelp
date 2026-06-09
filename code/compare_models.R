@@ -110,13 +110,22 @@ fmt_med_ci <- function(v, digits) {
 }
 
 summary_rows <- lapply(model_names, function(m) {
-  parms <- parse_param_block(paste0(models, "/stan_model_", m, ".stan"))
-  if (!all(c("w", "q") %in% parms)) {
-    message("[", m, "] preference summary skipped: 'w' and 'q' not both sampled.")
+  parms  <- parse_param_block(paste0(models, "/stan_model_", m, ".stan"))
+  family <- model_family(m)
+  has_w  <- "w" %in% parms
+  has_q  <- "q" %in% parms
+
+  ## vanLeeuwen variants without a sampled `w` (e.g. vanLeeuwen_q) fix
+  ## w = q - 4 in the Stan model; derive it here so the summary uses the
+  ## same value the model was fit with.
+  if (!has_q || (family == "Logistic" && !has_w)) {
+    message("[", m, "] preference summary skipped: required parameters not sampled.")
     return(NULL)
   }
-  draws <- posterior::as_draws_df(fits[[m]]$draws(c("w", "q")))
-  w <- draws$w; q <- draws$q
+  cols  <- if (has_w) c("w", "q") else "q"
+  draws <- posterior::as_draws_df(fits[[m]]$draws(cols))
+  q <- draws$q
+  w <- if (has_w) draws$w else q - 4
 
   pref     <- preference(0, w, q, m)
   switch_g <- 1 / exp(log_switch_point(0.5, w, q, m))

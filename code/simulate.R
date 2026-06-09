@@ -11,7 +11,7 @@
 ##   * integrates the ODE over a grid of initial conditions and posterior draws,
 ##   * writes tmp/ODE_kelp_<level>_<model_name>.RDA for each entry of A.level.
 ##
-## When invoked from inside parallel::parLapply (parallel_models = TRUE in
+## When invoked from inside an outer future_lapply (parallel_models = TRUE in
 ## RunMe.R), pass `internal_cores = 1L` to avoid nested cluster oversubscription.
 ##
 ## Skip-if-unchanged: when `reuse_existing` is TRUE (default driven by the
@@ -19,17 +19,6 @@
 ## source, posterior_draws_<name>.RDA, simulate.R, A.level, and n_draws, and
 ## compares against tmp/ODE_kelp_<name>.hash. If the signature matches and all
 ## per-level ODE_kelp_<level>_<name>.RDA outputs exist, the simulation is skipped.
-
-## Muffle the cosmetic "closing unused connection" warnings emitted by R's GC
-## when PSOCK cluster sockets get finalized. Legitimate warnings still surface.
-.muffle_connection_warnings <- function(expr) {
-  withCallingHandlers(expr,
-    warning = function(w) {
-      if (grepl("closing unused connection", conditionMessage(w), fixed = TRUE))
-        invokeRestart("muffleWarning")
-    }
-  )
-}
 
 ## Build R-callable resourceLoss_<name>(S0, A0, F0, params) from the Stan source
 ## by extracting the body between the ## ODE_BODY_START ## / END markers.
@@ -96,16 +85,23 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
   source(paste0(tmp, "/resourceLoss_", model_name, ".R"))
   resourceLoss <- get(paste0("resourceLoss_", model_name))
 
-  ## cluster setup (skip when running serially, e.g. inside mclapply over models)
+  ## Sever the closure's link to simulate_model's frame. Without this,
+  ## future_lapply's auto-globals would drag every local in scope (including
+  ## posts_df_raw) across to each worker via resourceLoss's enclosing env.
+  environment(resourceLoss) <- globalenv()
+
+  ## Switch the future plan only for the duration of this function. When
+  ## simulate_model is called from an outer future_lapply (parallel_models =
+  ## TRUE in RunMe.R), RunMe.R passes internal_cores = 1L so we don't swap
+  ## the plan -- the inner future_lapply runs sequentially under future's
+  ## nested-future-safety default, avoiding cluster-of-clusters explosions.
   if (internal_cores > 1L) {
     cat("[", model_name, "] initiating parallel simulation on ",
         internal_cores, " cores.\n", sep = "")
-    cl <- makeCluster(internal_cores)
-    on.exit(.muffle_connection_warnings(stopCluster(cl)), add = TRUE)
-    invisible(clusterEvalQ(cl, library(deSolve)))
+    old_plan <- plan(multisession, workers = internal_cores)
+    on.exit(plan(old_plan), add = TRUE)
   } else {
     cat("[", model_name, "] running simulation serially.\n", sep = "")
-    cl <- NULL
   }
 
   for (AL in 1:length(A.level)) { # initial kelp abundance (low and high)
@@ -175,16 +171,20 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
     n_inits <- length(inits_P1)
     combos  <- expand.grid(init_idx = seq_len(n_inits), parm_idx = seq_len(n_parms))
 
-    if (!is.null(cl)) {
-      clusterExport(cl,
-        c("full_parm_list", "inits_P1", "combos",
-          "t.list_P1_restock", "t.list_P2_restock", "t.list_P3_restock",
-          "resourceLoss", "P1", "P2", "U"),
-        envir = environment())
-    }
-
-    flat_results <- .muffle_connection_warnings(
-      pblapply(seq_len(nrow(combos)), function(i) {
+    ## future_lapply auto-exports the closed-over globals (full_parm_list,
+    ## inits_P1, combos, t.list_P1_restock/P2/P3, resourceLoss, P1, P2) via
+    ## future.globals = TRUE. We tick the progressor at most n_ticks times
+    ## across the whole combo loop instead of once per ode trio -- otherwise
+    ## ~16k progression signals per kelp level saturate the IPC channel from
+    ## the multisession workers back to the master and freeze the R event loop.
+    ## The inner bar is visible when this stage runs under plan(sequential);
+    ## under outer-parallel mode it executes inside a worker and is not
+    ## relayed to the master console.
+    n_ticks   <- 100L
+    tick_step <- max(1L, floor(nrow(combos) / n_ticks))
+    flat_results <- with_progress({
+      p <- progressor(steps = n_ticks)
+      future_lapply(seq_len(nrow(combos)), function(i) {
         x <- full_parm_list[[combos$parm_idx[i]]]
         y <- inits_P1[[combos$init_idx[i]]]
 
@@ -203,9 +203,10 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
                   func  = resourceLoss,
                   parms = x)
 
+        if (i %% tick_step == 0L) p()
         rbind(p1, p2, p3)
-      }, cl = cl)
-    )
+      }, future.globals = TRUE, future.packages = "deSolve", future.seed = TRUE)
+    })
 
     ## re-nest into original outs_parms[[parm_idx]][[init_idx]] structure
     outs_parms <- split(flat_results, combos$parm_idx)

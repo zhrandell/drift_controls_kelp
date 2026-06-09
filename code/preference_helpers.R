@@ -30,8 +30,8 @@ preference <- function(x, w, q, model_name) {
   if (model_family(model_name) == "Logistic") {
     1 - 1 / (1 + exp(w + q * x))
   } else {
-    1 - (1 + exp((q - 4) + x)) /
-        (1 + exp(log(2) + (q - 4) + x) + exp(q + 2 * x))
+    1 - (1 + exp(w + x)) /
+        (1 + exp(log(2) + w + x) + exp(q + 2 * x))
   }
 }
 
@@ -40,9 +40,9 @@ log_switch_point <- function(y, w, q, model_name) {
     (log(-y / (y - 1)) - w) / q
   } else {
     log(- (2 * y) /
-        (exp(q - 4) * (2 * y - 1) -
+        (exp(w) * (2 * y - 1) -
          exp(q) * sqrt(exp(-2 * q) *
-                       (exp(2 * (q - 4)) * (1 - 2 * y)^2 -
+                       (exp(2 * w) * (1 - 2 * y)^2 -
                         4 * exp(q) * (y - 1) * y))))
   }
 }

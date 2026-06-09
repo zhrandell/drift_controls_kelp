@@ -5,6 +5,12 @@ load_pkg <- function(pkg) {
   library(pkg, character.only = TRUE)
 }
 
+## Libraries for parallelism + progress reporting (used by fit_all_models.R,
+## RunMe.R, simulate.R)
+load_pkg("future")
+load_pkg("future.apply")
+load_pkg("progressr")
+
 ## Libraries for 'empirical.R'
 load_pkg("tidyverse")
 load_pkg("scales")

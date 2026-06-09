@@ -33,7 +33,8 @@ model_names <- c("Logistic",
 parallel_models <- TRUE
 
 # Skip re-fitting a model whose .stan file is unchanged since the previous fit.
-# Detected by md5sum of the .stan source, stored alongside model_output_<name>.RDS.
+# Detected by md5sum of the .stan source, stored at tmp/model_output_<name>.hash
+# alongside the cached fit at tmp/model_output_<name>.RDS.
 # Set FALSE to force a fresh fit regardless of the cache.
 reuse_existing_fits <- TRUE
 
@@ -86,7 +87,7 @@ if (parallel_models) {
   ## PSOCK cluster (cross-platform: macOS, Windows, Linux). Workers start
   ## with empty environments, so we export the globals/functions they need
   ## and source load_packages.R on each one. `fits` is excluded -- each
-  ## worker re-reads model_output_<name>.RDS from disk inside visualize_model().
+  ## worker re-reads tmp/model_output_<name>.RDS from disk inside visualize_model().
   ##
   ## First-run startup cost: spawning workers + sourcing load_packages.R on
   ## each takes a few seconds. The cluster is reused across all four stages

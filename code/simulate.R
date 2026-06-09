@@ -91,9 +91,9 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
     posts_df_raw <- posts_df_raw[keep, , drop = FALSE]
   }
 
-  ## build ODE function from Stan source
-  make_resourceLoss(model_name, models, code)
-  source(paste0(code, "/resourceLoss_", model_name, ".R"))
+  ## build ODE function from Stan source (generated helper lives in tmp/)
+  make_resourceLoss(model_name, models, tmp)
+  source(paste0(tmp, "/resourceLoss_", model_name, ".R"))
   resourceLoss <- get(paste0("resourceLoss_", model_name))
 
   ## cluster setup (skip when running serially, e.g. inside mclapply over models)

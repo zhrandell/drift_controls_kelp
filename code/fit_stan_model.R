@@ -4,7 +4,7 @@
 
 ## Defines `fit_model(name)` which compiles 'models/stan_model_<name>.stan',
 ## samples using the shared `loss_dat` object, and writes the resulting
-## CmdStanMCMC fit to results/model_output_<name>.RDS.
+## CmdStanMCMC fit to tmp/model_output_<name>.RDS.
 ## Callers (fit_all_models.R) supply `models`, `results`, `tmp`,
 ## `warmup_iter`, `sampling_iter`, and `n_cores` from the global environment.
 ##
@@ -29,7 +29,7 @@ fit_model <- function(name,
     stop(sprintf("Stan file not found: %s", stan_file))
   }
 
-  out_file     <- paste0(results, "/model_output_", name, ".RDS")
+  out_file     <- paste0(tmp, "/model_output_", name, ".RDS")
   hash_file    <- paste0(tmp, "/model_output_", name, ".hash")
   current_hash <- unname(tools::md5sum(stan_file))
 

@@ -12,7 +12,7 @@ options(mc.cores = n_cores)
 ## ---- 1. Load fits and compute loo per model ------------------------------- ##
 
 fits <- setNames(lapply(model_names, function(m) {
-  readRDS(paste0(results, "/model_output_", m, ".RDS"))
+  readRDS(paste0(tmp, "/model_output_", m, ".RDS"))
 }), model_names)
 
 loo_list <- setNames(lapply(model_names, function(m) {

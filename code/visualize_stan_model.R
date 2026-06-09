@@ -35,7 +35,7 @@ visualize_model <- function(model_name) {
 ## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 ## specify directory and open saved RDS files
-fit <- readRDS(paste0(results, "/model_output_", model_name, ".RDS"))
+fit <- readRDS(paste0(tmp, "/model_output_", model_name, ".RDS"))
 
 # rdat <- read.csv(paste0(data, "/drift_kelp_loss.csv"))
 rdat <- readRDS(paste0(tmp, "/loss_dat.RData"))

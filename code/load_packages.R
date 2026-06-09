@@ -22,7 +22,7 @@ load_pkg("hexbin")
 load_pkg("janitor")
 load_pkg("diffdf")
 
-## Libraries for 'fit_stan_model.R' & 'analyze_visualize.R'
+## Libraries for 'fit_all_models.R' & 'analyze_visualize.R'
 load_pkg("cmdstanr")
 load_pkg("rstan")
 load_pkg("StanHeaders")

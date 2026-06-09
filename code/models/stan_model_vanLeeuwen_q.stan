@@ -21,9 +21,8 @@
       real F = Y[3];			// Stomach fullness 
       real a = theta[1]; 			// baseline attack rate
       real b = theta[2];      // velocity reduction
-      real w = theta[3];			// preference par 1
-      real q = theta[4]; 		  // preference par 2
-      real s = theta[5];			// stomach satiation sensitivity
+      real q = theta[3]; 		  // preference par 2
+      real s = theta[4];			// stomach satiation sensitivity
       real U = x_r[1]; 			  // Urchins
       
        // ## Do Not Remove the ODE_BODY_START and ODE_BODY_END flags ###
@@ -35,7 +34,8 @@
       // H = 2 / (1 + exp( ( F / z )^s ));
       
       // vanLeeuwen et al. reformulated
-      p = ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+      // We use parameters 'w = q-4' and 'q' for convenience though in the notes we use \nu for w and \psi for q
+      p = ( 1 -  ( 1 + exp( (q-4) + log(S / A) )) / ( 1 + exp( log(2) + (q-4) + log(S / A) ) + exp( q + 2 * log(S / A) )) );
       
       // Movement slowdown 
       M = 1 / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
@@ -97,34 +97,27 @@ transformed data {
 parameters {
   real <lower =   0, upper = 0.01> a;
   real <lower =   0, upper = 0.1>  b;
-  real <lower = -10, upper = 30>   w;
   real <lower =   2, upper = 15>   q;
   real <lower =   0, upper = 0.5>  s;
   real <lower =  10, upper = 20>   sigma;
 }
 
 transformed parameters {
-  array[5] real theta;
-  array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
-  array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
-  array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
-  array[nts4] vector[3] y4;					// two-dimensional container of size (nts4, 3)     
-  array[nts5] vector[3] y5;					// two-dimensional container of size (nts5, 3)  
+  array[4] real theta = {a, b, q, s};
+  array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3]
+  array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)
+  array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)
+  array[nts4] vector[3] y4;					// two-dimensional container of size (nts4, 3)
+  array[nts5] vector[3] y5;					// two-dimensional container of size (nts5, 3)
   vector[3] init_1;
   vector[3] init_2;
-  vector[1] U;			
-  
-  // obs 
+  vector[1] U;
+
+  // obs
   array[n_subject_1, n_total_1] real drift_1; 	// Drift remaining
   array[n_subject_1, n_total_1] real kelp_1; 		// Kelp remaining
   array[n_subject_2, n_total_2] real drift_2; 	// Drift remaining
   array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
-  
-  theta[1] = a; 
-  theta[2] = b;
-  theta[3] = w;
-  theta[4] = q;
-  theta[5] = s;
 
 
   // Temporal sequence 2 -----------------------------------
@@ -208,7 +201,6 @@ transformed parameters {
 model {
   a ~ exponential(1);
   b ~ exponential(0.1);
-  w ~ normal(0, 10);
   q ~ normal(0, 10);
   s ~ exponential(0.1);
   sigma ~ exponential(0.1);

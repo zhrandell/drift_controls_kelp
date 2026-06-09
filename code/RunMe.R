@@ -24,7 +24,7 @@ figs    <- "../figs"
 # file in code/models/.
 # Set to a single-element vector to fit just one model.
 model_names <- c("Logistic", 
-                 "LogisticClearance",
+                 "Logistic_z",
                  "vanLeeuwen_q",
                  "vanLeeuwen_wq")
 

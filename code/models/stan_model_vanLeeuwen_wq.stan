@@ -35,8 +35,7 @@
       // H = 2 / (1 + exp( ( F / z )^s ));
       
       // vanLeeuwen et al. reformulated
-      // We use parameters 'w = q-4' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-      p = ( 1 -  ( 1 + exp( (q-4) + log(S / A) )) / ( 1 + exp( log(2) + (q-4) + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+      p = ( 1 -  ( 1 + exp( w + log(S / A) )) / ( 1 + exp( log(2) + w + log(S / A) ) + exp( q + 2 * log(S / A) )) );
       
       // Movement slowdown 
       M = 1 / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
@@ -105,27 +104,21 @@ parameters {
 }
 
 transformed parameters {
-  array[5] real theta;
-  array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3] 
-  array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)   
-  array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)   
-  array[nts4] vector[3] y4;					// two-dimensional container of size (nts4, 3)     
-  array[nts5] vector[3] y5;					// two-dimensional container of size (nts5, 3)  
+  array[5] real theta = {a, b, w, q, s};
+  array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3]
+  array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)
+  array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)
+  array[nts4] vector[3] y4;					// two-dimensional container of size (nts4, 3)
+  array[nts5] vector[3] y5;					// two-dimensional container of size (nts5, 3)
   vector[3] init_1;
   vector[3] init_2;
-  vector[1] U;			
-  
-  // obs 
+  vector[1] U;
+
+  // obs
   array[n_subject_1, n_total_1] real drift_1; 	// Drift remaining
   array[n_subject_1, n_total_1] real kelp_1; 		// Kelp remaining
   array[n_subject_2, n_total_2] real drift_2; 	// Drift remaining
   array[n_subject_2, n_total_2] real kelp_2; 		// Kelp remaining
-  
-  theta[1] = a; 
-  theta[2] = b;
-  theta[3] = w;
-  theta[4] = q;
-  theta[5] = s;
 
 
   // Temporal sequence 2 -----------------------------------

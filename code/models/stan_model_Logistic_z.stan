@@ -24,6 +24,7 @@ functions {
     real w = theta[3];			// preference par 1
     real q = theta[4]; 		  // preference par 2
     real s = theta[5];			// stomach satiation sensitivity
+    real z = theta[6];			// stomach clearance rate 
     real U = x_r[1]; 			  // Urchins
   
   // ## Do Not Remove the ODE_BODY_START and ODE_BODY_END flags ###
@@ -46,7 +47,7 @@ functions {
     // Drift, Kelp, Stomach
   	dS_dt = - U * f_S;
   	dA_dt = - U * f_A;
-  	dF_dt =   f_S + f_A;
+  	dF_dt =   f_S + f_A - z * F;
 
   
   // ## ODE_BODY_END ##
@@ -94,19 +95,21 @@ transformed data {
 
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
+// parameters {
 parameters {
   real <lower =  0, upper = 0.05> a;
   real <lower =  0, upper = 0.1>  b;
   real <lower = -6, upper = 6>    w;
   real <lower = -5, upper = 5>    q;
   real <lower =  0, upper = 0.5>  s;
+  real <lower =  0, upper = 0.1>  z;
   real <lower = 10, upper = 20>   sigma;
 }
 
 
 
 transformed parameters {
-  array[5] real theta = {a, b, w, q, s};
+  array[6] real theta = {a, b, w, q, s, z};
   array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3]
   array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)
@@ -201,11 +204,22 @@ transformed parameters {
 }
 
 model {
+  // a ~ exponential(10);
+  // b ~ exponential(10);
+  // // b ~ normal(0, 1);
+  // w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
+  // q ~ normal(0, 10);
+  // s ~ exponential(1);
+  // // s ~ normal(0, 1);
+  // z ~ exponential(10);
+  // sigma ~ exponential(0.1);
+  
   a ~ exponential(10);
   b ~ exponential(10);
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
   s ~ exponential(1);
+  z ~ exponential(10);
   sigma ~ exponential(0.1);
 
 

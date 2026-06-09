@@ -3,7 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 ## Reads from the caller's environment (RunMe.R):
-##   results, figs, n_cores, model_names
+##   results, figs, n_cores, model_names, exclude_from_comparison
 
 ## Set the session-wide core count so loo and any nested parallel routines pick
 ## it up (loo_model_weights() has no explicit `cores` argument).
@@ -24,28 +24,40 @@ loo_list <- setNames(lapply(model_names, function(m) {
 ## table is only meaningful then. With a single model we just print its ELPD
 ## summary to screen and skip the table.
 ##
+## `compare_names` is the subset of `model_names` kept in the LaTeX summary
+## tables (section 2 below and section 5). LOO is still computed for every
+## model in `model_names` above so sections 3-4 (Pareto-k, PPC) see all of
+## them; only the table rows are filtered.
+##
 ## Plain ASCII column headers are required: stargazer's `out=` path runs an
 ## internal text-width pass that returns NA from nchar() when headers contain
 ## LaTeX math markers ($...$, backslashes), erroring in .text.column.width.
 
-if (length(model_names) >= 2) {
+compare_names <- setdiff(model_names, exclude_from_comparison)
 
-  loo_cmp   <- loo::loo_compare(loo_list)
-  stack_wts <- loo::loo_model_weights(loo_list, method = "stacking")
-  pbma_wts  <- loo::loo_model_weights(loo_list, method = "pseudobma")
+if (length(compare_names) >= 2) {
+
+  loo_cmp   <- loo::loo_compare(loo_list[compare_names])
+  pbma_wts  <- loo::loo_model_weights(loo_list[compare_names],
+                                      method = "pseudobma")
   print(loo_cmp)
 
+  mods <- rownames(loo_cmp)
+  vals <- t(data.frame(
+    `ELPD diff`      = round(loo_cmp[, "elpd_diff"],    1),
+    `SE diff`        = round(loo_cmp[, "se_diff"],      1),
+    `ELPD loo`       = round(loo_cmp[, "elpd_loo"],     0),
+    `SE ELPD loo`    = round(loo_cmp[, "se_elpd_loo"],  0),
+    `p loo`          = round(loo_cmp[, "p_loo"],        1),
+    `Pseudo-BMA wt.` = round(as.numeric(pbma_wts[mods]), 2)
+  ))
+  colnames(vals) <- mods
+
   cmp_tex <- data.frame(
-    Model            = rownames(loo_cmp),
-    `ELPD diff`      = round(loo_cmp[, "elpd_diff"],    2),
-    `SE diff`        = round(loo_cmp[, "se_diff"],      2),
-    `ELPD loo`       = round(loo_cmp[, "elpd_loo"],     2),
-    `SE ELPD loo`    = round(loo_cmp[, "se_elpd_loo"],  2),
-    `p loo`          = round(loo_cmp[, "p_loo"],        2),
-    `Stacking wt.`   = round(as.numeric(stack_wts[rownames(loo_cmp)]), 2),
-    `Pseudo-BMA wt.` = round(as.numeric(pbma_wts[rownames(loo_cmp)]),  2),
-    check.names      = FALSE,
-    row.names        = NULL
+    Statistic   = rownames(vals),
+    vals,
+    check.names = FALSE,
+    row.names   = NULL
   )
 
   invisible(capture.output(
@@ -53,12 +65,17 @@ if (length(model_names) >= 2) {
       cmp_tex,
       summary  = FALSE,
       rownames = FALSE,
+      label = "tab:modelcomp",
+      title = 'Relative model performance as assessed by the Bayesian LOO estimate of the expected log pointwise predictive density.',
       out      = paste0(tables, "/Summary_model_comparison.tex")
     )
   ))
 
+} else if (length(compare_names) == 1) {
+  print(loo_list[[compare_names[1]]])
 } else {
-  print(loo_list[[model_names[1]]])
+  message("Summary_model_comparison.tex skipped: ",
+          "all models were excluded via exclude_from_comparison.")
 }
 
 ## ---- 3. Pareto-k diagnostics (flag unreliable obs per model) -------------- ##
@@ -109,7 +126,7 @@ fmt_med_ci <- function(v, digits) {
           digits, qs[2], digits, qs[1], digits, qs[3])
 }
 
-summary_rows <- lapply(model_names, function(m) {
+summary_rows <- lapply(compare_names, function(m) {
   parms  <- parse_param_block(paste0(models, "/stan_model_", m, ".stan"))
   family <- model_family(m)
   has_w  <- "w" %in% parms
@@ -143,7 +160,7 @@ summary_rows <- lapply(model_names, function(m) {
 ## Drop models that were skipped (e.g. missing w/q) so the row count matches.
 keep       <- !vapply(summary_rows, is.null, logical(1))
 summary_df <- data.frame(
-  Model = model_names[keep],
+  Model = compare_names[keep],
   do.call(rbind, summary_rows[keep]),
   stringsAsFactors = FALSE,
   check.names      = FALSE,
@@ -157,14 +174,19 @@ colnames(summary_df) <- c(
   "Baseline odds (drift to kelp)"
 )
 
-invisible(capture.output(
-  stargazer::stargazer(
-    summary_df,
-    summary  = FALSE,
-    rownames = FALSE,
-    out      = paste0(tables, "/Summary_preference.tex")
-  )
-))
+if (nrow(summary_df) > 0) {
+  invisible(capture.output(
+    stargazer::stargazer(
+      summary_df,
+      summary  = FALSE,
+      rownames = FALSE,
+      out      = paste0(tables, "/Summary_preference.tex")
+    )
+  ))
+} else {
+  message("Summary_preference.tex skipped: no eligible models after applying ",
+          "exclude_from_comparison.")
+}
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

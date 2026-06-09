@@ -23,10 +23,19 @@ figs    <- "../figs"
 # Models to fit and compare. Each entry must have a 'stan_model_<name>.stan'
 # file in code/models/.
 # Set to a single-element vector to fit just one model.
-model_names <- c("Logistic", 
+model_names <- c("Logistic",
                  "Logistic_z",
+                 "Logistic_z_noM",
                  "vanLeeuwen_q",
                  "vanLeeuwen_wq")
+
+# Models to exclude from the two summary LaTeX tables produced by
+# compare_models.R: Summary_model_comparison.tex (PSIS-LOO pairwise
+# comparison) and Summary_preference.tex (per-model preference summary).
+# Excluded models are still fit, still visualized/simulated/plotted, and still
+# appear in the Pareto-k diagnostic summary and PPC density overlays.
+# Each entry must also appear in model_names. Default: character(0) (no exclusions).
+exclude_from_comparison <- c("vanLeeuwen_wq")
 
 # Fit models concurrently? FALSE = sequential (safer for RAM).
 # TRUE multiplies memory by length(model_names) since each fit also runs parallel chains.

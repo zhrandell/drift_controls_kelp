@@ -29,9 +29,11 @@ loo_list <- setNames(lapply(model_names, function(m) {
 ## model in `model_names` above so sections 3-4 (Pareto-k, PPC) see all of
 ## them; only the table rows are filtered.
 ##
-## Plain ASCII column headers are required: stargazer's `out=` path runs an
-## internal text-width pass that returns NA from nchar() when headers contain
-## LaTeX math markers ($...$, backslashes), erroring in .text.column.width.
+## The pairwise-comparison table is written as raw LaTeX (not via stargazer)
+## so that math-mode markup ($...$, backslashes) can appear in the column
+## labels; stargazer's `out=` path returns NA from nchar() on such headers
+## and errors in .text.column.width (same workaround as
+## visualize_stan_model.R).
 
 compare_names <- setdiff(model_names, exclude_from_comparison)
 
@@ -43,33 +45,49 @@ if (length(compare_names) >= 2) {
   print(loo_cmp)
 
   mods <- rownames(loo_cmp)
-  vals <- t(data.frame(
-    `ELPD diff`      = round(loo_cmp[, "elpd_diff"],    1),
-    `SE diff`        = round(loo_cmp[, "se_diff"],      1),
-    `ELPD loo`       = round(loo_cmp[, "elpd_loo"],     0),
-    `SE ELPD loo`    = round(loo_cmp[, "se_elpd_loo"],  0),
-    `p loo`          = round(loo_cmp[, "p_loo"],        1),
-    `Pseudo-BMA wt.` = round(as.numeric(pbma_wts[mods]), 2)
-  ))
-  colnames(vals) <- mods
+  vals <- data.frame(
+    "ELPD"                     = sprintf("%.0f", loo_cmp[, "elpd_loo"]),
+    "$SE_{ELPD}$"              = sprintf("%.0f", loo_cmp[, "se_elpd_loo"]),
+    "$p$"                      = sprintf("%.1f", loo_cmp[, "p_loo"]),
+    "$\\Delta \\text{ELPD}$"     = sprintf("%.1f", loo_cmp[, "elpd_diff"]),
+    "$SE(\\Delta \\text{ELPD})$" = sprintf("%.1f", loo_cmp[, "se_diff"]),
+    "Weight"                   = sprintf("%.2f", as.numeric(pbma_wts[mods])),
+    check.names      = FALSE,
+    stringsAsFactors = FALSE
+  )
 
   cmp_tex <- data.frame(
-    Statistic   = rownames(vals),
+    Model       = mods,
     vals,
     check.names = FALSE,
     row.names   = NULL
   )
 
-  invisible(capture.output(
-    stargazer::stargazer(
-      cmp_tex,
-      summary  = FALSE,
-      rownames = FALSE,
-      label = "tab:modelcomp",
-      title = 'Relative model performance as assessed by the Bayesian LOO estimate of the expected log pointwise predictive density.',
-      out      = paste0(tables, "/Summary_model_comparison.tex")
-    )
-  ))
+  tab_caption <- paste0(
+    "Relative model performance as assessed by the Bayesian LOO ",
+    "estimate of the expected log pointwise predictive density.
+    $p$ is the effective number of parameters.
+    Model weights estimated using the pseudo-BMA method."
+  )
+  tab_label <- "tab:modelcomp_LOO"
+  tab_path  <- paste0(tables, "/Summary_model_comparison.tex")
+  tex_rows  <- apply(cmp_tex, 1, function(r) {
+    paste0(paste(r, collapse = " & "), " \\\\")
+  })
+  writeLines(c(
+    "\\begin{table}[!htbp] \\centering",
+    paste0("  \\caption{", tab_caption, "}"),
+    paste0("  \\label{",   tab_label,   "}"),
+    "\\begin{tabular}{@{\\extracolsep{5pt}} lcccccc}",
+    "\\\\[-1.8ex]\\hline",
+    "\\hline \\\\[-1.8ex]",
+    paste0(paste(colnames(cmp_tex), collapse = " & "), " \\\\"),
+    "\\hline \\\\[-1.8ex]",
+    tex_rows,
+    "\\hline \\\\[-1.8ex]",
+    "\\end{tabular}",
+    "\\end{table}"
+  ), tab_path)
 
 } else if (length(compare_names) == 1) {
   print(loo_list[[compare_names[1]]])
@@ -147,13 +165,11 @@ summary_rows <- lapply(compare_names, function(m) {
   pref     <- preference(0, w, q, m)
   switch_g <- 1 / exp(log_switch_point(0.5, w, q, m))
   logodds  <- log(pref / (1 - pref))
-  odds     <- exp(logodds)
 
   c(
     fmt_med_ci(switch_g, digits = 2),
     fmt_med_ci(pref,     digits = 3),
-    fmt_med_ci(logodds,  digits = 3),
-    fmt_med_ci(odds,     digits = 2)
+    fmt_med_ci(logodds,  digits = 3)
   )
 })
 
@@ -168,16 +184,20 @@ summary_df <- data.frame(
 )
 colnames(summary_df) <- c(
   "Model",
-  "Switch point (g kelp per 1 g drift)",
-  "Baseline preference (drift)",
-  "Baseline log-odds (drift to kelp)",
-  "Baseline odds (drift to kelp)"
+  "Switch point",
+  "Baseline preference",
+  "Baseline log-odds"
 )
 
 if (nrow(summary_df) > 0) {
   invisible(capture.output(
     stargazer::stargazer(
       summary_df,
+      title = 'Model-specific estimates (and 95\\% credible intervals) of the relative abundance of drift versus kelp
+      at which urchins preference for the two resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), 
+      and of their baseline preference (expressed as proportional preference and log-odds of consumption) for drift 
+      over kelp when the abundance of the two resources is equal.',
+      label = 'tab:modelcomp_prefs',
       summary  = FALSE,
       rownames = FALSE,
       out      = paste0(tables, "/Summary_preference.tex")

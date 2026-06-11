@@ -32,7 +32,7 @@ dat <- na.omit(dat)
 dat$Drift_Initial[dat$Drift_Initial==0] <- 0
 dat$Kelp_Initial[dat$Kelp_Initial==0] <- 0
 
-keepTrtmts <- c("Low", "High") #, "Low_Control", "High_Control", "Drift_Control")
+keepTrtmts <- c("Low", "High", "Low_Control", "High_Control", "Drift_Control")
 
 ## 24 hour data 
 dat1 <- filter(dat, Trial %in% c("5","6")) 

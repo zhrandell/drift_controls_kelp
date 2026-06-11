@@ -6,8 +6,8 @@
     vector resourceLoss(real t,              		// time
                         vector Y,            		// state variables          
                         array[] real theta, 		// params
-                        vector x_r) {			      // urchins
-      
+                        vector x_r) {			      // x_r = [Urchins, S_present, A_present]
+
       real dS_dt;				// Drift rate of change
       real dA_dt;				// Kelp rate of change
       real dF_dt;				// Stomach fullness rate of change
@@ -18,12 +18,14 @@
       real p;           // Preference for drift
       real S = fmax(Y[1], 1e-10); 		// Drift (clamped to prevent log(0) or log(negative))
       real A = fmax(Y[2], 1e-10); 		// Kelp  (clamped to prevent log(0) or log(negative))
-      real F = Y[3];			// Stomach fullness 
+      real F = Y[3];			// Stomach fullness
       real a = theta[1]; 			// baseline attack rate
       real b = theta[2];      // velocity reduction
       real q = theta[3]; 		  // preference par 2
       real s = theta[4];			// stomach satiation sensitivity
       real U = x_r[1]; 			  // Urchins
+      real S_present = x_r[2];  // 1 if drift present at outset, 0 if absent (control)
+      real A_present = x_r[3];  // 1 if kelp  present at outset, 0 if absent (control)
       
        // ## Do Not Remove the ODE_BODY_START and ODE_BODY_END flags ###
        
@@ -33,9 +35,18 @@
       H = exp( - s * F );
       // H = 2 / (1 + exp( ( F / z )^s ));
       
-      // vanLeeuwen et al. reformulated
-      // We use parameters 'w = q-4' and 'q' for convenience though in the notes we use \nu for w and \psi for q
-      p = ( 1 -  ( 1 + exp( (q-4) + log(S / A) )) / ( 1 + exp( log(2) + (q-4) + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+      // Preference for drift.
+      // When one resource is absent (control treatment) the preference for the
+      // other resource is fixed at 1; otherwise use the vanLeeuwen et al.
+      // reformulated preference.  We use parameters 'w = q-4' and 'q' for
+      // convenience though in the notes we use \nu for w and \psi for q.
+      if (S_present == 0) {
+        p = 0;
+      } else if (A_present == 0) {
+        p = 1;
+      } else {
+        p = ( 1 -  ( 1 + exp( (q-4) + log(S / A) )) / ( 1 + exp( log(2) + (q-4) + log(S / A) ) + exp( q + 2 * log(S / A) )) );
+      }
       
       // Movement slowdown 
       M = 1 / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
@@ -111,7 +122,7 @@ transformed parameters {
   array[nts5] vector[3] y5;					// two-dimensional container of size (nts5, 3)
   vector[3] init_1;
   vector[3] init_2;
-  vector[1] U;
+  vector[3] U;     // [urchins, drift presence indicator, kelp presence indicator]
 
   // obs
   array[n_subject_1, n_total_1] real drift_1; 	// Drift remaining
@@ -122,6 +133,11 @@ transformed parameters {
 
   // Temporal sequence 2 -----------------------------------
   for (i in 1:n_subject_1) {
+
+    // Cohort-level presence flags (constant across periods within a cohort);
+    // tells the ODE function to fix p = 0 or p = 1 for control treatments.
+    U[2] = y1_init_s_a[i, 1] > 0 ? 1.0 : 0.0;
+    U[3] = y1_init_s_a[i, 2] > 0 ? 1.0 : 0.0;
 
     // period 1
     init_1[1] = y1_init_s_a[i, 1]; // initial drift
@@ -155,8 +171,12 @@ transformed parameters {
 
 
   // Temporal sequence 1 -----------------------------------
-  for (i in 1:n_subject_2) {      
-   
+  for (i in 1:n_subject_2) {
+
+    // Cohort-level presence flags (see comment in subject_1 loop above).
+    U[2] = y3_init_s_a[i, 1] > 0 ? 1.0 : 0.0;
+    U[3] = y3_init_s_a[i, 2] > 0 ? 1.0 : 0.0;
+
     // period 3
     init_2[1] = y3_init_s_a[i, 1];
     init_2[2] = y3_init_s_a[i, 2];

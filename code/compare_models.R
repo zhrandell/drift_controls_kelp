@@ -143,8 +143,18 @@ for (m in model_names) {
 
 fmt_med_ci <- function(v, digits) {
   qs <- stats::quantile(v, c(0.025, 0.5, 0.975), na.rm = TRUE)
-  sprintf("%.*f (%.*f, %.*f)",
-          digits, qs[2], digits, qs[1], digits, qs[3])
+  ## Values with more than 4 digits before the decimal point are rendered in
+  ## scientific notation (e.g. $5.5 \times 10^{14}$) so the table stays legible.
+  fmt <- function(x) {
+    if (is.finite(x) && abs(x) >= 1e4) {
+      e        <- floor(log10(abs(x)))
+      mantissa <- x / 10^e
+      sprintf("$%.*f \\times 10^{%d}$", digits, mantissa, as.integer(e))
+    } else {
+      sprintf("%.*f", digits, x)
+    }
+  }
+  sprintf("%s (%s, %s)", fmt(qs[2]), fmt(qs[1]), fmt(qs[3]))
 }
 
 summary_rows <- lapply(compare_names, function(m) {
@@ -170,13 +180,13 @@ summary_rows <- lapply(compare_names, function(m) {
   logodds  <- log(pref / (1 - pref))
 
   c(
-    fmt_med_ci(switch_g, digits = 2),
-    fmt_med_ci(pref,     digits = 3),
-    fmt_med_ci(logodds,  digits = 3)
+    fmt_med_ci(switch_g, digits = 1),
+    fmt_med_ci(pref,     digits = 2),
+    fmt_med_ci(logodds,  digits = 1)
   )
 })
 
-## Drop models that were skipped (e.g. missing w/q) so the row count matches.
+## Drop models that were skipped so the row count matches.
 keep       <- !vapply(summary_rows, is.null, logical(1))
 summary_df <- data.frame(
   Model = model_label(compare_names[keep]),
@@ -196,7 +206,7 @@ if (nrow(summary_df) > 0) {
   ## Written as raw LaTeX (not via stargazer) so model_labels containing math
   ## markup ($...$) survive — same workaround as the comparison table above.
   pref_caption <- paste0(
-    "Model-specific estimates (and 95\\% credible intervals) of the relative ",
+    "Model-specific median posterior estimates (and 95\\% credible intervals) of the relative ",
     "abundance of drift versus kelp at which urchins preference for the two ",
     "resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), ",
     "and of their baseline preference (expressed as proportional preference ",

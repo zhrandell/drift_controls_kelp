@@ -95,11 +95,43 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
   ## TRUE in RunMe.R), RunMe.R passes internal_cores = 1L so we don't swap
   ## the plan -- the inner future_lapply runs sequentially under future's
   ## nested-future-safety default, avoiding cluster-of-clusters explosions.
+  ##
+  ## Cluster setup can fail with "sh: fork: Resource temporarily unavailable"
+  ## when internal_cores exceeds the per-user process limit (ulimit -u on
+  ## macOS/Linux). When that happens, halve the worker count and retry, and
+  ## fall back to sequential execution if even a single worker can't be
+  ## spawned. Use a short connectTimeout so the retries don't each wait the
+  ## parallelly default of 125 s.
   if (internal_cores > 1L) {
-    cat("[", model_name, "] initiating parallel simulation on ",
-        internal_cores, " cores.\n", sep = "")
-    old_plan <- plan(multisession, workers = internal_cores)
-    on.exit(plan(old_plan), add = TRUE)
+    orig_plan <- plan()
+    on.exit(plan(orig_plan), add = TRUE)
+    old_timeout <- getOption("parallelly.makeNodePSOCK.connectTimeout", 125)
+    options(parallelly.makeNodePSOCK.connectTimeout = 20)
+    on.exit(options(parallelly.makeNodePSOCK.connectTimeout = old_timeout),
+            add = TRUE)
+
+    workers_try <- internal_cores
+    cluster_up  <- FALSE
+    while (workers_try > 1L) {
+      cat("[", model_name, "] initiating parallel simulation on ",
+          workers_try, " cores.\n", sep = "")
+      cluster_up <- tryCatch({
+        plan(multisession, workers = workers_try)
+        TRUE
+      }, error = function(e) {
+        message("[", model_name, "] cluster setup failed with ",
+                workers_try, " workers: ", conditionMessage(e))
+        plan(sequential)   # clean up any half-spawned workers
+        FALSE
+      })
+      if (cluster_up) break
+      workers_try <- workers_try %/% 2L
+    }
+
+    if (!cluster_up) {
+      cat("[", model_name, "] running simulation serially ",
+          "after cluster setup failures.\n", sep = "")
+    }
   } else {
     cat("[", model_name, "] running simulation serially.\n", sep = "")
   }
@@ -145,8 +177,11 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
     ## U is appended so the ODE body (which references U) can find it inside
     ## with(as.list(c(S0, A0, F0))) -- the old simulate.R relied on U being a
     ## global, which no longer holds now that the body lives inside a function.
+    ## S_present / A_present are the presence flags read by the ODE body's
+    ## preference-branching block; simulations always have both resources
+    ## present, so both flags are 1 (matching the Low/High treatment branch).
     parm_list <- c(setNames(as.numeric(posts_df_raw[1, ode_parm_cols]), ode_parm_cols),
-                   U = U)
+                   U = U, S_present = 1, A_present = 1)
 
     ## run single ODE
     out_P1 <- ode(init_P1,
@@ -157,7 +192,7 @@ simulate_model <- function(model_name, n_draws = NULL, internal_cores = n_cores,
     ## full list of params (all draws, for parallel run)
     full_parm_list <- lapply(seq_len(nrow(posts_df_raw)), function(i)
       c(setNames(as.numeric(posts_df_raw[i, ode_parm_cols]), ode_parm_cols),
-        U = U)
+        U = U, S_present = 1, A_present = 1)
     )
 
     ## t.lists for restocking model

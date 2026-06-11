@@ -28,6 +28,9 @@ model_names <- c("Logistic",
                  "Logistic_z",
                  "Logistic_z_noM",
                  "vanLeeuwen_q",
+                 "vanLeeuwen_q_z",
+                 "vanLeeuwen_q_noM",
+                 "vanLeeuwen_q_z_noM",
                  "vanLeeuwen_wq")
 
 # Models to exclude from the two summary LaTeX tables produced by
@@ -45,11 +48,14 @@ exclude_from_comparison <- c("vanLeeuwen_wq")
 # as-is. Values may contain LaTeX math markers.
 model_labels <- c(
   Logistic       = "Logistic",
-  Logistic_noM   = "Logistic, no $M$",
-  Logistic_z     = "Logistic, with $z$",
-  Logistic_z_noM = "Logistic, with $z$, no $M$",
+  Logistic_noM   = "Logistic (no $M$)",
+  Logistic_z     = "Logistic ($z$)",
+  Logistic_z_noM = "Logistic ($z$, no $M$)",
   vanLeeuwen_q   = "van Leeuwen ($q$)",
-  vanLeeuwen_wq  = "van Leeuwen ($w$, $q$)"
+  vanLeeuwen_q_z = "van Leeuwen ($q$, $z$)",
+  vanLeeuwen_q_z_noM = "van Leeuwen ($q$, $z$, no $M$)",
+  vanLeeuwen_q_noM = "van Leeuwen ($q$, no $M$)",
+  vanLeeuwen_wq  = "van Leeuwen ($q$, $w$)"
 )
 
 # Vectorized lookup: returns model_labels[m] when present, else m.
@@ -78,8 +84,12 @@ reuse_existing_sims <- TRUE
 warmup_iter <- 200
 sampling_iter <- 500
 
-# Specify number of cores to use for parallel computing
-n_cores <- max(1L, detectCores() - 1L)
+# Specify number of cores to use for parallel computing.
+# Capped at 12 to avoid hitting the per-user process limit (ulimit -u) when
+# parallel stages spawn PSOCK workers or fork via mclapply -- on macOS this
+# manifests as "sh: fork: Resource temporarily unavailable" and brings down
+# both simulate_model()'s cluster and loo()'s mclapply pool.
+n_cores <- max(1L, min(detectCores() - 1L, 12L))
 
 # Number of posterior draws to use in simulate_model(). NULL = keep all draws.
 # Lower this (e.g. 200) to speed up the ODE simulation at the cost of CI estimation.

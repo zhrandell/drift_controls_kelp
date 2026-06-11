@@ -38,6 +38,26 @@ model_names <- c("Logistic",
 # Each entry must also appear in model_names. Default: character(0) (no exclusions).
 exclude_from_comparison <- c("vanLeeuwen_wq")
 
+# Display labels used in place of raw model_names in the summary LaTeX tables
+# (Summary_model_comparison.tex, Summary_preference.tex, and the caption of
+# Summary_posteriors_<m>.tex). Named character vector keyed by entries of
+# model_names; any model without a matching entry uses its model_names value
+# as-is. Values may contain LaTeX math markers.
+model_labels <- c(
+  Logistic       = "Logistic",
+  Logistic_noM   = "Logistic, no $M$",
+  Logistic_z     = "Logistic, with $z$",
+  Logistic_z_noM = "Logistic, with $z$, no $M$",
+  vanLeeuwen_q   = "van Leeuwen ($q$)",
+  vanLeeuwen_wq  = "van Leeuwen ($w$, $q$)"
+)
+
+# Vectorized lookup: returns model_labels[m] when present, else m.
+model_label <- function(m) {
+  lbl <- model_labels[m]
+  ifelse(is.na(lbl) | nchar(lbl) == 0, m, unname(lbl))
+}
+
 # Fit models concurrently? FALSE = sequential (safer for RAM).
 # TRUE multiplies memory by length(model_names) since each fit also runs parallel chains.
 parallel_models <- FALSE

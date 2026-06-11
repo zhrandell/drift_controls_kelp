@@ -45,6 +45,9 @@ if (length(compare_names) >= 2) {
   print(loo_cmp)
 
   mods <- rownames(loo_cmp)
+  ## Adopt loo_compare's best-to-worst ELPD order for every downstream summary
+  ## so Summary_preference.tex rows match Summary_model_comparison.tex rows.
+  compare_names <- mods
   vals <- data.frame(
     "ELPD"                     = sprintf("%.0f", loo_cmp[, "elpd_loo"]),
     "$SE_{ELPD}$"              = sprintf("%.0f", loo_cmp[, "se_elpd_loo"]),
@@ -57,7 +60,7 @@ if (length(compare_names) >= 2) {
   )
 
   cmp_tex <- data.frame(
-    Model       = mods,
+    Model       = model_label(mods),
     vals,
     check.names = FALSE,
     row.names   = NULL
@@ -176,7 +179,7 @@ summary_rows <- lapply(compare_names, function(m) {
 ## Drop models that were skipped (e.g. missing w/q) so the row count matches.
 keep       <- !vapply(summary_rows, is.null, logical(1))
 summary_df <- data.frame(
-  Model = compare_names[keep],
+  Model = model_label(compare_names[keep]),
   do.call(rbind, summary_rows[keep]),
   stringsAsFactors = FALSE,
   check.names      = FALSE,
@@ -190,19 +193,35 @@ colnames(summary_df) <- c(
 )
 
 if (nrow(summary_df) > 0) {
-  invisible(capture.output(
-    stargazer::stargazer(
-      summary_df,
-      title = 'Model-specific estimates (and 95\\% credible intervals) of the relative abundance of drift versus kelp
-      at which urchins preference for the two resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), 
-      and of their baseline preference (expressed as proportional preference and log-odds of consumption) for drift 
-      over kelp when the abundance of the two resources is equal.',
-      label = 'tab:modelcomp_prefs',
-      summary  = FALSE,
-      rownames = FALSE,
-      out      = paste0(tables, "/Summary_preference.tex")
-    )
-  ))
+  ## Written as raw LaTeX (not via stargazer) so model_labels containing math
+  ## markup ($...$) survive — same workaround as the comparison table above.
+  pref_caption <- paste0(
+    "Model-specific estimates (and 95\\% credible intervals) of the relative ",
+    "abundance of drift versus kelp at which urchins preference for the two ",
+    "resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), ",
+    "and of their baseline preference (expressed as proportional preference ",
+    "and log-odds of consumption) for drift over kelp when the abundance of ",
+    "the two resources is equal."
+  )
+  pref_label <- "tab:modelcomp_prefs"
+  pref_path  <- paste0(tables, "/Summary_preference.tex")
+  pref_rows  <- apply(summary_df, 1, function(r) {
+    paste0(paste(r, collapse = " & "), " \\\\")
+  })
+  writeLines(c(
+    "\\begin{table}[!htbp] \\centering",
+    paste0("  \\caption{", pref_caption, "}"),
+    paste0("  \\label{",   pref_label,   "}"),
+    "\\begin{tabular}{@{\\extracolsep{5pt}} lccc}",
+    "\\\\[-1.8ex]\\hline",
+    "\\hline \\\\[-1.8ex]",
+    paste0(paste(colnames(summary_df), collapse = " & "), " \\\\"),
+    "\\hline \\\\[-1.8ex]",
+    pref_rows,
+    "\\hline \\\\[-1.8ex]",
+    "\\end{tabular}",
+    "\\end{table}"
+  ), pref_path)
 } else {
   message("Summary_preference.tex skipped: no eligible models after applying ",
           "exclude_from_comparison.")

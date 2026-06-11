@@ -175,7 +175,8 @@ colnames(out.parms) <- c("Parameter", "Estimate", "CI")
 ## text-width pass returns NA from nchar() and errors in .text.column.width
 ## (same issue documented in compare_models.R). Write the LaTeX directly.
 tab_caption <- paste0("Parameter posterior median point estimates and ",
-                      "95\\% credible intervals.")
+                      "95\\% credible intervals for the ",
+                      model_label(model_name), " model.")
 tab_label   <- paste0("tab:post_", model_name)
 tab_path    <- paste0(tables, "/Summary_posteriors_", model_name, ".tex")
 tex_rows    <- apply(out.parms, 1, function(r) {

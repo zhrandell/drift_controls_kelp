@@ -31,7 +31,10 @@ model_names <- c("Logistic",
                  "vanLeeuwen_q_z",
                  "vanLeeuwen_q_noM",
                  "vanLeeuwen_q_z_noM",
-                 "vanLeeuwen_wq")
+                 "vanLeeuwen",
+                 "vanLeeuwen_noM",
+                 "vanLeeuwen_z",
+                 "vanLeeuwen_z_noM")
 
 # Models to exclude from the two summary LaTeX tables produced by
 # compare_models.R: Summary_model_comparison.tex (PSIS-LOO pairwise
@@ -39,7 +42,7 @@ model_names <- c("Logistic",
 # Excluded models are still fit, still visualized/simulated/plotted, and still
 # appear in the Pareto-k diagnostic summary and PPC density overlays.
 # Each entry must also appear in model_names. Default: character(0) (no exclusions).
-exclude_from_comparison <- c("vanLeeuwen_wq")
+exclude_from_comparison <- character(0)
 
 # Display labels used in place of raw model_names in the summary LaTeX tables
 # (Summary_model_comparison.tex, Summary_preference.tex, and the caption of
@@ -55,7 +58,10 @@ model_labels <- c(
   vanLeeuwen_q_z = "van Leeuwen ($q$, $z$)",
   vanLeeuwen_q_z_noM = "van Leeuwen ($q$, $z$, no $M$)",
   vanLeeuwen_q_noM = "van Leeuwen ($q$, no $M$)",
-  vanLeeuwen_wq  = "van Leeuwen ($q$, $w$)"
+  vanLeeuwen  = "van Leeuwen",
+  vanLeeuwen_noM  = "van Leeuwen (no $M$)",
+  vanLeeuwen_z  = "van Leeuwen ($z$)",
+  vanLeeuwen_z_noM  = "van Leeuwen ($z$, no $M$)"
 )
 
 # Vectorized lookup: returns model_labels[m] when present, else m.
@@ -81,8 +87,8 @@ reuse_existing_fits <- TRUE
 reuse_existing_sims <- TRUE
 
 # Specify number of MCMC iterations
-warmup_iter <- 200
-sampling_iter <- 500
+warmup_iter <- 1000
+sampling_iter <- 3000
 
 # Specify number of cores to use for parallel computing.
 # Capped at 12 to avoid hitting the per-user process limit (ulimit -u) when

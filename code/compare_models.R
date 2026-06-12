@@ -9,6 +9,108 @@
 ## it up (loo_model_weights() has no explicit `cores` argument).
 options(mc.cores = n_cores)
 
+## ---- Helpers for prior/bounds extraction (section 6) ---------------------- ##
+## Reuse parse_param_block() (defined in visualize_stan_model.R) for parameter
+## names; these helpers extend it to also extract bounds and prior specs.
+
+## Read a stan file with comments stripped, ready for regex parsing.
+.read_stan_stripped <- function(stan_file) {
+  src <- paste(readLines(stan_file, warn = FALSE), collapse = "\n")
+  src <- gsub("//[^\n]*",   "", src)               # strip line comments
+  src <- gsub("/\\*.*?\\*/", "", src, perl = TRUE) # strip block comments
+  src
+}
+
+## Parse the `parameters { ... }` block and return per-parameter bounds.
+## Returns a data.frame with columns name, lower, upper (character).
+parse_param_bounds <- function(stan_file) {
+  src <- .read_stan_stripped(stan_file)
+  m   <- regmatches(src, regexpr("\\bparameters\\s*\\{[^}]*\\}", src, perl = TRUE))
+  if (length(m) == 0) return(data.frame(name = character(0),
+                                        lower = character(0),
+                                        upper = character(0),
+                                        stringsAsFactors = FALSE))
+  body  <- sub("^parameters\\s*\\{", "", m)
+  body  <- sub("\\}$", "", body)
+  decls <- strsplit(body, ";", fixed = TRUE)[[1]]
+  out   <- data.frame(name = character(0), lower = character(0),
+                      upper = character(0), stringsAsFactors = FALSE)
+  for (d in decls) {
+    d  <- trimws(d)
+    if (nchar(d) == 0) next
+    nm <- regmatches(d, regexpr("[A-Za-z_][A-Za-z0-9_]*\\s*$", d))
+    if (length(nm) == 0) next
+    lo <- regmatches(d, regexpr("lower\\s*=\\s*[^,>\\s]+", d, perl = TRUE))
+    up <- regmatches(d, regexpr("upper\\s*=\\s*[^,>\\s]+", d, perl = TRUE))
+    lo <- if (length(lo)) trimws(sub("^lower\\s*=\\s*", "", lo)) else NA_character_
+    up <- if (length(up)) trimws(sub("^upper\\s*=\\s*", "", up)) else NA_character_
+    out <- rbind(out, data.frame(name = trimws(nm), lower = lo, upper = up,
+                                 stringsAsFactors = FALSE))
+  }
+  out
+}
+
+## Parse the `model { ... }` block and return per-parameter prior expressions.
+## Returns a data.frame with columns name, prior (e.g. "exponential(10)").
+## Only `<name> ~ <dist>(...)` statements on a single line are matched, where
+## <name> is one of the declared parameters -- so likelihood lines like
+## `target += normal_lpdf(...)` and indexed `~` statements are excluded.
+parse_priors <- function(stan_file, param_names) {
+  src <- .read_stan_stripped(stan_file)
+  m   <- regmatches(src, regexpr("\\bmodel\\s*\\{.*?\\n\\}", src, perl = TRUE))
+  if (length(m) == 0) {
+    ## Fallback: model block may not end on its own line; grab up to the next
+    ## top-level `}` by greedy match.
+    m <- regmatches(src, regexpr("\\bmodel\\s*\\{[\\s\\S]*", src, perl = TRUE))
+    if (length(m) == 0) return(data.frame(name = character(0),
+                                          prior = character(0),
+                                          stringsAsFactors = FALSE))
+  }
+  out <- data.frame(name = character(0), prior = character(0),
+                    stringsAsFactors = FALSE)
+  for (nm in param_names) {
+    pat <- paste0("(?m)^\\s*\\Q", nm,
+                  "\\E\\s*~\\s*([A-Za-z_][A-Za-z0-9_]*\\s*\\([^;]*\\))\\s*;")
+    hit <- regmatches(m, regexpr(pat, m, perl = TRUE))
+    if (length(hit) == 0) next
+    pri <- sub(pat, "\\1", hit, perl = TRUE)
+    out <- rbind(out, data.frame(name = nm, prior = trimws(pri),
+                                 stringsAsFactors = FALSE))
+  }
+  out
+}
+
+## Bounds → "[lower, upper]" (plain text).
+format_bounds <- function(lower, upper) {
+  if (is.na(lower) && is.na(upper)) return("")
+  paste0("[", ifelse(is.na(lower), "", lower), ", ",
+              ifelse(is.na(upper), "", upper), "]")
+}
+
+## Stan distribution syntax → LaTeX math. Unknown distributions fall through
+## wrapped in \text{...} so future families work without code changes.
+format_prior <- function(stan_expr) {
+  if (is.na(stan_expr) || !nzchar(stan_expr)) return("")
+  m <- regmatches(stan_expr,
+                  regexec("^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\((.*)\\)\\s*$",
+                          stan_expr))[[1]]
+  if (length(m) < 3) return(paste0("$\\text{", stan_expr, "}$"))
+  fam  <- m[2]
+  args <- trimws(m[3])
+  tex <- switch(fam,
+    exponential = paste0("$\\text{Exp}(", args, ")$"),
+    normal      = paste0("$\\mathcal{N}(", args, ")$"),
+    uniform     = paste0("$\\mathcal{U}(", args, ")$"),
+    lognormal   = paste0("$\\text{LogNormal}(", args, ")$"),
+    cauchy      = paste0("$\\text{Cauchy}(", args, ")$"),
+    student_t   = paste0("$t(", args, ")$"),
+    gamma       = paste0("$\\text{Gamma}(", args, ")$"),
+    beta        = paste0("$\\text{Beta}(", args, ")$"),
+    paste0("$\\text{", fam, "}(", args, ")$")
+  )
+  tex
+}
+
 ## ---- 1. Load fits and compute loo per model ------------------------------- ##
 
 fits <- setNames(lapply(model_names, function(m) {
@@ -234,6 +336,76 @@ if (nrow(summary_df) > 0) {
   ), pref_path)
 } else {
   message("Summary_preference.tex skipped: no eligible models after applying ",
+          "exclude_from_comparison.")
+}
+
+## ---- 6. Parameter priors & bounds summary (LaTeX, all models) ------------- ##
+## Scan each model's .stan source for declared parameter bounds and prior
+## specifications and emit a single combined Summary_priors.tex. Iterates over
+## `compare_names` (which section 2 reorders LOO best-to-worst when >= 2
+## models), so this table aligns row-by-row with the LOO and preference tables.
+
+if (length(compare_names) >= 1) {
+
+  prior_rows <- do.call(rbind, lapply(compare_names, function(m) {
+    stan_file <- paste0(models, "/stan_model_", m, ".stan")
+    bnds      <- parse_param_bounds(stan_file)
+    prs       <- parse_priors(stan_file, bnds$name)
+    df <- merge(bnds, prs, by = "name", all.x = TRUE, sort = FALSE)
+    df <- df[match(bnds$name, df$name), , drop = FALSE]   # preserve decl order
+    par_lbls <- vapply(df$name, function(p) {
+      lbl <- param_labels[[p]]
+      if (is.null(lbl)) p else label_to_tex(lbl)
+    }, character(1))
+    data.frame(
+      Model     = c(model_label(m), rep("", nrow(df) - 1L)),
+      Parameter = par_lbls,
+      Bounds    = mapply(format_bounds, df$lower, df$upper),
+      Prior     = vapply(df$prior, format_prior, character(1)),
+      stringsAsFactors = FALSE,
+      check.names      = FALSE,
+      row.names        = NULL
+    )
+  }))
+
+  ## Build tex rows, inserting an \hline before every model header row
+  ## except the first so model groups read as distinct blocks.
+  group_starts <- which(nzchar(prior_rows$Model))
+  tex_rows <- character(0)
+  for (i in seq_len(nrow(prior_rows))) {
+    if (i %in% group_starts && i != group_starts[1]) {
+      tex_rows <- c(tex_rows, "\\hline \\\\[-1.8ex]")
+    }
+    tex_rows <- c(tex_rows,
+                  paste0(paste(unlist(prior_rows[i, ]), collapse = " & "),
+                         " \\\\"))
+  }
+
+  prior_caption <- paste0(
+    "Parameter bounds and prior specifications used during model fitting. ",
+    "Bounds are the `<lower=...,upper=...>' constraints declared in the Stan ",
+    "`parameters' block; priors are the distributions assigned to each ",
+    "parameter in the Stan `model' block."
+  )
+  prior_label <- "tab:priors"
+  prior_path  <- paste0(tables, "/Summary_priors.tex")
+  writeLines(c(
+    "\\begin{table}[!htbp] \\centering",
+    paste0("  \\caption{", prior_caption, "}"),
+    paste0("  \\label{",   prior_label,   "}"),
+    "\\begin{tabular}{@{\\extracolsep{5pt}} lllc}",
+    "\\\\[-1.8ex]\\hline",
+    "\\hline \\\\[-1.8ex]",
+    paste0(paste(colnames(prior_rows), collapse = " & "), " \\\\"),
+    "\\hline \\\\[-1.8ex]",
+    tex_rows,
+    "\\hline \\\\[-1.8ex]",
+    "\\end{tabular}",
+    "\\end{table}"
+  ), prior_path)
+
+} else {
+  message("Summary_priors.tex skipped: no eligible models after applying ",
           "exclude_from_comparison.")
 }
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

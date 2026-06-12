@@ -9,6 +9,41 @@
 ## model_family() in preference_helpers.R (names starting with "Logistic" or
 ## "vanLeeuwen").
 
+## label map for known parameters; unknown ones get their raw name. Defined at
+## script scope so compare_models.R (sourced after this file) can reuse it for
+## the Summary_priors.tex table.
+param_labels <- list(
+  a     = expression("Search rate "          (italic(a))),
+  b     = expression("Supression rate "      (italic(b))),
+  w     = expression("Baseline preference "  (tilde(italic("ω")))),
+  q     = expression("Switching sensitivity " (italic("φ"))),
+  s     = expression("Stomach sensitivity "  (italic(v))),
+  z     = expression("Stomach clearance "    (italic(z))),
+  sigma = expression("Variance "             (italic(sigma)))
+)
+
+## Render a param_labels plot expression as a LaTeX-friendly string for
+## stargazer(): "Search rate " (italic(a)) -> "Search rate ($a$)".
+math_to_tex <- function(x) {
+  if (is.call(x)) {
+    fn    <- as.character(x[[1]])
+    inner <- math_to_tex(x[[2]])
+    if (fn == "tilde") return(paste0("\\tilde{", inner, "}"))
+    return(inner)  # italic() etc. -- math mode handles italics
+  }
+  greek <- c("ω" = "\\omega",
+             "φ" = "\\varphi",
+             "sigma"  = "\\sigma")
+  s <- as.character(x)
+  if (s %in% names(greek)) return(unname(greek[s]))
+  s
+}
+label_to_tex <- function(e) {
+  if (is.null(e)) return(NA_character_)
+  ex <- e[[1]]
+  paste0(trimws(as.character(ex[[1]])), " ($", math_to_tex(ex[[2]]), "$)")
+}
+
 ## Parse the names declared in a Stan file's `parameters { ... }` block.
 ## Returns the base identifiers only (no indices), e.g. c("a", "b", ...).
 parse_param_block <- function(stan_file) {
@@ -62,39 +97,6 @@ family <- model_family(model_name)  # "Logistic" or "vanLeeuwen"
 
 ## print param list output
 print(fit, parms)
-
-## label map for known parameters; unknown ones get their raw name.
-param_labels <- list(
-  a     = expression("Search rate "          (italic(a))),
-  b     = expression("Supression rate "      (italic(b))),
-  w     = expression("Baseline preference "  (tilde(italic("\u03c9")))),
-  q     = expression("Switching sensitivity " (italic("\u03C6"))),
-  s     = expression("Stomach sensitivity "  (italic(v))),
-  z     = expression("Stomach clearance "    (italic(z))),
-  sigma = expression("Variance "             (italic(sigma)))
-)
-
-## Render a param_labels plot expression as a LaTeX-friendly string for
-## stargazer(): "Search rate " (italic(a)) -> "Search rate ($a$)".
-math_to_tex <- function(x) {
-  if (is.call(x)) {
-    fn    <- as.character(x[[1]])
-    inner <- math_to_tex(x[[2]])
-    if (fn == "tilde") return(paste0("\\tilde{", inner, "}"))
-    return(inner)  # italic() etc. -- math mode handles italics
-  }
-  greek <- c("\u03c9" = "\\omega",
-             "\u03C6" = "\\varphi",
-             "sigma"  = "\\sigma")
-  s <- as.character(x)
-  if (s %in% names(greek)) return(unname(greek[s]))
-  s
-}
-label_to_tex <- function(e) {
-  if (is.null(e)) return(NA_character_)
-  ex <- e[[1]]
-  paste0(trimws(as.character(ex[[1]])), " ($", math_to_tex(ex[[2]]), "$)")
-}
 
 
 ## extract draw information (sampled parameters only; pulling fit$draws() with

@@ -43,7 +43,6 @@ load_pkg("bayesplot")
 ## Libraries for 'analyze_visualize.R'
 load_pkg("patchwork")
 load_pkg("Cairo") # requires installation of XQuartz on machine
-load_pkg("stargazer")
 
 ## Libraries for 'simulate.R' and 'plot_simulation'
 load_pkg("deSolve")

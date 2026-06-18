@@ -142,8 +142,27 @@ compare_names <- setdiff(model_names, exclude_from_comparison)
 if (length(compare_names) >= 2) {
 
   loo_cmp   <- loo::loo_compare(loo_list[compare_names])
-  pbma_wts  <- loo::loo_model_weights(loo_list[compare_names],
-                                      method = "pseudobma")
+
+  ## loo_model_weights() (via validate_psis_loo_list) requires every psis_loo
+  ## object to have identical dim() = c(n_draws, n_obs). loo_compare() only
+  ## checks n_obs, so models fit with different post-warmup iteration counts
+  ## pass the comparison above but error here with "Each object in the list
+  ## must have the same dimensions." Detect that case and emit the table
+  ## without a Weight column instead of aborting the whole script.
+  loo_dims  <- sapply(loo_list[compare_names], dim)
+  same_dims <- length(unique(loo_dims[1L, ])) == 1L &&
+               length(unique(loo_dims[2L, ])) == 1L
+  if (same_dims) {
+    pbma_wts <- loo::loo_model_weights(loo_list[compare_names],
+                                       method = "pseudobma")
+  } else {
+    message("loo_model_weights skipped: models have mismatched dim() ",
+            "(rows = n_draws, cols = n_obs); refit with matching iter ",
+            "counts to recover pseudo-BMA weights:")
+    print(loo_dims)
+    pbma_wts <- setNames(rep(NA_real_, length(compare_names)),
+                         compare_names)
+  }
   print(loo_cmp)
 
   mods <- rownames(loo_cmp)
@@ -172,7 +191,8 @@ if (length(compare_names) >= 2) {
     "Relative model performance as assessed by the Bayesian LOO ",
     "estimate of the expected log pointwise predictive density.
     $p$ is the effective number of parameters.
-    Model weights estimated using the pseudo-BMA method."
+    Model weights estimated using the pseudo-BMA method.
+    Models ordered by performance."
   )
   tab_label <- "tab:modelcomp_LOO"
   tab_path  <- paste0(tables, "/Summary_model_comparison.tex")
@@ -313,7 +333,7 @@ if (nrow(summary_df) > 0) {
     "resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), ",
     "and of their baseline preference (expressed as proportional preference ",
     "and log-odds of consumption) for drift over kelp when the abundance of ",
-    "the two resources is equal."
+    "the two resources is equal.  Models ordered by relative performance."
   )
   pref_label <- "tab:modelcomp_prefs"
   pref_path  <- paste0(tables, "/Summary_preference.tex")
@@ -339,29 +359,48 @@ if (nrow(summary_df) > 0) {
           "exclude_from_comparison.")
 }
 
-## ---- 6. Parameter priors & bounds summary (LaTeX, all models) ------------- ##
-## Scan each model's .stan source for declared parameter bounds and prior
-## specifications and emit a single combined Summary_priors.tex. Iterates over
-## `compare_names` (which section 2 reorders LOO best-to-worst when >= 2
-## models), so this table aligns row-by-row with the LOO and preference tables.
+## ---- 6. Combined priors, bounds, and posterior summary (LaTeX, all models)  ##
+## For each model, scan the .stan source for declared parameter bounds and
+## prior specifications, then summarize the corresponding posterior draws as
+## the median and 95% credible interval. All models are emitted to a single
+## summary_priors_posteriors.tex. Iterates in the order specified by
+## `model_names` in RunMe.R (not the LOO best-to-worst order used by the
+## comparison and preference tables), with `exclude_from_comparison` removed.
 
-if (length(compare_names) >= 1) {
+priors_posteriors_names <- setdiff(model_names, exclude_from_comparison)
 
-  prior_rows <- do.call(rbind, lapply(compare_names, function(m) {
+if (length(priors_posteriors_names) >= 1) {
+
+  ## Posterior median / CI formatter matches the per-model posterior tables
+  ## that visualize_stan_model.R used to write: signif to 4 then 4 decimals.
+  .fmt_post <- function(x) formatC(signif(x, 4), 4, format = "f")
+
+  prior_post_rows <- do.call(rbind, lapply(priors_posteriors_names, function(m) {
     stan_file <- paste0(models, "/stan_model_", m, ".stan")
     bnds      <- parse_param_bounds(stan_file)
     prs       <- parse_priors(stan_file, bnds$name)
     df <- merge(bnds, prs, by = "name", all.x = TRUE, sort = FALSE)
     df <- df[match(bnds$name, df$name), , drop = FALSE]   # preserve decl order
+
+    draws <- posterior::as_draws_df(fits[[m]]$draws(df$name))
+    posts <- as.data.frame(draws)[, df$name, drop = FALSE]
+    qs    <- apply(posts, 2, stats::quantile,
+                   probs = c(0.025, 0.5, 0.975), na.rm = TRUE)
+    post_med <- vapply(qs[2, ], .fmt_post, character(1))
+    post_ci  <- paste0("(", vapply(qs[1, ], .fmt_post, character(1)),
+                       "---", vapply(qs[3, ], .fmt_post, character(1)), ")")
+
     par_lbls <- vapply(df$name, function(p) {
       lbl <- param_labels[[p]]
       if (is.null(lbl)) p else label_to_tex(lbl)
     }, character(1))
     data.frame(
-      Model     = c(model_label(m), rep("", nrow(df) - 1L)),
-      Parameter = par_lbls,
-      Bounds    = mapply(format_bounds, df$lower, df$upper),
-      Prior     = vapply(df$prior, format_prior, character(1)),
+      Model              = c(model_label(m), rep("", nrow(df) - 1L)),
+      Parameter          = par_lbls,
+      Prior              = vapply(df$prior, format_prior, character(1)),
+      Bounds             = mapply(format_bounds, df$lower, df$upper),
+      `Posterior median` = post_med,
+      CI                 = post_ci,
       stringsAsFactors = FALSE,
       check.names      = FALSE,
       row.names        = NULL
@@ -370,43 +409,57 @@ if (length(compare_names) >= 1) {
 
   ## Build tex rows, inserting an \hline before every model header row
   ## except the first so model groups read as distinct blocks.
-  group_starts <- which(nzchar(prior_rows$Model))
+  group_starts <- which(nzchar(prior_post_rows$Model))
   tex_rows <- character(0)
-  for (i in seq_len(nrow(prior_rows))) {
+  for (i in seq_len(nrow(prior_post_rows))) {
     if (i %in% group_starts && i != group_starts[1]) {
       tex_rows <- c(tex_rows, "\\hline \\\\[-1.8ex]")
     }
     tex_rows <- c(tex_rows,
-                  paste0(paste(unlist(prior_rows[i, ]), collapse = " & "),
+                  paste0(paste(unlist(prior_post_rows[i, ]),
+                               collapse = " & "),
                          " \\\\"))
   }
 
-  prior_caption <- paste0(
-    "Parameter bounds and prior specifications used during model fitting. ",
-    "Bounds are the `<lower=...,upper=...>' constraints declared in the Stan ",
-    "`parameters' block; priors are the distributions assigned to each ",
-    "parameter in the Stan `model' block."
+  combined_caption <- paste0(
+    "Parameter bounds, prior specifications, and posterior median estimates ",
+    "with 95\\% credible intervals."
   )
-  prior_label <- "tab:priors"
-  prior_path  <- paste0(tables, "/Summary_priors.tex")
+  combined_label <- "tab:priors_posteriors"
+  combined_path  <- paste0(tables, "/Summary_priors_posteriors.tex")
+  ncol_tab       <- ncol(prior_post_rows)
+  header_row     <- paste0(paste(colnames(prior_post_rows), collapse = " & "),
+                           " \\\\")
   writeLines(c(
-    "\\begin{table}[!htbp] \\centering",
-    paste0("  \\caption{", prior_caption, "}"),
-    paste0("  \\label{",   prior_label,   "}"),
-    "\\begin{tabular}{@{\\extracolsep{5pt}} lllc}",
-    "\\\\[-1.8ex]\\hline",
+    "\\begingroup\\footnotesize",
+    "\\setlength{\\tabcolsep}{3pt}",
+    "\\begin{longtable}{@{} llllcc @{}}",
+    paste0("\\caption{", combined_caption, "}\\label{",
+           combined_label, "}\\\\"),
+    "\\hline\\hline \\\\[-1.8ex]",
+    header_row,
     "\\hline \\\\[-1.8ex]",
-    paste0(paste(colnames(prior_rows), collapse = " & "), " \\\\"),
+    "\\endfirsthead",
+    paste0("\\multicolumn{", ncol_tab,
+           "}{l}{\\textit{Table \\thetable{} continued from previous page}}\\\\"),
+    "\\hline\\hline \\\\[-1.8ex]",
+    header_row,
     "\\hline \\\\[-1.8ex]",
+    "\\endhead",
+    "\\hline \\\\[-1.8ex]",
+    paste0("\\multicolumn{", ncol_tab,
+           "}{r}{\\textit{Continued on next page}} \\\\"),
+    "\\endfoot",
+    "\\hline \\\\[-1.8ex]",
+    "\\endlastfoot",
     tex_rows,
-    "\\hline \\\\[-1.8ex]",
-    "\\end{tabular}",
-    "\\end{table}"
-  ), prior_path)
+    "\\end{longtable}",
+    "\\endgroup"
+  ), combined_path)
 
 } else {
-  message("Summary_priors.tex skipped: no eligible models after applying ",
-          "exclude_from_comparison.")
+  message("Summary_priors_posteriors.tex skipped: no eligible models after ",
+          "applying exclude_from_comparison.")
 }
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

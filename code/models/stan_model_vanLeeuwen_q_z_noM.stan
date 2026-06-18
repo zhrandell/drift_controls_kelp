@@ -106,11 +106,11 @@ transformed data {
 // Narrow down limits to increase sampling efficiency, 
 // but keep wide enough to not affect accepted priors
 parameters {
-  real <lower =   0, upper = 0.01> a;
-  real <lower =   2, upper = 15>   q;
-  real <lower =   0, upper = 0.5>  s;
-  real <lower =  -8, upper = 1>  z;
-  real <lower =  10, upper = 20>   sigma;
+  real <lower =   0, upper = 5> a;
+  real <lower =   2, upper = 110>   q;
+  real <lower =   0, upper = 10>  s;
+  real <lower =  -5, upper = -2>  z;
+  real <lower =  15, upper = 20>   sigma;
 }
 
 transformed parameters {

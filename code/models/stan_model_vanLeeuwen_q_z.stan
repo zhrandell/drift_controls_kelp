@@ -111,7 +111,7 @@ parameters {
   real <lower =   0, upper = 0.1>  b;
   real <lower =   2, upper = 15>   q;
   real <lower =   0, upper = 0.5>  s;
-  real <lower =  -8, upper = 1>  z;
+  real <lower =  -16, upper = 1>  z;
   real <lower =  10, upper = 20>   sigma;
 }
 

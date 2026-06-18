@@ -58,7 +58,7 @@ functions {
     // Drift, Kelp, Stomach
   	dS_dt = - U * f_S;
   	dA_dt = - U * f_A;
-  	dF_dt =   f_S + f_A - z * F;
+  	dF_dt =   f_S + f_A - exp(z) * F;
 
   
   // ## ODE_BODY_END ##
@@ -113,7 +113,7 @@ parameters {
   real <lower = -6, upper = 6>    w;
   real <lower = -5, upper = 5>    q;
   real <lower =  0, upper = 0.5>  s;
-  real <lower =  0, upper = 0.1>  z;
+  real <lower =  -14, upper = 1>  z;
   real <lower = 10, upper = 20>   sigma;
 }
 
@@ -239,7 +239,7 @@ model {
   w ~ normal(0, 1.8); // normal(0, 1.8) is ~uniform on logistic scale
   q ~ normal(0, 10);
   s ~ exponential(1);
-  z ~ exponential(10);
+  z ~ normal(0, 10);
   sigma ~ exponential(0.1);
 
 

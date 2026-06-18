@@ -20,10 +20,9 @@
       real A = fmax(Y[2], 1e-10); 		// Kelp  (clamped to prevent log(0) or log(negative))
       real F = Y[3];			// Stomach fullness
       real a = theta[1]; 			// baseline attack rate
-      real b = theta[2];      // velocity reduction
-      real w = theta[3];			// preference par 1
-      real q = theta[4]; 		  // preference par 2
-      real s = theta[5];			// stomach satiation sensitivity
+      real w = theta[2];			// preference par 1
+      real q = theta[3]; 		  // preference par 2
+      real s = theta[4];			// stomach satiation sensitivity
       real U = x_r[1]; 			  // Urchins
       real S_present = x_r[2];  // 1 if drift present at outset, 0 if absent (control)
       real A_present = x_r[3];  // 1 if kelp  present at outset, 0 if absent (control)
@@ -34,8 +33,7 @@
       
       // Hunger level
       H = exp( - s * F );
-      // H = 2 / (1 + exp( ( F / z )^s ));
-      
+
       // Preference for drift.
       // When one resource is absent (control treatment) the preference for the
       // other resource is fixed at 1; otherwise use the vanLeeuwen et al.
@@ -49,7 +47,7 @@
       }
       
       // Movement slowdown 
-      M = 1 / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
+      M = 1 ; // / ( 1 + a * b * ( p * S + (1-p) * A )^2 );
       
       // Consumption rates
       f_S = S * H * M * a * p;
@@ -107,7 +105,6 @@ transformed data {
 // but keep wide enough to not affect accepted priors
 parameters {
   real <lower =   0, upper = 0.01> a;
-  real <lower =   0, upper = 0.1>  b;
   real <lower = -10, upper = 30>   w;
   real <lower =   2, upper = 15>   q;
   real <lower =   0, upper = 0.5>  s;
@@ -115,7 +112,7 @@ parameters {
 }
 
 transformed parameters {
-  array[5] real theta = {a, b, w, q, s};
+  array[4] real theta = {a, w, q, s};
   array[nts1] vector[3] y1;					// two-dimensional container of size (nts1, 3) i.e. y1[1, 3]
   array[nts2] vector[3] y2;					// two-dimensional container of size (nts2, 3)
   array[nts3] vector[3] y3;					// two-dimensional container of size (nts3, 3)
@@ -221,7 +218,6 @@ transformed parameters {
 
 model {
   a ~ exponential(1);
-  b ~ exponential(0.1);
   w ~ normal(0, 10);
   q ~ normal(0, 10);
   s ~ exponential(0.1);

@@ -42,26 +42,29 @@ model_names <- c("Logistic",
 # Excluded models are still fit, still visualized/simulated/plotted, and still
 # appear in the Pareto-k diagnostic summary and PPC density overlays.
 # Each entry must also appear in model_names. Default: character(0) (no exclusions).
-exclude_from_comparison <- character(0)
+exclude_from_comparison <- c("vanLeeuwen_q",
+                             "vanLeeuwen_q_z",
+                             "vanLeeuwen_q_noM",
+                             "vanLeeuwen_q_z_noM")
 
 # Display labels used in place of raw model_names in the summary LaTeX tables
-# (Summary_model_comparison.tex, Summary_preference.tex, and the caption of
-# Summary_posteriors_<m>.tex). Named character vector keyed by entries of
-# model_names; any model without a matching entry uses its model_names value
-# as-is. Values may contain LaTeX math markers.
+# (Summary_model_comparison.tex, Summary_preference.tex, and the Model column
+# of summary_priors_posteriors.tex). Named character vector keyed by entries
+# of model_names; any model without a matching entry uses its model_names
+# value as-is. Values may contain LaTeX math markers.
 model_labels <- c(
   Logistic       = "Logistic",
-  Logistic_noM   = "Logistic (no $M$)",
+  Logistic_noM   = "Logistic ($m=1$)",
   Logistic_z     = "Logistic ($z$)",
-  Logistic_z_noM = "Logistic ($z$, no $M$)",
+  Logistic_z_noM = "Logistic ($z$, $m=1$)",
   vanLeeuwen_q   = "van Leeuwen ($q$)",
   vanLeeuwen_q_z = "van Leeuwen ($q$, $z$)",
-  vanLeeuwen_q_z_noM = "van Leeuwen ($q$, $z$, no $M$)",
-  vanLeeuwen_q_noM = "van Leeuwen ($q$, no $M$)",
+  vanLeeuwen_q_z_noM = "van Leeuwen ($q$, $z$, $m = 1$)",
+  vanLeeuwen_q_noM = "van Leeuwen ($q$, $m=1$)",
   vanLeeuwen  = "van Leeuwen",
-  vanLeeuwen_noM  = "van Leeuwen (no $M$)",
+  vanLeeuwen_noM  = "van Leeuwen ($m=1$)",
   vanLeeuwen_z  = "van Leeuwen ($z$)",
-  vanLeeuwen_z_noM  = "van Leeuwen ($z$, no $M$)"
+  vanLeeuwen_z_noM  = "van Leeuwen ($z$, $m=1$)"
 )
 
 # Vectorized lookup: returns model_labels[m] when present, else m.
@@ -87,8 +90,8 @@ reuse_existing_fits <- TRUE
 reuse_existing_sims <- TRUE
 
 # Specify number of MCMC iterations
-warmup_iter <- 1000
-sampling_iter <- 3000
+warmup_iter <- 200 #1000
+sampling_iter <- 300 # 5000
 
 # Specify number of cores to use for parallel computing.
 # Capped at 12 to avoid hitting the per-user process limit (ulimit -u) when

@@ -3,15 +3,14 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 ## Defines visualize_model(model_name): produces per-model trace / pairs /
-## posterior / preference plots and posterior summary outputs for the fit
-## previously written by fit_model(). Reads `results`, `figs`, `models` from
-## the caller's environment. The preference form is selected by model name via
-## model_family() in preference_helpers.R (names starting with "Logistic" or
-## "vanLeeuwen").
+## posterior / preference plots for the fit previously written by fit_model().
+## Reads `results`, `figs`, `models` from the caller's environment. The
+## preference form is selected by model name via model_family() in
+## preference_helpers.R (names starting with "Logistic" or "vanLeeuwen").
 
 ## label map for known parameters; unknown ones get their raw name. Defined at
 ## script scope so compare_models.R (sourced after this file) can reuse it for
-## the Summary_priors.tex table.
+## the summary_priors_posteriors.tex table.
 param_labels <- list(
   a     = expression("Search rate "          (italic(a))),
   b     = expression("Supression rate "      (italic(b))),
@@ -23,7 +22,7 @@ param_labels <- list(
 )
 
 ## Render a param_labels plot expression as a LaTeX-friendly string for
-## stargazer(): "Search rate " (italic(a)) -> "Search rate ($a$)".
+## table cells: "Search rate " (italic(a)) -> "Search rate ($a$)".
 math_to_tex <- function(x) {
   if (is.call(x)) {
     fn    <- as.character(x[[1]])
@@ -106,15 +105,7 @@ draws_array <- fit$draws(parms)
 draws_df <- posterior::as_draws_df(draws_array)
 
 
-## plot posteriors
-posts <- mcmc_hist(fit$draws(parms))
-
-
-## sampling diagnostics 
-diagnostic_df <- as_draws_df(fit$sampler_diagnostics()) 
-
-
-## trace plot 
+## trace plot
 t1 <- mcmc_trace(draws_array, pars = parms)
 
 ggplot2::ggsave(filename = paste0(figs, "/trace_", model_name, ".pdf"), 
@@ -156,49 +147,6 @@ if (family == "vanLeeuwen" && !("w" %in% parms) && "q" %in% parms) {
 save(posts_df_raw, file = paste0(tmp, "/posterior_draws_", model_name, ".RDA"))
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Median and 95% CI ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CI <- data.frame(apply(posts_df_raw, 2, 
-                       quantile, c(0.0250, 0.5, 0.975), 
-                       na.rm = TRUE))
-out.parms <- data.frame(formatC(signif(t(CI[c(2,1,3),]), 4), 4, format="f"))
-par_lbls <- vapply(rownames(out.parms),
-                   function(p) {
-                     lbl <- param_labels[[p]]
-                     if (is.null(lbl)) p else label_to_tex(lbl)
-                   },
-                   character(1))
-out.parms <-  cbind(Parameter = par_lbls,
-                    Estimate = out.parms[,1],
-                    CI = paste0('(',out.parms[,2], '---', out.parms[,3], ')'))
-colnames(out.parms) <- c("Parameter", "Estimate", "CI")
-
-## stargazer chokes on LaTeX math markers in cell contents -- its internal
-## text-width pass returns NA from nchar() and errors in .text.column.width
-## (same issue documented in compare_models.R). Write the LaTeX directly.
-tab_caption <- paste0("Parameter posterior median point estimates and ",
-                      "95\\% credible intervals for the ",
-                      model_label(model_name), " model.")
-tab_label   <- paste0("tab:post_", model_name)
-tab_path    <- paste0(tables, "/Summary_posteriors_", model_name, ".tex")
-tex_rows    <- apply(out.parms, 1, function(r) {
-                     paste0(paste(r, collapse = " & "), " \\\\")
-                     })
-writeLines(c(
-  "\\begin{table}[!htbp] \\centering",
-  paste0("  \\caption{", tab_caption, "}"),
-  paste0("  \\label{",   tab_label,   "}"),
-  "\\begin{tabular}{@{\\extracolsep{5pt}} lcc}",
-  "\\\\[-1.8ex]\\hline",
-  "\\hline \\\\[-1.8ex]",
-  "Parameter & Estimate & CI \\\\",
-  "\\hline \\\\[-1.8ex]",
-  tex_rows,
-  "\\hline \\\\[-1.8ex]",
-  "\\end{tabular}",
-  "\\end{table}"
-), tab_path)
-
 
 ## Custom posterior plot ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -336,8 +284,8 @@ par(mar = c(3, 3, 1, 1),
           add = TRUE,
           col = alpha('black', 0.1))
   }
-  w <- CI$w[2]
-  q <- CI$q[2]
+  w <- median(posts_df_raw$w, na.rm = TRUE)
+  q <- median(posts_df_raw$q, na.rm = TRUE)
   curve(Preference, 
         min(xlims), max(xlims), 
         add = TRUE,

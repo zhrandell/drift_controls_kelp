@@ -1,8 +1,0 @@
-Abundance switch point (equal preference):
- 1g drift to  75.28 g ( 20.191 g- 3587.795 g) kelp.
-Baseline preference (equal abundance):
- 0.941  ( 0.903 - 0.973 ) drift to  0.059  ( 0.027 - 0.097 ) kelp.
-Baseline preference (equal abundance) log-odds:
- 2.769406  ( 2.231012 - 3.584547 ) drift to kelp.
-Baseline preference (equal abundance) odds:
- 15.94915  ( 9.309278 - 36.03704 ) drift to kelp.

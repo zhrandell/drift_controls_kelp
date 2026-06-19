@@ -204,7 +204,7 @@ fig2 <- function(data,
   ggplot(data, aes(x = {{ xvar }}, y = {{ yvar }})) + my.theme + my.text +
     geom_point(aes(color = Treatment, shape = Treatment), size = ptSize) +
     geom_smooth(
-      data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
+      # data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
       aes(color = Treatment, fill = Treatment),
       linewidth = smoothSize, span = smoothSpan, level = smoothCI,
       method = "loess",
@@ -281,7 +281,7 @@ dat$group_label_simple <- factor(dat$group_label_simple, levels = all_levels)
 
 
 smooth_data <- dat %>%
-  filter(!Treatment_Controls %in% c("High_Control", "Low_Control")) %>%
+  # filter(!Treatment_Controls %in% c("High_Control", "Low_Control")) %>%
   mutate(group_label_simple = factor(group_label_simple, levels = all_levels))
 
 
@@ -385,7 +385,7 @@ all_seq <- function(data,
   ggplot(data, aes(x = {{ xvar }}, y = {{ yvar }})) + my.theme + my.text +
     geom_point(aes(color = group_label, fill = group_label, shape = Treatment), size = ptSize) +
     geom_smooth(
-      data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
+      # data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
       aes(x = {{ xvar }}, y = {{ yvar }}, color = group_label, fill = group_label),
       linewidth = smoothSize, span = smoothSpan, level = smoothCI,
       method = 'loess',

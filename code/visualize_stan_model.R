@@ -282,7 +282,7 @@ par(mar = c(3, 3, 1, 1),
     curve(Preference,
           min(xlims), max(xlims),
           add = TRUE,
-          col = alpha('black', 0.1))
+          col = alpha('black', 10/n_sim_draws))
   }
   w <- median(posts_df_raw$w, na.rm = TRUE)
   q <- median(posts_df_raw$q, na.rm = TRUE)

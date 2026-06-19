@@ -90,8 +90,8 @@ reuse_existing_fits <- TRUE
 reuse_existing_sims <- TRUE
 
 # Specify number of MCMC iterations
-warmup_iter <- 200 #1000
-sampling_iter <- 300 # 5000
+warmup_iter <- 1000
+sampling_iter <- 5000
 
 # Specify number of cores to use for parallel computing.
 # Capped at 12 to avoid hitting the per-user process limit (ulimit -u) when
@@ -102,7 +102,7 @@ n_cores <- max(1L, min(detectCores() - 1L, 12L))
 
 # Number of posterior draws to use in simulate_model(). NULL = keep all draws.
 # Lower this (e.g. 200) to speed up the ODE simulation at the cost of CI estimation.
-n_sim_draws <- 200
+n_sim_draws <- 1000
 
 # Specify kelp abundances (grams) at which to simulate
 A.level = c("low" = 50,

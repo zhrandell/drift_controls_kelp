@@ -165,9 +165,15 @@ if (length(compare_names) >= 2) {
   }
   print(loo_cmp)
 
+  ## Sort models by pseudo-BMA weight (highest first) for every downstream
+  ## summary so Summary_preference.tex rows match Summary_model_comparison.tex
+  ## rows. Falls back to loo_compare's best-to-worst ELPD order when weights
+  ## are unavailable (mismatched dim() above).
   mods <- rownames(loo_cmp)
-  ## Adopt loo_compare's best-to-worst ELPD order for every downstream summary
-  ## so Summary_preference.tex rows match Summary_model_comparison.tex rows.
+  if (all(is.finite(pbma_wts))) {
+    mods <- names(sort(pbma_wts, decreasing = TRUE))
+    loo_cmp <- loo_cmp[mods, , drop = FALSE]
+  }
   compare_names <- mods
   vals <- data.frame(
     "ELPD"                     = sprintf("%.0f", loo_cmp[, "elpd_loo"]),
@@ -188,11 +194,16 @@ if (length(compare_names) >= 2) {
   )
 
   tab_caption <- paste0(
-    "Relative model performance as assessed by the Bayesian LOO ",
-    "estimate of the expected log pointwise predictive density.
+    "Relative model performance as assessed by the Bayesian LOO
+    estimate of the expected log pointwise predictive density.
     $p$ is the effective number of parameters.
     Model weights estimated using the pseudo-BMA method.
-    Models ordered by performance."
+    Models ordered by weight.
+    A parenthetical $z$ indicates a model including a gut
+    evacuation rate, assumed absent in other models.
+    A parenthetical $m=1$ indicates a model with $m$ fixed to 1
+    (equivalent to $b=0$), meaning no movement suppression at high resource
+    abundances."
   )
   tab_label <- "tab:modelcomp_LOO"
   tab_path  <- paste0(tables, "/Summary_model_comparison.tex")
@@ -333,7 +344,8 @@ if (nrow(summary_df) > 0) {
     "resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), ",
     "and of their baseline preference (expressed as proportional preference ",
     "and log-odds of consumption) for drift over kelp when the abundance of ",
-    "the two resources is equal.  Models ordered by relative performance."
+    "the two resources is equal.  Models ordered by pseudo-BMA weight.
+    See Table \\ref{tab:modelcomp_LOO} for model name interpretations."
   )
   pref_label <- "tab:modelcomp_prefs"
   pref_path  <- paste0(tables, "/Summary_preference.tex")
@@ -423,7 +435,8 @@ if (length(priors_posteriors_names) >= 1) {
 
   combined_caption <- paste0(
     "Parameter bounds, prior specifications, and posterior median estimates ",
-    "with 95\\% credible intervals."
+    "with 95\\% credible intervals. 
+    See Table \\ref{tab:modelcomp_LOO} for model name interpretations."
   )
   combined_label <- "tab:priors_posteriors"
   combined_path  <- paste0(tables, "/Summary_priors_posteriors.tex")

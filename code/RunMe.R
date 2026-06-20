@@ -1,89 +1,182 @@
-
-## start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Start up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 rm(list = ls())
+closeAllConnections()
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+source('load_packages.R')
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Choose the model [1] or [2]
-sel.model <- c('Logistic', 'vanLeeuwen')[1]
+## Relative file paths ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-## Libraries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## Libraries for 'empirical.R'
-library(tidyverse)
-library(scales)
-library(ggpubr)
-
-## Libraries for 'format_data.R' 
-library(stats)
-library(gridExtra)
-library(gtable)
-library(grid)
-library(deSolve)
-library(rstudioapi)
-library(reshape2)
-library(hexbin)
-library(janitor)
-library(diffdf)
-
-## Libraries for 'fit_stan_model.R' & 'analyze_visualize.R'
-library(cmdstanr)
-library(rstan)
-library(StanHeaders)
-library(shinystan)
-library(posterior)
-library(bayesplot)
-
-## Libraries for 'analyze_visualize.R'
-library(egg)
-library(Cairo) # requires installation of XQuartz on machine
-library(stargazer)
-
-## Libraries for 'simulate.R' and 'plot_simulation'
-library(deSolve)
-library(reshape2)
-library(ggplot2)
-library(egg)
-library(tidyselect)
-library(scales)
-library(pbapply)
-
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## check wd is appropriate
-getwd()
-
-## relative file paths
-code <- "../code"
-data <- "../data"
+code    <- "../code"
+models  <- "../code/models"
+data    <- "../data"
 results <- "../results"
-figs <- "../figs"
+tmp     <- "../results/tmp"
+tables  <- "../tables"
+figs    <- "../figs"
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Choices ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Models to fit and compare. Each entry must have a 'stan_model_<name>.stan'
+# file in code/models/.
+# Set to a single-element vector to fit just one model.
+model_names <- c("Logistic",
+                 "Logistic_noM",
+                 "Logistic_z",
+                 "Logistic_z_noM",
+                 "vanLeeuwen_q",
+                 "vanLeeuwen_q_z",
+                 "vanLeeuwen_q_noM",
+                 "vanLeeuwen_q_z_noM",
+                 "vanLeeuwen",
+                 "vanLeeuwen_noM",
+                 "vanLeeuwen_z",
+                 "vanLeeuwen_z_noM")
 
+# Models to exclude from the two summary LaTeX tables produced by
+# compare_models.R: Summary_model_comparison.tex (PSIS-LOO pairwise
+# comparison) and Summary_preference.tex (per-model preference summary).
+# Excluded models are still fit, still visualized/simulated/plotted, and still
+# appear in the Pareto-k diagnostic summary and PPC density overlays.
+# Each entry must also appear in model_names. Default: character(0) (no exclusions).
+exclude_from_comparison <- c("vanLeeuwen_q",
+                             "vanLeeuwen_q_z",
+                             "vanLeeuwen_q_noM",
+                             "vanLeeuwen_q_z_noM")
 
+# Display labels used in place of raw model_names in the summary LaTeX tables
+# (Summary_model_comparison.tex, Summary_preference.tex, and the Model column
+# of summary_priors_posteriors.tex). Named character vector keyed by entries
+# of model_names; any model without a matching entry uses its model_names
+# value as-is. Values may contain LaTeX math markers.
+model_labels <- c(
+  Logistic       = "Logistic",
+  Logistic_noM   = "Logistic ($m=1$)",
+  Logistic_z     = "Logistic ($z$)",
+  Logistic_z_noM = "Logistic ($z$, $m=1$)",
+  vanLeeuwen_q   = "van Leeuwen ($q$)",
+  vanLeeuwen_q_z = "van Leeuwen ($q$, $z$)",
+  vanLeeuwen_q_z_noM = "van Leeuwen ($q$, $z$, $m = 1$)",
+  vanLeeuwen_q_noM = "van Leeuwen ($q$, $m=1$)",
+  vanLeeuwen  = "van Leeuwen",
+  vanLeeuwen_noM  = "van Leeuwen ($m=1$)",
+  vanLeeuwen_z  = "van Leeuwen ($z$)",
+  vanLeeuwen_z_noM  = "van Leeuwen ($z$, $m=1$)"
+)
 
-## source files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Vectorized lookup: returns model_labels[m] when present, else m.
+model_label <- function(m) {
+  lbl <- model_labels[m]
+  ifelse(is.na(lbl) | nchar(lbl) == 0, m, unname(lbl))
+}
+
+# Fit models concurrently? FALSE = sequential (safer for RAM).
+# TRUE multiplies memory by length(model_names) since each fit also runs parallel chains.
+parallel_models <- FALSE
+
+# Skip re-fitting a model whose .stan file is unchanged since the previous fit.
+# Detected by md5sum of the .stan source, stored at tmp/model_output_<name>.hash
+# alongside the cached fit at tmp/model_output_<name>.RDS.
+# Set FALSE to force a fresh fit regardless of the cache.
+reuse_existing_fits <- TRUE
+
+# Skip re-simulating a model whose ODE inputs are unchanged since the previous
+# simulation. Detected by a signature of the .stan source, posterior_draws_<name>.RDA,
+# simulate.R, A.level, and n_sim_draws, stored at tmp/ODE_kelp_<name>.hash.
+# Set FALSE to force fresh simulations regardless of the cache.
+reuse_existing_sims <- TRUE
+
+# Specify number of MCMC iterations
+warmup_iter <- 1000
+sampling_iter <- 5000
+
+# Specify number of cores to use for parallel computing.
+# Capped at 12 to avoid hitting the per-user process limit (ulimit -u) when
+# parallel stages spawn PSOCK workers or fork via mclapply -- on macOS this
+# manifests as "sh: fork: Resource temporarily unavailable" and brings down
+# both simulate_model()'s cluster and loo()'s mclapply pool.
+n_cores <- max(1L, min(detectCores() - 1L, 12L))
+
+# Number of posterior draws to use in simulate_model(). NULL = keep all draws.
+# Lower this (e.g. 200) to speed up the ODE simulation at the cost of CI estimation.
+n_sim_draws <- 1000
+
+# Specify kelp abundances (grams) at which to simulate
+A.level = c("low" = 50,
+            "high" = 250)
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Source files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 source('plot_juvenile_kelp.R')
 source('empirical.R')
 source('format_data.R')
-source('fit_stan_model.R')
-source('analyze_visualize.R')
-source('simulate.R')
-source('simulate_process.R')
-source('plot_simulation.R')
 
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+source('fit_all_models.R')
 
+source('preference_helpers.R')            # defines preference() / log_switch_point()
+source('visualize_stan_model.R')          # defines visualize_model()
+source('simulate.R')                      # defines simulate_model()
+source('process_simulation.R')            # defines process_model_sim()
+source('plot_simulation.R')               # defines plot_model_sim()
 
+## compare_models.R runs at source time and reuses parse_param_block() defined
+## by visualize_stan_model.R, so it must be sourced after the definitions above.
+source('compare_models.R')
+
+## Parallel mode: each model gets its own multisession worker and
+## simulate_model's inner ODE loop runs sequentially inside it
+## (internal_cores = 1L) to avoid nested cluster oversubscription. A progressr
+## bar ticks once per model per stage.
+## Serial mode: run_stage() loops over models with a plain for so each stage's
+## console output (cmdstanr per-chain progress, simulate_model's per-kelp-level
+## prints) prints live. simulate_model uses all n_cores for its inner ODE loop.
+if (parallel_models) {
+  mc_n <- min(length(model_names), n_cores)
+  cat("Running visualize / simulate / process / plot stages for",
+      length(model_names), "models in parallel (",
+      paste(model_names, collapse = ", "), ") on", mc_n, "core(s).\n")
+  plan(multisession, workers = mc_n)
+  on.exit(plan(sequential), add = TRUE)
+  handlers(global = TRUE)
+  handlers("progress")
+  internal_cores <- 1L
+} else {
+  internal_cores <- n_cores
+}
+
+run_stage <- function(label, fn, ...) {
+  if (parallel_models) {
+    with_progress({
+      p <- progressor(steps = length(model_names))
+      future_lapply(model_names, function(m) {
+        source("load_packages.R")
+        options(device = function(...) pdf(NULL))
+        out <- fn(m, ...)
+        p(sprintf("[%s %s] done", label, m))
+        out
+      }, future.globals = TRUE, future.seed = TRUE, future.stdout = NA)
+    })
+  } else {
+    out <- vector("list", length(model_names))
+    for (i in seq_along(model_names)) {
+      m <- model_names[i]
+      cat(sprintf("\n[%s %d/%d] %s...\n",
+                  label, i, length(model_names), m))
+      out[[i]] <- fn(m, ...)
+    }
+    out
+  }
+}
+
+invisible(run_stage("visualize", visualize_model))
+invisible(run_stage("simulate",  simulate_model,
+                    n_draws = n_sim_draws, internal_cores = internal_cores))
+invisible(run_stage("process",   process_model_sim))
+invisible(run_stage("plot",      plot_model_sim))
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

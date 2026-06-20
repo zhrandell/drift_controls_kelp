@@ -144,8 +144,6 @@ p1 <- plot_ecdf(df,
                     breaks_by = 1,
                     shade_min = log10(20),
                     shade_max = log10(80))
-print(p1)
-
 
 ## save pdf 
 ggsave(

@@ -2,16 +2,16 @@
 ## function to plot simulated temporal dynamics code ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## Defines plot_model_sim(model_name): consumes the per-period summary tables
+## produced by process_model_sim() and writes figs/ODE_simulation_<model>.pdf.
+## Reads `results`, `figs` from the caller's environment.
 
-
-
+plot_model_sim <- function(model_name) {
 
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-load(paste0(results,"/ODE_toPlot_kelp_high_", sel.model,".RDA"))
-load(paste0(results,"/ODE_toPlot_kelp_low_", sel.model,".RDA"))
+load(paste0(tmp,"/ODE_toPlot_kelp_high_", model_name,".RDA"))
+load(paste0(tmp,"/ODE_toPlot_kelp_low_", model_name,".RDA"))
 ## END set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 
 
@@ -76,17 +76,17 @@ my.theme = theme(
 
 
 ## fixed-size custom legends ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-library(grid)
-
 # Function to return a grob for custom legend with absolute sizes (mm units)
 fixed_legend_grob <- function(low_col, high_col,
                               square_mm = 6,
                               gap_mm = 2,
-                              text_cex = 1.3) {
+                              text_cex = 1.3,
+                              y_low_mm  = 3,
+                              y_high_mm = 10) {
 
   # vertical positions (from bottom) for the two legend rows
-  y_low  <- unit(3,  "mm")
-  y_high <- unit(10, "mm")
+  y_low  <- unit(y_low_mm,  "mm")
+  y_high <- unit(y_high_mm, "mm")
 
   grobTree(
     # optional transparent background
@@ -96,13 +96,13 @@ fixed_legend_grob <- function(low_col, high_col,
     rectGrob(x = unit(0, "mm"), y = y_low,
              width = unit(square_mm, "mm"), height = unit(square_mm, "mm"),
              just = c("left","bottom"),
-             gp = gpar(fill = low_col, col = NA)),
+             gp = gpar(fill = low_col, col = NA, alpha = alph)),
 
     # High square
     rectGrob(x = unit(0, "mm"), y = y_high,
              width = unit(square_mm, "mm"), height = unit(square_mm, "mm"),
              just = c("left","bottom"),
-             gp = gpar(fill = high_col, col = NA)),
+             gp = gpar(fill = high_col, col = NA, alpha = alph)),
 
     # Labels
     textGrob("Low",
@@ -120,9 +120,12 @@ fixed_legend_grob <- function(low_col, high_col,
 }
 
 ## create the three legends (consistent across panels)
-legend_drift <- fixed_legend_grob(low_drift_col,  high_drift_col)
-legend_kelp  <- fixed_legend_grob(low_kelp_col,   high_kelp_col)
-legend_full  <- fixed_legend_grob(low_fullness_col, high_fullness_col)
+legend_drift <- fixed_legend_grob(low_drift_col,    high_drift_col,    
+                                  square_mm = 4, text_cex = 0.9, y_high_mm = 7)
+legend_kelp  <- fixed_legend_grob(low_kelp_col,     high_kelp_col,     
+                                  square_mm = 4, text_cex = 0.9, y_high_mm = 7)
+legend_full  <- fixed_legend_grob(low_fullness_col, high_fullness_col, 
+                                  square_mm = 4, text_cex = 0.9, y_high_mm = 7)
 ## END custom legend ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -150,22 +153,23 @@ x_max <- max(combined_high$S0, combined_low$S0, na.rm = TRUE)
 
 
 ## function to plot single Period for Low and High Kelp treatments ~~~~~~~~~~~~~ 
-plot.dynamics <- function(high_dat, var, 
-                      high_lower_ribbon, 
-                      high_upper_ribbon, 
+plot.dynamics <- function(high_dat, var,
+                      high_lower_ribbon,
+                      high_upper_ribbon,
                       high_fill, ## params to plot High Kelp ribbon
-                      high_init, 
-                      high_period, ## params to plot High Kelp median value line across x-axis 
-                      low_dat, 
-                      low_lower_ribbon, 
-                      low_upper_ribbon, 
+                      high_init,
+                      high_period, ## params to plot High Kelp median value line across x-axis
+                      low_dat,
+                      low_lower_ribbon,
+                      low_upper_ribbon,
                       low_fill, ## params to plot Low Kelp ribbon
-                      low_init, 
+                      low_init,
                       low_period, ## params to plot Low Kelp median value line across x-axis
-                      x_axis_text, 
-                      y_axis_text, 
+                      x_axis_text,
+                      y_axis_text,
                       plot_title,
-                      ymax){ ## axis label and ylim params
+                      ymax,
+                      y_breaks = waiver()){ ## axis label and ylim params
 
 ## title options 
   title_layer <- if (is.null(plot_title)) {
@@ -210,7 +214,7 @@ plot.dynamics <- function(high_dat, var,
     xlab(x_axis_text) +
     ylab(y_axis_text) +
     ggtitle(plot_title) +
-    ylim(0, ymax)
+    scale_y_continuous(limits = c(0, ymax), breaks = y_breaks)
 
   return(plot)
 }
@@ -241,7 +245,8 @@ drift.1 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 1",
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -274,7 +279,8 @@ drift.2 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 2",
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -307,7 +313,8 @@ drift.3 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Drift consumed (g)",
   plot_title =  "Period 3",
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -342,7 +349,8 @@ kelp.1 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -375,7 +383,8 @@ kelp.2 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -408,7 +417,8 @@ kelp.3 <- plot.dynamics(
   x_axis_text = "Initial drift (g)",
   y_axis_text = "Kelp consumed (g)",
   plot_title = NULL,
-  ymax = ymax_loss
+  ymax = ymax_loss,
+  y_breaks = c(0, 25, 50, 75, 100)
 )
 
 
@@ -521,23 +531,24 @@ fullness.3 <- place_legend(fullness.3, legend_full, x_max, ymax_fill)
 
 
 ## plot all 9 panes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-all.temporal.dynamics <- egg::ggarrange(
-  tag_facet(drift.1 + facet_wrap(~ "time"), tag_pool = "a"),
-  tag_facet(drift.2 + facet_wrap(~ "time"), tag_pool = "b"),
-  tag_facet(drift.3 + facet_wrap(~ "time"), tag_pool = "c"),
-  tag_facet(kelp.1 + facet_wrap(~ "time"), tag_pool = "d"),
-  tag_facet(kelp.2 + facet_wrap(~ "time"), tag_pool = "e"),
-  tag_facet(kelp.3 + facet_wrap(~ "time"), tag_pool = "f"),
-  tag_facet(fullness.1 + facet_wrap(~ "time"), tag_pool = "g"),
-  tag_facet(fullness.2 + facet_wrap(~ "time"), tag_pool = "h"),
-  tag_facet(fullness.3 + facet_wrap(~ "time"), tag_pool = "i"),
+all.temporal.dynamics <- wrap_plots(
+  drift.1,
+  drift.2,
+  drift.3,
+  kelp.1,
+  kelp.2,
+  kelp.3,
+  fullness.1,
+  fullness.2,
+  fullness.3,
   nrow = 3,
-  ncol = 3
-)
+  ncol = 3) +
+    plot_annotation(tag_levels = 'a', tag_prefix = '(', tag_suffix = ')') &
+    theme(plot.tag = element_text(size = rel(1.2), face = "plain"))
 
 
 ## save pdf 
-ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", sel.model, ".pdf"), 
+ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", model_name, ".pdf"), 
                 plot = all.temporal.dynamics, 
                 dpi = 1200, 
                 width = 11,
@@ -545,8 +556,8 @@ ggplot2::ggsave(filename = paste0(figs, "/ODE_simulation_", sel.model, ".pdf"),
                 units = "in")
 ## END plotting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
+invisible(NULL)
+}  # end plot_model_sim()
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

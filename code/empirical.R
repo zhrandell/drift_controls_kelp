@@ -204,7 +204,7 @@ fig2 <- function(data,
   ggplot(data, aes(x = {{ xvar }}, y = {{ yvar }})) + my.theme + my.text +
     geom_point(aes(color = Treatment, shape = Treatment), size = ptSize) +
     geom_smooth(
-      data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
+      # data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
       aes(color = Treatment, fill = Treatment),
       linewidth = smoothSize, span = smoothSpan, level = smoothCI,
       method = "loess",
@@ -228,7 +228,7 @@ p1 <- fig2(
   yvar = Drift_Consumed,
   palette = pal_drift,
   plot_title = "Drift consumed vs Drift available",
-  xlab_text = "initial Drift (g)",
+  xlab_text = "Initial drift (g)",
   ylab_text = "Drift consumed (g)",
   show_legend = TRUE
 )
@@ -240,7 +240,7 @@ p2 <- fig2(
   yvar = Kelp_Consumed,
   palette = pal_kelp,
   plot_title = "Kelp consumed vs Drift available",
-  xlab_text = "initial Drift (g)",
+  xlab_text = "Initial drift (g)",
   ylab_text = "Kelp consumed (g)",
   show_legend = TRUE
 )
@@ -252,14 +252,14 @@ p3 <- fig2(
   yvar = Kelp_Consumed,
   palette = pal_kelp,
   plot_title = "Kelp consumed vs Kelp available",
-  xlab_text = "initial Kelp (g)",
+  xlab_text = "Initial kelp (g)",
   ylab_text = "Kelp consumed (g)",
   show_legend = FALSE
 )
 
 
 ## combine all rows into 1
-seq1_results <- ggarrange(p1, p2, p3, nrow = 3)
+seq1_results <- wrap_plots(p1, p2, p3, nrow = 3)
 
 
 ## save 
@@ -281,7 +281,7 @@ dat$group_label_simple <- factor(dat$group_label_simple, levels = all_levels)
 
 
 smooth_data <- dat %>%
-  filter(!Treatment_Controls %in% c("High_Control", "Low_Control")) %>%
+  # filter(!Treatment_Controls %in% c("High_Control", "Low_Control")) %>%
   mutate(group_label_simple = factor(group_label_simple, levels = all_levels))
 
 
@@ -385,7 +385,7 @@ all_seq <- function(data,
   ggplot(data, aes(x = {{ xvar }}, y = {{ yvar }})) + my.theme + my.text +
     geom_point(aes(color = group_label, fill = group_label, shape = Treatment), size = ptSize) +
     geom_smooth(
-      data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
+      # data = data %>% filter(!Treatment_Controls %in% c("High_Control", "Low_Control")),
       aes(x = {{ xvar }}, y = {{ yvar }}, color = group_label, fill = group_label),
       linewidth = smoothSize, span = smoothSpan, level = smoothCI,
       method = 'loess',
@@ -409,9 +409,9 @@ p4 <- all_seq(
   xvar = Drift_Initial,
   yvar = Drift_Consumed,
   palette = pal_custom,
-  plot_title = "Drift consumed vs available drift",
-  xlab_text = "initial drift (g)",
-  ylab_text = "drift consumed (g)",
+  plot_title = "Drift consumed vs Drift available",
+  xlab_text = "Initial drift (g)",
+  ylab_text = "Drift consumed (g)",
   show_legend = FALSE
 )
 
@@ -421,9 +421,9 @@ p5 <- all_seq(
   xvar = Drift_Initial,
   yvar = Kelp_Consumed,
   palette = pal_custom,
-  plot_title = "Kelp consumed vs available drift",
-  xlab_text = "initial drift (g)",
-  ylab_text = "kelp consumed (g)",
+  plot_title = "Kelp consumed vs Drift available",
+  xlab_text = "Initial drift (g)",
+  ylab_text = "Kelp consumed (g)",
   show_legend = FALSE
 )
 
@@ -434,16 +434,15 @@ p6 <- all_seq(
   xvar = Kelp_Initial,
   yvar = Kelp_Consumed,
   palette = pal_custom,
-  plot_title = "Kelp consumed vs available kelp",
-  xlab_text = "initial kelp (g)",
-  ylab_text = "kelp consumed (g)",
+  plot_title = "Kelp consumed vs Kelp available",
+  xlab_text = "Initial kelp (g)",
+  ylab_text = "Kelp consumed (g)",
   show_legend = TRUE
 )
 
 
 ## aggregate
-pAll <- ggarrange(p4, p5, p6,
-                  nrow = 3)
+pAll <- wrap_plots(p4, p5, p6, nrow = 3)
 
 
 ## save

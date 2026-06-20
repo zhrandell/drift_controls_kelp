@@ -1,0 +1,293 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     11645,        285]
+NotebookOptionsPosition[     10918,        267]
+NotebookOutlinePosition[     11313,        283]
+CellTagsIndexPosition[     11270,        280]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[{
+ RowBox[{"Clear", "[", "\"\<Global`*\>\"", "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"SetDirectory", "[", 
+   RowBox[{"NotebookDirectory", "[", "]"}], "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"SetDirectory", "[", "\"\<../../figs/\>\"", "]"}], ";"}]}], "Input",\
+
+ CellChangeTimes->{{3.941306070509192*^9, 3.941306070806033*^9}, {
+  3.941306218211669*^9, 3.9413062223041477`*^9}},
+ CellLabel->"In[48]:=",ExpressionUUID->"a4e946ec-3e46-4db1-bc37-d79c3e68d85a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"Logistic", "[", "x_", "]"}], "=", 
+   RowBox[{
+    FractionBox["1", 
+     RowBox[{"1", "+", 
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"-", "x"}]]}]], "//", "N"}]}], ";"}], "\n", 
+ RowBox[{"Plot", "[", 
+  RowBox[{
+   RowBox[{"Logistic", "[", "x", "]"}], ",", 
+   RowBox[{"{", 
+    RowBox[{"x", ",", 
+     RowBox[{"-", "5"}], ",", "5"}], "}"}], ",", "\[IndentingNewLine]", 
+   RowBox[{"PlotRange", "->", 
+    RowBox[{"{", 
+     RowBox[{"All", ",", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", "1"}], "}"}]}], "}"}]}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.93214889535496*^9, 3.9321489574355373`*^9}, {
+  3.932149306587409*^9, 3.932149310605221*^9}, {3.9412996441397533`*^9, 
+  3.941299650653488*^9}, {3.941299833929017*^9, 3.941299839220584*^9}, {
+  3.941299892030175*^9, 3.941299913578251*^9}, {3.941299983862845*^9, 
+  3.9412999937513647`*^9}, {3.941300226695174*^9, 3.941300229479914*^9}, {
+  3.9413052848971233`*^9, 3.941305296307074*^9}},
+ CellLabel->"In[51]:=",ExpressionUUID->"a3e51eb2-79a8-4647-8647-cb88ba1f24c7"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"LogisticRatio", "[", "Ratio_", "]"}], "=", 
+   FractionBox["1", 
+    RowBox[{"1", "+", 
+     SuperscriptBox["\[ExponentialE]", 
+      RowBox[{"-", 
+       RowBox[{"Log", "[", "Ratio", "]"}]}]]}]]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"LogisticRatioRate", "[", "Ratio_", "]"}], "=", 
+   RowBox[{"1", "-", 
+    FractionBox["1", 
+     RowBox[{"1", "+", 
+      SuperscriptBox["Ratio", "\[Phi]"]}]]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"LogisticRatioPrefRate", "[", "Ratio_", "]"}], "=", 
+   RowBox[{"1", "-", 
+    FractionBox["1", 
+     RowBox[{"1", "+", 
+      RowBox[{
+       FractionBox["\[Omega]", 
+        RowBox[{"1", "-", "\[Omega]"}]], 
+       SuperscriptBox["Ratio", "\[Phi]"]}]}]]}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"LogisticRatioGen", "[", "Ratio_", "]"}], "=", 
+   RowBox[{"1", "-", 
+    FractionBox["1", 
+     RowBox[{"1", "+", 
+      SuperscriptBox["\[ExponentialE]", 
+       RowBox[{"\[CapitalOmega]", " ", "+", " ", 
+        RowBox[{"\[Phi]", " ", 
+         RowBox[{"Log", "[", "Ratio", "]"}]}]}]]}]]}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.941300398235273*^9, 3.941300398561789*^9}, {
+  3.941301552861903*^9, 3.941301562609264*^9}, {3.94130162641422*^9, 
+  3.941301652462137*^9}, {3.941301756065012*^9, 3.941301764668544*^9}, {
+  3.941301810554064*^9, 3.941301812233518*^9}, {3.94130192048468*^9, 
+  3.941301974797117*^9}, {3.9413032813907146`*^9, 3.941303349974105*^9}, {
+  3.941303383498967*^9, 3.941303386149659*^9}, {3.941303741705764*^9, 
+  3.941303749811247*^9}, {3.941305298285256*^9, 3.941305298824614*^9}, {
+  3.9413054703538623`*^9, 3.9413055026277*^9}, {3.941305659277199*^9, 
+  3.941305661097678*^9}},
+ CellLabel->"In[53]:=",ExpressionUUID->"5447ccd6-20b2-425c-9800-5b5ccfac9ee8"],
+
+Cell[BoxData[
+ RowBox[{"Manipulate", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"parms", " ", "=", " ", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\[Omega]", "->", " ", "w"}], ",", " ", 
+       RowBox[{"\[Phi]", "->", " ", "p"}], ",", 
+       RowBox[{"\[CapitalOmega]", "->", " ", "W"}]}], "}"}]}], ";", 
+    "\[IndentingNewLine]", 
+    RowBox[{"LogLinearPlot", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"LogisticRatio", "[", "R", "]"}], ",", "\[IndentingNewLine]", 
+        
+        RowBox[{
+         RowBox[{"LogisticRatioRate", "[", "R", "]"}], "/.", "parms"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"LogisticRatioPrefRate", "[", "R", "]"}], "/.", "parms"}], ",",
+         "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"LogisticRatioGen", "[", "R", "]"}], "/.", "parms"}]}], 
+       "\[IndentingNewLine]", "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"R", ",", "0.01", ",", "100"}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"PlotRange", "->", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"All", ",", "All"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"0", ",", "1"}], "}"}]}], "}"}]}]}], "]"}]}], ",", 
+   "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"w", ",", "0.5", ",", "\[Omega]"}], "}"}], ",", "0", ",", "1", ",",
+      "0.1"}], "}"}], ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"W", ",", "0", ",", "\[CapitalOmega]"}], "}"}], ",", 
+     RowBox[{"-", "5"}], ",", "5", ",", "0.1"}], "}"}], ",", 
+   "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"p", ",", "1", ",", "\[Phi]"}], "}"}], ",", 
+     RowBox[{"-", "5"}], ",", "5", ",", "0.1"}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.932148971220495*^9, 3.932149091873931*^9}, {
+   3.932149219886789*^9, 3.93214925700277*^9}, {3.932149491745078*^9, 
+   3.932149493989933*^9}, {3.941299499549739*^9, 3.9412995052592993`*^9}, {
+   3.941299656120841*^9, 3.9412996602892103`*^9}, {3.941299695251373*^9, 
+   3.94129969597229*^9}, {3.941299841669002*^9, 3.941299842838634*^9}, {
+   3.941299916859184*^9, 3.941299918021*^9}, {3.94130001035417*^9, 
+   3.941300010846881*^9}, 3.941300160710336*^9, {3.941300256192768*^9, 
+   3.941300359672696*^9}, {3.941301577384115*^9, 3.9413016089114*^9}, {
+   3.941301666667588*^9, 3.941301699557098*^9}, {3.941301770072904*^9, 
+   3.941301797081972*^9}, {3.941301953158113*^9, 3.941301977879839*^9}, {
+   3.941303367218816*^9, 3.941303368408312*^9}, {3.941303398757998*^9, 
+   3.941303410190707*^9}, {3.94130375488211*^9, 3.941303759222199*^9}, {
+   3.941305270865003*^9, 3.941305271175952*^9}, {3.9413055234825907`*^9, 
+   3.941305528222965*^9}, {3.941305566936631*^9, 3.941305668197693*^9}},
+ CellLabel->"In[57]:=",ExpressionUUID->"ff354f6d-b6f5-43d4-a9df-b607cf9cddab"],
+
+Cell[BoxData[{
+ RowBox[{"p1", "=", 
+  RowBox[{"LogLinearPlot", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"LogisticRatioPrefRate", "[", "R", "]"}], "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\[Omega]", "->", " ", "0.3"}], ",", " ", 
+         RowBox[{"\[Phi]", "->", " ", "0"}]}], "}"}]}], ",", 
+      RowBox[{
+       RowBox[{"LogisticRatioPrefRate", "[", "R", "]"}], "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\[Omega]", "->", " ", "0.5"}], ",", " ", 
+         RowBox[{"\[Phi]", "->", " ", "1"}]}], "}"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"LogisticRatioPrefRate", "[", "R", "]"}], "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\[Omega]", "->", " ", "0.5"}], ",", " ", 
+         RowBox[{"\[Phi]", "->", " ", "2"}]}], "}"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"LogisticRatioPrefRate", "[", "R", "]"}], "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\[Omega]", "->", " ", "0.99"}], ",", " ", 
+         RowBox[{"\[Phi]", "->", " ", "2"}]}], "}"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"LogisticRatioPrefRate", "[", "R", "]"}], "/.", " ", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"\[Omega]", "->", " ", "0.8"}], ",", " ", 
+         RowBox[{"\[Phi]", "->", " ", 
+          RowBox[{"-", "1"}]}]}], "}"}]}]}], "\[IndentingNewLine]", "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"R", ",", "0.01", ",", "100"}], "}"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{"PlotRange", "->", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"All", ",", "All"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "1"}], "}"}]}], "}"}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{"Axes", " ", "->", " ", "False"}], ",", "\[IndentingNewLine]", 
+    RowBox[{"Frame", "->", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", " ", 
+        RowBox[{"True", ",", " ", "False"}], "}"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"True", ",", " ", "False"}], "}"}]}], "}"}]}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{"FrameLabel", "->", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Style", "[", 
+        RowBox[{"\"\<Relative abundance \
+(\!\(\*StyleBox[\"S\",FontSlant->\"Italic\"]\)/\!\(\*StyleBox[\"A\",FontSlant-\
+>\"Italic\"]\))\>\"", ",", "16"}], "]"}], ",", " ", "\[IndentingNewLine]", 
+       RowBox[{"Style", "[", 
+        RowBox[{"\"\<Preference for \
+\!\(\*StyleBox[\"S\",FontSlant->\"Italic\"]\)\>\"", ",", "16"}], "]"}]}], 
+      "\[IndentingNewLine]", "}"}]}], ",", "\[IndentingNewLine]", 
+    RowBox[{"PlotLegends", "->", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{"\"\<\[Omega] = 0.3, \[Phi] = 0\>\"", ",", 
+       "\[IndentingNewLine]", "\"\<\[Omega] = 0.5, \[Phi] = 1\>\"", ",", 
+       "\[IndentingNewLine]", "\"\<\[Omega] = 0.5, \[Phi] = 2\>\"", ",", 
+       "\[IndentingNewLine]", "\"\<\[Omega] = 0.99, \[Phi] = 2\>\"", ",", 
+       "\[IndentingNewLine]", "\"\<\[Omega] = 0.99, \[Phi] = -1\>\""}], 
+      "\[IndentingNewLine]", "}"}]}]}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{"\"\<vis_Logistic.pdf\>\"", ",", "p1"}], "]"}], ";"}]}], "Input",
+ CellChangeTimes->{{3.9413053646775007`*^9, 3.941305454944116*^9}, {
+  3.941305712391063*^9, 3.941306000816834*^9}, {3.9413061158533993`*^9, 
+  3.941306121252787*^9}, {3.94130626302676*^9, 3.941306390623938*^9}, {
+  3.941306447371934*^9, 3.941306460420825*^9}, {3.941306494072713*^9, 
+  3.941306516673667*^9}, {3.941306806704369*^9, 3.9413069060959477`*^9}, {
+  3.942254066276524*^9, 3.942254111311488*^9}, {3.990032291084475*^9, 
+  3.990032291648427*^9}},
+ CellLabel->"In[58]:=",ExpressionUUID->"8c2725d0-6f7f-4977-8f5e-3ff1ea00421f"]
+},
+WindowSize->{808, 890},
+WindowMargins->{{474, Automatic}, {Automatic, -237}},
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"4b54944f-584e-428d-acdb-f80fddd7be54"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 499, 10, 70, "Input",ExpressionUUID->"a4e946ec-3e46-4db1-bc37-d79c3e68d85a"],
+Cell[1060, 32, 1088, 26, 85, "Input",ExpressionUUID->"a3e51eb2-79a8-4647-8647-cb88ba1f24c7"],
+Cell[2151, 60, 1853, 46, 170, "Input",ExpressionUUID->"5447ccd6-20b2-425c-9800-5b5ccfac9ee8"],
+Cell[4007, 108, 3010, 67, 274, "Input",ExpressionUUID->"ff354f6d-b6f5-43d4-a9df-b607cf9cddab"],
+Cell[7020, 177, 3894, 88, 478, "Input",ExpressionUUID->"8c2725d0-6f7f-4977-8f5e-3ff1ea00421f"]
+}
+]
+*)
+

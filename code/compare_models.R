@@ -3,7 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 ## Reads from the caller's environment (RunMe.R):
-##   results, figs, n_cores, model_names, exclude_from_comparison
+##   results, figs, n_cores, model_names, exclude_from_comparison, weight_method
 
 ## Set the session-wide core count so loo and any nested parallel routines pick
 ## it up (loo_model_weights() has no explicit `cores` argument).
@@ -153,25 +153,25 @@ if (length(compare_names) >= 2) {
   same_dims <- length(unique(loo_dims[1L, ])) == 1L &&
                length(unique(loo_dims[2L, ])) == 1L
   if (same_dims) {
-    pbma_wts <- loo::loo_model_weights(loo_list[compare_names],
-                                       method = "pseudobma")
+    model_wts <- loo::loo_model_weights(loo_list[compare_names],
+                                        method = weight_method)
   } else {
     message("loo_model_weights skipped: models have mismatched dim() ",
             "(rows = n_draws, cols = n_obs); refit with matching iter ",
-            "counts to recover pseudo-BMA weights:")
+            "counts to recover ", weight_method, " weights:")
     print(loo_dims)
-    pbma_wts <- setNames(rep(NA_real_, length(compare_names)),
-                         compare_names)
+    model_wts <- setNames(rep(NA_real_, length(compare_names)),
+                          compare_names)
   }
   print(loo_cmp)
 
-  ## Sort models by pseudo-BMA weight (highest first) for every downstream
+  ## Sort models by stacking weight (highest first) for every downstream
   ## summary so Summary_preference.tex rows match Summary_model_comparison.tex
   ## rows. Falls back to loo_compare's best-to-worst ELPD order when weights
   ## are unavailable (mismatched dim() above).
   mods <- rownames(loo_cmp)
-  if (all(is.finite(pbma_wts))) {
-    mods <- names(sort(pbma_wts, decreasing = TRUE))
+  if (all(is.finite(model_wts))) {
+    mods <- names(sort(model_wts, decreasing = TRUE))
     loo_cmp <- loo_cmp[mods, , drop = FALSE]
   }
   compare_names <- mods
@@ -181,7 +181,7 @@ if (length(compare_names) >= 2) {
     "$p$"                      = sprintf("%.1f", loo_cmp[, "p_loo"]),
     "$\\Delta \\text{ELPD}$"     = sprintf("%.1f", loo_cmp[, "elpd_diff"]),
     "$SE(\\Delta \\text{ELPD})$" = sprintf("%.1f", loo_cmp[, "se_diff"]),
-    "Weight"                   = sprintf("%.2f", as.numeric(pbma_wts[mods])),
+    "Weight"                   = sprintf("%.2f", as.numeric(model_wts[mods])),
     check.names      = FALSE,
     stringsAsFactors = FALSE
   )
@@ -193,11 +193,12 @@ if (length(compare_names) >= 2) {
     row.names   = NULL
   )
 
+  wt_method_label <- if (weight_method == "pseudobma") "pseudo-BMA+" else weight_method
   tab_caption <- paste0(
     "Relative model performance as assessed by the Bayesian LOO
     estimate of the expected log pointwise predictive density.
     $p$ is the effective number of parameters.
-    Model weights estimated using the pseudo-BMA method.
+    Model weights estimated using the ", wt_method_label, " method.
     Models ordered by weight.
     A parenthetical $z$ indicates a model including a gut
     evacuation rate, assumed absent in other models.
@@ -274,22 +275,6 @@ for (m in model_names) {
 ## preference() and log_switch_point() (defined in preference_helpers.R) dispatch
 ## on the model name via model_family().
 
-fmt_med_ci <- function(v, digits) {
-  qs <- stats::quantile(v, c(0.025, 0.5, 0.975), na.rm = TRUE)
-  ## Values with more than 4 digits before the decimal point are rendered in
-  ## scientific notation (e.g. $5.5 \times 10^{14}$) so the table stays legible.
-  fmt <- function(x) {
-    if (is.finite(x) && abs(x) >= 1e4) {
-      e        <- floor(log10(abs(x)))
-      mantissa <- x / 10^e
-      sprintf("$%.*f \\times 10^{%d}$", digits, mantissa, as.integer(e))
-    } else {
-      sprintf("%.*f", digits, x)
-    }
-  }
-  sprintf("%s (%s, %s)", fmt(qs[2]), fmt(qs[1]), fmt(qs[3]))
-}
-
 summary_rows <- lapply(compare_names, function(m) {
   parms  <- parse_param_block(paste0(models, "/stan_model_", m, ".stan"))
   family <- model_family(m)
@@ -313,9 +298,9 @@ summary_rows <- lapply(compare_names, function(m) {
   logodds  <- log(pref / (1 - pref))
 
   c(
-    fmt_med_ci(switch_g, digits = 1),
-    fmt_med_ci(pref,     digits = 2),
-    fmt_med_ci(logodds,  digits = 1)
+    fmt_med_ci(switch_g, digits = 1, ci_level = ci_level),
+    fmt_med_ci(pref,     digits = 2, ci_level = ci_level),
+    fmt_med_ci(logodds,  digits = 1, ci_level = ci_level)
   )
 })
 
@@ -339,12 +324,12 @@ if (nrow(summary_df) > 0) {
   ## Written as raw LaTeX (not via stargazer) so model_labels containing math
   ## markup ($...$) survive — same workaround as the comparison table above.
   pref_caption <- paste0(
-    "Model-specific median posterior estimates (and 95\\% credible intervals) of the relative ",
+    "Model-specific median posterior estimates (and ", round(ci_level * 100), "\\% credible intervals) of the relative ",
     "abundance of drift versus kelp at which urchins preference for the two ",
     "resources is equal (expressed as $g$ of kelp per 1 $g$ of drift), ",
     "and of their baseline preference (expressed as proportional preference ",
     "and log-odds of consumption) for drift over kelp when the abundance of ",
-    "the two resources is equal.  Models ordered by pseudo-BMA weight.
+    "the two resources is equal.  Models ordered and averaged by ", wt_method_label, " weight.
     See Table \\ref{tab:modelcomp_LOO} for model name interpretations."
   )
   pref_label <- "tab:modelcomp_prefs"
@@ -396,8 +381,9 @@ if (length(priors_posteriors_names) >= 1) {
 
     draws <- posterior::as_draws_df(fits[[m]]$draws(df$name))
     posts <- as.data.frame(draws)[, df$name, drop = FALSE]
+    tail_p <- (1 - ci_level) / 2
     qs    <- apply(posts, 2, stats::quantile,
-                   probs = c(0.025, 0.5, 0.975), na.rm = TRUE)
+                   probs = c(tail_p, 0.5, 1 - tail_p), na.rm = TRUE)
     post_med <- vapply(qs[2, ], .fmt_post, character(1))
     post_ci  <- paste0("(", vapply(qs[1, ], .fmt_post, character(1)),
                        "---", vapply(qs[3, ], .fmt_post, character(1)), ")")
@@ -435,7 +421,7 @@ if (length(priors_posteriors_names) >= 1) {
 
   combined_caption <- paste0(
     "Parameter bounds, prior specifications, and posterior median estimates ",
-    "with 95\\% credible intervals. 
+    "with ", round(ci_level * 100), "\\% credible intervals.
     See Table \\ref{tab:modelcomp_LOO} for model name interpretations."
   )
   combined_label <- "tab:priors_posteriors"

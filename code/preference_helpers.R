@@ -47,6 +47,23 @@ log_switch_point <- function(y, w, q, model_name) {
   }
 }
 
+## Shared formatter used by compare_models.R and model_average.R.
+## Returns "median (lo%, hi%)" with optional scientific notation for large values.
+fmt_med_ci <- function(v, digits, ci_level = 0.95) {
+  tail_p <- (1 - ci_level) / 2
+  qs <- stats::quantile(v, c(tail_p, 0.5, 1 - tail_p), na.rm = TRUE)
+  fmt <- function(x) {
+    if (is.finite(x) && abs(x) >= 1e4) {
+      e        <- floor(log10(abs(x)))
+      mantissa <- x / 10^e
+      sprintf("$%.*f \\times 10^{%d}$", digits, mantissa, as.integer(e))
+    } else {
+      sprintf("%.*f", digits, x)
+    }
+  }
+  sprintf("%s (%s, %s)", fmt(qs[2]), fmt(qs[1]), fmt(qs[3]))
+}
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

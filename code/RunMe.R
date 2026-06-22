@@ -104,6 +104,13 @@ n_cores <- max(1L, min(detectCores() - 1L, 12L))
 # Lower this (e.g. 200) to speed up the ODE simulation at the cost of CI estimation.
 n_sim_draws <- 1000
 
+# Method used by loo_model_weights() to compute model weights for ranking
+# and model averaging. Either "stacking" or "pseudobma" ("pseudo-BMA+").
+weight_method <- "pseudobma"
+
+# Confidence interval width for plots (e.g. 0.95 = 95%, 0.50 = 50%).
+ci_level <- 0.95
+
 # Specify kelp abundances (grams) at which to simulate
 A.level = c("low" = 50,
             "high" = 250)
@@ -175,8 +182,14 @@ run_stage <- function(label, fn, ...) {
 invisible(run_stage("visualize", visualize_model))
 invisible(run_stage("simulate",  simulate_model,
                     n_draws = n_sim_draws, internal_cores = internal_cores))
-invisible(run_stage("process",   process_model_sim))
+invisible(run_stage("process",   process_model_sim, ci_level = ci_level))
 invisible(run_stage("plot",      plot_model_sim))
+
+source('model_average.R')
+if (exists("model_wts") && length(compare_names) >= 2 &&
+    all(is.finite(model_wts))) {
+  compute_model_average(model_wts, compare_names, fits)
+}
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,6 +6,17 @@
 ## produced by process_model_sim() and writes figs/ODE_simulation_<model>.pdf.
 ## Reads `results`, `figs` from the caller's environment.
 
+## Custom ggplot theme shared by plot_model_sim() and model_average.R.
+my.theme = theme(
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  axis.line = element_line(colour = "black"),
+  axis.title = element_text(size = 16),
+  axis.text = element_text(size = 14),
+  plot.title = element_text(size = 16)
+)
+
 plot_model_sim <- function(model_name) {
 
 ## set up ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,16 +70,6 @@ y.blank <- theme(axis.title.y = element_blank(),
                  axis.text.y = element_blank())
 
 
-## set up custom ggplot theme
-my.theme = theme(
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  panel.background = element_blank(),
-  axis.line = element_line(colour = "black"),
-  axis.title = element_text(size = 16),
-  axis.text = element_text(size = 14),
-  plot.title = element_text(size = 16)
-)
 ## END custom graphing parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

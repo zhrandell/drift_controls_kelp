@@ -8,7 +8,9 @@
 ## period median, 95% CI, and initial-condition columns expected by
 ## plot_simulation.R. Reads `tmp`, `A.level` from the caller's environment.
 
-process_model_sim <- function(model_name) {
+process_model_sim <- function(model_name, ci_level = 0.95) {
+  tail_p <- (1 - ci_level) / 2
+  ci_probs <- c(tail_p, 1 - tail_p)
 
 for (AL in 1:length(A.level)) { # initial kelp abundance (low and high)
 
@@ -92,18 +94,18 @@ for (AL in 1:length(A.level)) { # initial kelp abundance (low and high)
   F_P3 <- as.data.frame(matrix(apply(F_fill_P3, 2, median), ncol = 1))
 
 
-  ## calculate 95 CI
-  S_loss_P1 <- apply(S_loss_P1, 2, quantile, c(0.025, 0.975))
-  A_loss_P1 <- apply(A_loss_P1, 2, quantile, c(0.025, 0.975))
-  F_fill_P1 <- apply(F_fill_P1, 2, quantile, c(0.025, 0.975))
+  ## calculate CI at the requested ci_level
+  S_loss_P1 <- apply(S_loss_P1, 2, quantile, ci_probs)
+  A_loss_P1 <- apply(A_loss_P1, 2, quantile, ci_probs)
+  F_fill_P1 <- apply(F_fill_P1, 2, quantile, ci_probs)
 
-  S_loss_P2 <- apply(S_loss_P2, 2, quantile, c(0.025, 0.975))
-  A_loss_P2 <- apply(A_loss_P2, 2, quantile, c(0.025, 0.975))
-  F_fill_P2 <- apply(F_fill_P2, 2, quantile, c(0.025, 0.975))
+  S_loss_P2 <- apply(S_loss_P2, 2, quantile, ci_probs)
+  A_loss_P2 <- apply(A_loss_P2, 2, quantile, ci_probs)
+  F_fill_P2 <- apply(F_fill_P2, 2, quantile, ci_probs)
 
-  S_loss_P3 <- apply(S_loss_P3, 2, quantile, c(0.025, 0.975))
-  A_loss_P3 <- apply(A_loss_P3, 2, quantile, c(0.025, 0.975))
-  F_fill_P3 <- apply(F_fill_P3, 2, quantile, c(0.025, 0.975))
+  S_loss_P3 <- apply(S_loss_P3, 2, quantile, ci_probs)
+  A_loss_P3 <- apply(A_loss_P3, 2, quantile, ci_probs)
+  F_fill_P3 <- apply(F_fill_P3, 2, quantile, ci_probs)
 
 
   ## bind df

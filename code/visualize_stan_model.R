@@ -162,7 +162,8 @@ plot.posterior <- function(x, param='a', label='a', tag = '(a)'){
   sz1 <- 0.5
   sz2 <- 0.5
 
-  CI <- quantile(data.frame(x)[param], c(0.0250, 0.5, 0.975), na.rm = TRUE)
+  tail_p <- (1 - ci_level) / 2
+  CI <- quantile(data.frame(x)[param], c(tail_p, 0.5, 1 - tail_p), na.rm = TRUE)
   
   fig <- ggplot(x, aes(.data[[param]])) + 
     geom_histogram(fill = col, bins = 100) +
@@ -225,6 +226,9 @@ if (!all(c("w", "q") %in% names(posts_df_raw))) {
   return(invisible(NULL))
 }
 
+if (nrow(posts_df_raw) > n_sim_draws)
+  posts_df_raw <- posts_df_raw[sample.int(nrow(posts_df_raw), n_sim_draws), ]
+
 ## One-arg closures over the loop-local `w`, `q` (and `model_name`) so the
 ## existing `curve(Preference, ...)` and `LogSwitchPoint(sp)` call sites work
 ## unchanged. Math lives in preference_helpers.R, shared with compare_models.R.
@@ -249,7 +253,8 @@ for(i in 1:nrow(posts_df_raw)){
 }
 
 Pref.Predictions <- apply(Pref.Predicts, 2, median)
-Pref.One2One <- round(quantile(Pref.One2Ones, c(0.025, 0.5, 0.975)), 3)
+tail_p <- (1 - ci_level) / 2
+Pref.One2One <- round(quantile(Pref.One2Ones, c(tail_p, 0.5, 1 - tail_p)), 3)
 
 pdf(paste0(figs, '/preference_', model_name,'.pdf'),
     height = 4,
@@ -282,7 +287,7 @@ par(mar = c(3, 3, 1, 1),
     curve(Preference,
           min(xlims), max(xlims),
           add = TRUE,
-          col = alpha('black', 10/n_sim_draws))
+          col = alpha('black', 100/n_sim_draws))
   }
   w <- median(posts_df_raw$w, na.rm = TRUE)
   q <- median(posts_df_raw$q, na.rm = TRUE)

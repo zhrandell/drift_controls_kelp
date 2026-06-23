@@ -191,6 +191,11 @@ if (exists("model_wts") && length(compare_names) >= 2 &&
   compute_model_average(model_wts, compare_names, fits)
 }
 
+source('plot_time_series.R')
+if (file.exists(paste0(tmp, "/ODE_kelp_", names(A.level)[1], "_model_average.RDA"))) {
+  plot_timeseries_model_average()
+}
+
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## END of script ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -113,7 +113,7 @@ dat2 <- as.data.frame(apply(dat2, 2, function(x)
 ## remove data via key ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## remove keys associated with missing data in dat1, the 24hr data
 dat1 <- dat1[!grepl("3_1_5", dat1$key),] 
-dat1 <- dat1[!grepl("9_3_8", dat1$key),] 
+#dat1 <- dat1[!grepl("9_3_8", dat1$key),] 
 
 
 ## remove keys associated with missing data in dat2, the 48hr data

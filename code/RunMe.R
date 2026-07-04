@@ -27,10 +27,6 @@ model_names <- c("Logistic",
                  "Logistic_noM",
                  "Logistic_z",
                  "Logistic_z_noM",
-                 "vanLeeuwen_q",
-                 "vanLeeuwen_q_z",
-                 "vanLeeuwen_q_noM",
-                 "vanLeeuwen_q_z_noM",
                  "vanLeeuwen",
                  "vanLeeuwen_noM",
                  "vanLeeuwen_z",
@@ -42,10 +38,7 @@ model_names <- c("Logistic",
 # Excluded models are still fit, still visualized/simulated/plotted, and still
 # appear in the Pareto-k diagnostic summary and PPC density overlays.
 # Each entry must also appear in model_names. Default: character(0) (no exclusions).
-exclude_from_comparison <- c("vanLeeuwen_q",
-                             "vanLeeuwen_q_z",
-                             "vanLeeuwen_q_noM",
-                             "vanLeeuwen_q_z_noM")
+exclude_from_comparison <- character(0)
 
 # Display labels used in place of raw model_names in the summary LaTeX tables
 # (Summary_model_comparison.tex, Summary_preference.tex, and the Model column
@@ -57,10 +50,6 @@ model_labels <- c(
   Logistic_noM   = "Logistic ($m=1$)",
   Logistic_z     = "Logistic ($z$)",
   Logistic_z_noM = "Logistic ($z$, $m=1$)",
-  vanLeeuwen_q   = "van Leeuwen ($q$)",
-  vanLeeuwen_q_z = "van Leeuwen ($q$, $z$)",
-  vanLeeuwen_q_z_noM = "van Leeuwen ($q$, $z$, $m = 1$)",
-  vanLeeuwen_q_noM = "van Leeuwen ($q$, $m=1$)",
   vanLeeuwen  = "van Leeuwen",
   vanLeeuwen_noM  = "van Leeuwen ($m=1$)",
   vanLeeuwen_z  = "van Leeuwen ($z$)",

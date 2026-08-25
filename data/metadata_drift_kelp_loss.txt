@@ -1,0 +1,44 @@
+Metadata for drift_kelp_loss.csv, the primary data input associated with this research: 
+
+[, 1] - Hours
+The specific amount of time (in hours) elapsed since the drift and kelp resources were placed in the cage.
+
+[, 2] - Interval 
+A categorical variable representing "48", for the 48-hour trials, or "24" for the 24-hour trials. We refer to Sequence 1 as the 48-hour Trials, and Sequence 2 the 24-hour trials. 
+
+[, 3] - Period
+A reference to the temporal period, with Trials having either two or three (2 or 3) temperal periods where they are original stocked, then sampled and restocked to enable subsequent observations.
+
+[, 4] - Trial
+Trials denotes the multiple experimental replicates. Both Sequence 1 and 2 data consisted of four Trials each. Sequence 1 data contained three Periods (sampling at approximately 48, 96, and 144 hrs), and Sequence 2 data contained two Periods (sampling at approximately 24 and 48 hrs).
+
+[, 5] - Cage
+The specific cage number ranging from 1:20. 
+
+[, 6] - Urchins
+The number of urchins contained within each cage. 
+
+[, 7] - Level
+A column used to denote the amount of drift (or cage control) within each cage, with drift consisting of 8 levels.
+
+[, 8] - Detail
+A column used to denote the amount of live kelp within each cage, with "Low" associated with a single juvenile M. pyrifera (Giant kelp) individual, and "High" associated with either two four juvenile M. pyrifera individuals. This column also includes the same information as "Level" above, with drift levels ranging (1:8). 
+
+[, 9] - Treatment
+A column denoting whether each cage had a "Low" live kelp (1 plant), "High" live kelp (2 or 4 plants), or was a cage control ("Low_Control", "High_Control", "Urchin_Control").
+
+[, 10] - Kelp_Ind
+The number of kelp plants within each cage (1, 2, or 4). 
+
+[, 11] - Drift_Initial
+Raw wet-weight biomass values for the initial amount (in grams) of drift algae placed within each cage.
+
+[, 12] - Drift_Remaining
+Raw wet-weight biomass values for the amount (in grams) of drift algae remaining.
+
+[, 13] - Kelp_Initial
+Raw wet-weight biomass values for the initial amount (in grams) of live kelp placed within each cage.
+
+[, 14] - Kelp_Remaining
+Raw wet-weight biomass values for the amount (in grams) of live kelp remaining.
+

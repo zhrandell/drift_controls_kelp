@@ -1,0 +1,63 @@
+Metadata for the San Nicolas Island kelp and invertebrate data used to analyze juvenile Giant kelp. 
+
+The biological variables are counts of individuals recorded within fixed 10 m x 2 m (20 m2) benthic band transects at permanent subtidal monitoring sites around San Nicolas Island, California. Scientific names below reflect currently accepted taxonomy; historical names are noted where relevant.
+
+[, 1] - date
+The date on which the transect survey was conducted.
+
+[, 2] - PERIOD
+A numeric identifier for the sampling period, as recorded in the source data.
+
+[, 3] - SEASON
+The season in which the survey was conducted (for example, "SPRING" or "FALL").
+
+[, 4] - SITE
+A numeric identifier for the permanent subtidal monitoring site. The study included six sites around San Nicolas Island.
+
+[, 5] - ID
+A unique transect identifier formed by combining the SITE and TRANSECT values (for example, "1_10R").
+
+[, 6] - TRANSECT
+The identifier assigned to the permanent 10 m x 2 m benthic band transect. Each site contained five permanent transects.
+
+[, 7] - PatMin
+The count of Patiria miniata (bat star) individuals recorded on the transect.
+
+[, 8] - MesFra
+The count of Mesocentrotus franciscanus (red sea urchin) individuals recorded on the transect. This species was formerly classified as Strongylocentrotus franciscanus.
+
+[, 9] - StrPur
+The count of Strongylocentrotus purpuratus (purple sea urchin) individuals recorded on the transect.
+
+[, 10] - MegUnd
+The count of Megastraea undosa (wavy turban snail) individuals recorded on the transect. Historical names include Astraea undosa and Lithopoma undosum.
+
+[, 11] - DerImb
+The count of Dermasterias imbricata (leather star) individuals recorded on the transect.
+
+[, 12] - PisGig
+The count of Pisaster giganteus (giant-spined sea star) individuals recorded on the transect.
+
+[, 13] - PycHel
+The count of Pycnopodia helianthoides (sunflower sea star) individuals recorded on the transect.
+
+[, 14] - SteOsm
+The count of Stephanocystis osmundacea (chainbladder kelp) individuals recorded on the transect. This species was formerly classified as Cystoseira osmundacea.
+
+[, 15] - LamSpp
+The count of kelp individuals identified to the genus Laminaria (Laminaria spp.) recorded on the transect.
+
+[, 16] - MacJuv
+The count of juvenile Macrocystis pyrifera (giant kelp) individuals less than 1 m tall recorded on the transect.
+
+[, 17] - LamJuv
+The count of juvenile kelp individuals in the order Laminariales for which the genus was uncertain, recorded on the transect.
+
+[, 18] - EisArb
+The count of Eisenia arborea (southern sea palm) individuals recorded on the transect.
+
+[, 19] - PteCal
+The count of Pterygophora californica (woody-stemmed kelp) individuals recorded on the transect.
+
+[, 20] - MacPyr
+The count of Macrocystis pyrifera (giant kelp) individuals greater than 1 m tall recorded on the transect.
